@@ -1,0 +1,645 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		002F3C0109D093BD00EBEB88 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 002F3C0009D093BD00EBEB88 /* OpenGL.framework */; };
+		38357A5F0A23B86E001C6B13 /* EmulationMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38357A5E0A23B86E001C6B13 /* EmulationMain.cpp */; };
+		38694A270A23D420005C94A3 /* EmulationRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38694A250A23D420005C94A3 /* EmulationRunner.cpp */; };
+		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
+		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		AD027A5E1429382D003CBB79 /* SDLMainIntro.m in Sources */ = {isa = PBXBuildFile; fileRef = AD027A5D1429382D003CBB79 /* SDLMainIntro.m */; };
+		AD0792A31461EBCD0043E0F6 /* PreferencesWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = AD0792A21461EBCD0043E0F6 /* PreferencesWindowController.m */; };
+		AD0936E21440B537006D73E9 /* gui.m in Sources */ = {isa = PBXBuildFile; fileRef = AD0936E11440B537006D73E9 /* gui.m */; };
+		AD3A53FD15A8D76D000202C6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AD3A53FE15A8D76D000202C6 /* AppDelegate.m */; };
+		AD3B554715A7792200787C42 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AD3B554915A7792200787C42 /* Localizable.strings */; };
+		AD3E859E143E508B0054D0E8 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD3E859D143E508B0054D0E8 /* Carbon.framework */; };
+		AD3E85A2143E50DF0054D0E8 /* MyPreferences.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A0143E50DF0054D0E8 /* MyPreferences.cpp */; };
+		AD3E85A5143E50F90054D0E8 /* Preferences.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A3143E50F90054D0E8 /* Preferences.cpp */; };
+		AD3E85A8143E51170054D0E8 /* FullPath.c in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A6143E51170054D0E8 /* FullPath.c */; };
+		AD3E85AA143E591A0054D0E8 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD3E85A9143E591A0054D0E8 /* CoreServices.framework */; };
+		AD3E85AF143E5DF50054D0E8 /* MachOCFMGlue.c in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85AD143E5DF50054D0E8 /* MachOCFMGlue.c */; };
+		AD42AFBD1572794F00F7B76E /* rootfs-common in Resources */ = {isa = PBXBuildFile; fileRef = AD42AFBC1572794F00F7B76E /* rootfs-common */; };
+		AD5F11981572401100F8BE63 /* rootfs in Resources */ = {isa = PBXBuildFile; fileRef = AD5F11961572401100F8BE63 /* rootfs */; };
+		AD60906B15A38E5D0073E842 /* atarix.xib in Resources */ = {isa = PBXBuildFile; fileRef = AD60906D15A38E5D0073E842 /* atarix.xib */; };
+		AD60907115A394D80073E842 /* AtariCrash.xib in Resources */ = {isa = PBXBuildFile; fileRef = AD60907315A394D80073E842 /* AtariCrash.xib */; };
+		AD6D7DFF143FA90C00575FB1 /* missing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD6D7DFE143FA90C00575FB1 /* missing.cpp */; };
+		AD82E54D157B6C85006EE53F /* AtariXApplicationIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = AD82E54C157B6C85006EE53F /* AtariXApplicationIcon.icns */; };
+		AD96C53D143E4EEC008E0D68 /* Clipboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C51F143E4EEC008E0D68 /* Clipboard.cpp */; };
+		AD96C53E143E4EEC008E0D68 /* Globals.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C521143E4EEC008E0D68 /* Globals.cpp */; };
+		AD96C53F143E4EEC008E0D68 /* MacXFS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C524143E4EEC008E0D68 /* MacXFS.cpp */; };
+		AD96C540143E4EEC008E0D68 /* MagiC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C526143E4EEC008E0D68 /* MagiC.cpp */; };
+		AD96C541143E4EEC008E0D68 /* MagiCKeyboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C529143E4EEC008E0D68 /* MagiCKeyboard.cpp */; };
+		AD96C542143E4EEC008E0D68 /* MagiCMouse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C52C143E4EEC008E0D68 /* MagiCMouse.cpp */; };
+		AD96C543143E4EEC008E0D68 /* MagiCPrint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C52E143E4EEC008E0D68 /* MagiCPrint.cpp */; };
+		AD96C544143E4EEC008E0D68 /* MagiCSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C530143E4EEC008E0D68 /* MagiCSerial.cpp */; };
+		AD96C545143E4EEC008E0D68 /* MyMoreFiles.c in Sources */ = {isa = PBXBuildFile; fileRef = AD96C533143E4EEC008E0D68 /* MyMoreFiles.c */; };
+		AD96C546143E4EEC008E0D68 /* PascalStrings.c in Sources */ = {isa = PBXBuildFile; fileRef = AD96C536143E4EEC008E0D68 /* PascalStrings.c */; };
+		AD96C547143E4EEC008E0D68 /* TextConversion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C538143E4EEC008E0D68 /* TextConversion.cpp */; };
+		AD96C548143E4EEC008E0D68 /* XCmd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C53A143E4EEC008E0D68 /* XCmd.cpp */; };
+		AD96C54D143E4F56008E0D68 /* Debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C54B143E4F56008E0D68 /* Debug.cpp */; };
+		AD98681C143D0E5E00E1D5B2 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = AD986815143D0E5E00E1D5B2 /* m68kcpu.c */; };
+		AD98681D143D0E5E00E1D5B2 /* m68kopac.c in Sources */ = {isa = PBXBuildFile; fileRef = AD986817143D0E5E00E1D5B2 /* m68kopac.c */; };
+		AD98681E143D0E5E00E1D5B2 /* m68kopdm.c in Sources */ = {isa = PBXBuildFile; fileRef = AD986818143D0E5E00E1D5B2 /* m68kopdm.c */; };
+		AD98681F143D0E5E00E1D5B2 /* m68kopnz.c in Sources */ = {isa = PBXBuildFile; fileRef = AD986819143D0E5E00E1D5B2 /* m68kopnz.c */; };
+		AD986820143D0E5E00E1D5B2 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = AD98681A143D0E5E00E1D5B2 /* m68kops.c */; };
+		AD995129157167CE009CCE96 /* ApplicationIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = AD995128157167CE009CCE96 /* ApplicationIcon.png */; };
+		ADA0A1811460AB23002C580A /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = ADA0A1801460AB23002C580A /* Preferences.xib */; };
+		ADAF180A1572562500676157 /* MagicMacX.OS in Resources */ = {isa = PBXBuildFile; fileRef = ADAF18081572562400676157 /* MagicMacX.OS */; };
+		ADB9D2681A44EADC00B5CCED /* SDL2.framework in Copy Frameworks into .app bundle */ = {isa = PBXBuildFile; fileRef = ADB9D2671A44EADC00B5CCED /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		ADC8D9D41A3F81EC0014AE2F /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ADC8D9D31A3F81EC0014AE2F /* SDL2.framework */; };
+		ADD0A10D156EDED100FF1993 /* AtariCrashWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = ADD0A10C156EDED100FF1993 /* AtariCrashWindowController.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		002F39FD09D0883400EBEB88 /* Copy Frameworks into .app bundle */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				ADB9D2681A44EADC00B5CCED /* SDL2.framework in Copy Frameworks into .app bundle */,
+			);
+			name = "Copy Frameworks into .app bundle";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		002F3C0009D093BD00EBEB88 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
+		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
+		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		38357A5E0A23B86E001C6B13 /* EmulationMain.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = EmulationMain.cpp; sourceTree = SOURCE_ROOT; };
+		38694A250A23D420005C94A3 /* EmulationRunner.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = EmulationRunner.cpp; sourceTree = SOURCE_ROOT; };
+		38694A260A23D420005C94A3 /* EmulationRunner.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = EmulationRunner.h; sourceTree = SOURCE_ROOT; };
+		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		8D1107320486CEB800E47090 /* AtariX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AtariX.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AD027A5C1429382D003CBB79 /* SDLMainIntro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMainIntro.h; sourceTree = "<group>"; };
+		AD027A5D1429382D003CBB79 /* SDLMainIntro.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDLMainIntro.m; sourceTree = "<group>"; };
+		AD0792A11461EBCD0043E0F6 /* PreferencesWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PreferencesWindowController.h; sourceTree = "<group>"; };
+		AD0792A21461EBCD0043E0F6 /* PreferencesWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PreferencesWindowController.m; sourceTree = "<group>"; };
+		AD0936E11440B537006D73E9 /* gui.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = gui.m; sourceTree = "<group>"; };
+		AD3A53FE15A8D76D000202C6 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		AD3B554815A7792200787C42 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AD3B554D15A7793800787C42 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AD3B554E15A7794100787C42 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AD3E859D143E508B0054D0E8 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = ../../../../../../System/Library/Frameworks/Carbon.framework; sourceTree = "<group>"; };
+		AD3E85A0143E50DF0054D0E8 /* MyPreferences.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MyPreferences.cpp; sourceTree = "<group>"; };
+		AD3E85A1143E50DF0054D0E8 /* MyPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyPreferences.h; sourceTree = "<group>"; };
+		AD3E85A3143E50F90054D0E8 /* Preferences.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Preferences.cpp; sourceTree = "<group>"; };
+		AD3E85A4143E50F90054D0E8 /* Preferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Preferences.h; sourceTree = "<group>"; };
+		AD3E85A6143E51170054D0E8 /* FullPath.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FullPath.c; sourceTree = "<group>"; };
+		AD3E85A7143E51170054D0E8 /* FullPath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FullPath.h; sourceTree = "<group>"; };
+		AD3E85A9143E591A0054D0E8 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = ../../../../../../System/Library/Frameworks/CoreServices.framework; sourceTree = "<group>"; };
+		AD3E85AB143E59700054D0E8 /* Atari.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Atari.h; sourceTree = "<group>"; };
+		AD3E85AC143E5CC80054D0E8 /* resource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = resource.h; sourceTree = "<group>"; };
+		AD3E85AD143E5DF50054D0E8 /* MachOCFMGlue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MachOCFMGlue.c; sourceTree = "<group>"; };
+		AD3E85AE143E5DF50054D0E8 /* MachOCFMGlue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MachOCFMGlue.h; sourceTree = "<group>"; };
+		AD42AFBC1572794F00F7B76E /* rootfs-common */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "rootfs-common"; sourceTree = "<group>"; };
+		AD5F1156157237F600F8BE63 /* AtariX_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AtariX_Prefix.pch; sourceTree = "<group>"; };
+		AD5F119515723E4500F8BE63 /* AtariX-Application copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "AtariX-Application copy-Info.plist"; path = "/Users/and/Documents/Programmieren/SDL/AtariX/AtariX-Application copy-Info.plist"; sourceTree = "<absolute>"; };
+		AD5F11971572401100F8BE63 /* English */ = {isa = PBXFileReference; lastKnownFileType = folder; name = English; path = English.lproj/rootfs; sourceTree = "<group>"; };
+		AD60906C15A38E5D0073E842 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/atarix.xib; sourceTree = "<group>"; };
+		AD60906F15A38E820073E842 /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/atarix.xib; sourceTree = "<group>"; };
+		AD60907015A38E860073E842 /* fr */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = fr; path = fr.lproj/atarix.xib; sourceTree = "<group>"; };
+		AD60907215A394D80073E842 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AtariCrash.xib; sourceTree = "<group>"; };
+		AD60907415A394F40073E842 /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/AtariCrash.xib; sourceTree = "<group>"; };
+		AD60907515A394F60073E842 /* fr */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = fr; path = fr.lproj/AtariCrash.xib; sourceTree = "<group>"; };
+		AD6D7DFC143FA02300575FB1 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
+		AD6D7DFE143FA90C00575FB1 /* missing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = missing.cpp; sourceTree = "<group>"; };
+		AD6D7E00143FA92400575FB1 /* missing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = missing.h; sourceTree = "<group>"; };
+		AD82E54C157B6C85006EE53F /* AtariXApplicationIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AtariXApplicationIcon.icns; sourceTree = "<group>"; };
+		AD96C51F143E4EEC008E0D68 /* Clipboard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Clipboard.cpp; sourceTree = "<group>"; };
+		AD96C520143E4EEC008E0D68 /* Clipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Clipboard.h; sourceTree = "<group>"; };
+		AD96C521143E4EEC008E0D68 /* Globals.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Globals.cpp; sourceTree = "<group>"; };
+		AD96C522143E4EEC008E0D68 /* Globals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Globals.h; sourceTree = "<group>"; };
+		AD96C523143E4EEC008E0D68 /* MAC_XFS.H */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MAC_XFS.H; sourceTree = "<group>"; };
+		AD96C524143E4EEC008E0D68 /* MacXFS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MacXFS.cpp; sourceTree = "<group>"; };
+		AD96C525143E4EEC008E0D68 /* MacXFS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MacXFS.h; sourceTree = "<group>"; };
+		AD96C526143E4EEC008E0D68 /* MagiC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MagiC.cpp; sourceTree = "<group>"; };
+		AD96C527143E4EEC008E0D68 /* MagiC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagiC.h; sourceTree = "<group>"; };
+		AD96C528143E4EEC008E0D68 /* MagiCKernel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagiCKernel.h; sourceTree = "<group>"; };
+		AD96C529143E4EEC008E0D68 /* MagiCKeyboard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MagiCKeyboard.cpp; sourceTree = "<group>"; };
+		AD96C52A143E4EEC008E0D68 /* MagiCKeyboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagiCKeyboard.h; sourceTree = "<group>"; };
+		AD96C52B143E4EEC008E0D68 /* MagicMacXPluginTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagicMacXPluginTypes.h; sourceTree = "<group>"; };
+		AD96C52C143E4EEC008E0D68 /* MagiCMouse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MagiCMouse.cpp; sourceTree = "<group>"; };
+		AD96C52D143E4EEC008E0D68 /* MagiCMouse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagiCMouse.h; sourceTree = "<group>"; };
+		AD96C52E143E4EEC008E0D68 /* MagiCPrint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MagiCPrint.cpp; sourceTree = "<group>"; };
+		AD96C52F143E4EEC008E0D68 /* MagicPrint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagicPrint.h; sourceTree = "<group>"; };
+		AD96C530143E4EEC008E0D68 /* MagiCSerial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MagiCSerial.cpp; sourceTree = "<group>"; };
+		AD96C531143E4EEC008E0D68 /* MagiCSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagiCSerial.h; sourceTree = "<group>"; };
+		AD96C533143E4EEC008E0D68 /* MyMoreFiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MyMoreFiles.c; sourceTree = "<group>"; };
+		AD96C534143E4EEC008E0D68 /* MyMoreFiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyMoreFiles.h; sourceTree = "<group>"; };
+		AD96C535143E4EEC008E0D68 /* osd_cpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = osd_cpu.h; sourceTree = "<group>"; };
+		AD96C536143E4EEC008E0D68 /* PascalStrings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PascalStrings.c; sourceTree = "<group>"; };
+		AD96C537143E4EEC008E0D68 /* PascalStrings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PascalStrings.h; sourceTree = "<group>"; };
+		AD96C538143E4EEC008E0D68 /* TextConversion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextConversion.cpp; sourceTree = "<group>"; };
+		AD96C539143E4EEC008E0D68 /* TextConversion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextConversion.h; sourceTree = "<group>"; };
+		AD96C53A143E4EEC008E0D68 /* XCmd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XCmd.cpp; sourceTree = "<group>"; };
+		AD96C53B143E4EEC008E0D68 /* XCmd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCmd.h; sourceTree = "<group>"; };
+		AD96C53C143E4EEC008E0D68 /* XCmdDefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCmdDefs.h; sourceTree = "<group>"; };
+		AD96C54B143E4F56008E0D68 /* Debug.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Debug.cpp; sourceTree = "<group>"; };
+		AD96C54C143E4F56008E0D68 /* Debug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Debug.h; sourceTree = "<group>"; };
+		AD986813143D0E5E00E1D5B2 /* m68k.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68k.h; sourceTree = "<group>"; };
+		AD986814143D0E5E00E1D5B2 /* m68kconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kconf.h; sourceTree = "<group>"; };
+		AD986815143D0E5E00E1D5B2 /* m68kcpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kcpu.c; sourceTree = "<group>"; };
+		AD986816143D0E5E00E1D5B2 /* m68kcpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kcpu.h; sourceTree = "<group>"; };
+		AD986817143D0E5E00E1D5B2 /* m68kopac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kopac.c; sourceTree = "<group>"; };
+		AD986818143D0E5E00E1D5B2 /* m68kopdm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kopdm.c; sourceTree = "<group>"; };
+		AD986819143D0E5E00E1D5B2 /* m68kopnz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kopnz.c; sourceTree = "<group>"; };
+		AD98681A143D0E5E00E1D5B2 /* m68kops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kops.c; sourceTree = "<group>"; };
+		AD98681B143D0E5E00E1D5B2 /* m68kops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kops.h; sourceTree = "<group>"; };
+		AD995128157167CE009CCE96 /* ApplicationIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ApplicationIcon.png; sourceTree = "<group>"; };
+		ADA0A1801460AB23002C580A /* Preferences.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Preferences.xib; sourceTree = "<group>"; };
+		ADAF1806157255BD00676157 /* de */ = {isa = PBXFileReference; lastKnownFileType = folder; name = de; path = de.lproj/rootfs; sourceTree = "<group>"; };
+		ADAF1807157255C200676157 /* fr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fr; path = fr.lproj/rootfs; sourceTree = "<group>"; };
+		ADAF18091572562400676157 /* English */ = {isa = PBXFileReference; lastKnownFileType = file; name = English; path = English.lproj/MagicMacX.OS; sourceTree = "<group>"; };
+		ADAF180B1572562B00676157 /* de */ = {isa = PBXFileReference; lastKnownFileType = file; name = de; path = de.lproj/MagicMacX.OS; sourceTree = "<group>"; };
+		ADAF180C1572562E00676157 /* fr */ = {isa = PBXFileReference; lastKnownFileType = file; name = fr; path = fr.lproj/MagicMacX.OS; sourceTree = "<group>"; };
+		ADB9D2671A44EADC00B5CCED /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
+		ADC8D9D31A3F81EC0014AE2F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
+		ADCBEFF1146E90700079D3A4 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		ADD0A10B156EDED100FF1993 /* AtariCrashWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AtariCrashWindowController.h; sourceTree = "<group>"; };
+		ADD0A10C156EDED100FF1993 /* AtariCrashWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AtariCrashWindowController.m; sourceTree = "<group>"; };
+		ADF02772147AE4FD0093C9EE /* EmulationMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmulationMain.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D11072E0486CEB800E47090 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ADC8D9D41A3F81EC0014AE2F /* SDL2.framework in Frameworks */,
+				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
+				002F3C0109D093BD00EBEB88 /* OpenGL.framework in Frameworks */,
+				AD3E859E143E508B0054D0E8 /* Carbon.framework in Frameworks */,
+				AD3E85AA143E591A0054D0E8 /* CoreServices.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		080E96DDFE201D6D7F000001 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				ADCBEFF1146E90700079D3A4 /* AppDelegate.h */,
+				AD3A53FE15A8D76D000202C6 /* AppDelegate.m */,
+				AD3E85A6143E51170054D0E8 /* FullPath.c */,
+				AD3E85A7143E51170054D0E8 /* FullPath.h */,
+				AD96C54B143E4F56008E0D68 /* Debug.cpp */,
+				AD96C54C143E4F56008E0D68 /* Debug.h */,
+				AD96C533143E4EEC008E0D68 /* MyMoreFiles.c */,
+				AD96C534143E4EEC008E0D68 /* MyMoreFiles.h */,
+				AD96C536143E4EEC008E0D68 /* PascalStrings.c */,
+				AD96C537143E4EEC008E0D68 /* PascalStrings.h */,
+				AD027A5D1429382D003CBB79 /* SDLMainIntro.m */,
+				AD027A5C1429382D003CBB79 /* SDLMainIntro.h */,
+				38694A250A23D420005C94A3 /* EmulationRunner.cpp */,
+				38694A260A23D420005C94A3 /* EmulationRunner.h */,
+				38357A5E0A23B86E001C6B13 /* EmulationMain.cpp */,
+				ADF02772147AE4FD0093C9EE /* EmulationMain.h */,
+				AD0936E11440B537006D73E9 /* gui.m */,
+				AD0792A11461EBCD0043E0F6 /* PreferencesWindowController.h */,
+				AD0792A21461EBCD0043E0F6 /* PreferencesWindowController.m */,
+				ADD0A10B156EDED100FF1993 /* AtariCrashWindowController.h */,
+				ADD0A10C156EDED100FF1993 /* AtariCrashWindowController.m */,
+			);
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AD3E85A9143E591A0054D0E8 /* CoreServices.framework */,
+				AD3E859D143E508B0054D0E8 /* Carbon.framework */,
+				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
+				002F3C0009D093BD00EBEB88 /* OpenGL.framework */,
+			);
+			name = "Linked Frameworks";
+			sourceTree = "<group>";
+		};
+		1058C7A2FEA54F0111CA2CBB /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				ADC8D9D31A3F81EC0014AE2F /* SDL2.framework */,
+				29B97324FDCFA39411CA2CEA /* AppKit.framework */,
+				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		19C28FACFE9D520D11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D1107320486CEB800E47090 /* AtariX.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		29B97314FDCFA39411CA2CEA /* SDLOpenGLIntro */ = {
+			isa = PBXGroup;
+			children = (
+				ADB9D2671A44EADC00B5CCED /* SDL2.framework */,
+				AD6D7E00143FA92400575FB1 /* missing.h */,
+				AD6D7DFE143FA90C00575FB1 /* missing.cpp */,
+				AD6D7DFC143FA02300575FB1 /* config.h */,
+				AD3E85AD143E5DF50054D0E8 /* MachOCFMGlue.c */,
+				AD3E85AE143E5DF50054D0E8 /* MachOCFMGlue.h */,
+				AD3E85AC143E5CC80054D0E8 /* resource.h */,
+				AD3E85A3143E50F90054D0E8 /* Preferences.cpp */,
+				AD3E85A4143E50F90054D0E8 /* Preferences.h */,
+				AD96C54A143E4F12008E0D68 /* MagiC */,
+				AD96C535143E4EEC008E0D68 /* osd_cpu.h */,
+				AD986821143D0E7700E1D5B2 /* m68k */,
+				080E96DDFE201D6D7F000001 /* Classes */,
+				29B97315FDCFA39411CA2CEA /* Other Sources */,
+				29B97317FDCFA39411CA2CEA /* Resources */,
+				29B97323FDCFA39411CA2CEA /* Frameworks */,
+				19C28FACFE9D520D11CA2CBB /* Products */,
+				AD5F119515723E4500F8BE63 /* AtariX-Application copy-Info.plist */,
+			);
+			name = SDLOpenGLIntro;
+			sourceTree = "<group>";
+		};
+		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
+			isa = PBXGroup;
+			children = (
+				AD5F1156157237F600F8BE63 /* AtariX_Prefix.pch */,
+			);
+			name = "Other Sources";
+			sourceTree = "<group>";
+		};
+		29B97317FDCFA39411CA2CEA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AD3B554915A7792200787C42 /* Localizable.strings */,
+				AD82E54C157B6C85006EE53F /* AtariXApplicationIcon.icns */,
+				AD42AFBC1572794F00F7B76E /* rootfs-common */,
+				ADAF18081572562400676157 /* MagicMacX.OS */,
+				AD5F11961572401100F8BE63 /* rootfs */,
+				AD995128157167CE009CCE96 /* ApplicationIcon.png */,
+				8D1107310486CEB800E47090 /* Info.plist */,
+				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
+				ADA0A1801460AB23002C580A /* Preferences.xib */,
+				AD60906D15A38E5D0073E842 /* atarix.xib */,
+				AD60907315A394D80073E842 /* AtariCrash.xib */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
+				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		AD96C54A143E4F12008E0D68 /* MagiC */ = {
+			isa = PBXGroup;
+			children = (
+				AD3E85AB143E59700054D0E8 /* Atari.h */,
+				AD3E85A0143E50DF0054D0E8 /* MyPreferences.cpp */,
+				AD3E85A1143E50DF0054D0E8 /* MyPreferences.h */,
+				AD96C53A143E4EEC008E0D68 /* XCmd.cpp */,
+				AD96C53B143E4EEC008E0D68 /* XCmd.h */,
+				AD96C53C143E4EEC008E0D68 /* XCmdDefs.h */,
+				AD96C538143E4EEC008E0D68 /* TextConversion.cpp */,
+				AD96C539143E4EEC008E0D68 /* TextConversion.h */,
+				AD96C51F143E4EEC008E0D68 /* Clipboard.cpp */,
+				AD96C520143E4EEC008E0D68 /* Clipboard.h */,
+				AD96C521143E4EEC008E0D68 /* Globals.cpp */,
+				AD96C522143E4EEC008E0D68 /* Globals.h */,
+				AD96C523143E4EEC008E0D68 /* MAC_XFS.H */,
+				AD96C524143E4EEC008E0D68 /* MacXFS.cpp */,
+				AD96C525143E4EEC008E0D68 /* MacXFS.h */,
+				AD96C526143E4EEC008E0D68 /* MagiC.cpp */,
+				AD96C527143E4EEC008E0D68 /* MagiC.h */,
+				AD96C528143E4EEC008E0D68 /* MagiCKernel.h */,
+				AD96C529143E4EEC008E0D68 /* MagiCKeyboard.cpp */,
+				AD96C52A143E4EEC008E0D68 /* MagiCKeyboard.h */,
+				AD96C52B143E4EEC008E0D68 /* MagicMacXPluginTypes.h */,
+				AD96C52C143E4EEC008E0D68 /* MagiCMouse.cpp */,
+				AD96C52D143E4EEC008E0D68 /* MagiCMouse.h */,
+				AD96C52E143E4EEC008E0D68 /* MagiCPrint.cpp */,
+				AD96C52F143E4EEC008E0D68 /* MagicPrint.h */,
+				AD96C530143E4EEC008E0D68 /* MagiCSerial.cpp */,
+				AD96C531143E4EEC008E0D68 /* MagiCSerial.h */,
+			);
+			name = MagiC;
+			sourceTree = "<group>";
+		};
+		AD986821143D0E7700E1D5B2 /* m68k */ = {
+			isa = PBXGroup;
+			children = (
+				AD986813143D0E5E00E1D5B2 /* m68k.h */,
+				AD986814143D0E5E00E1D5B2 /* m68kconf.h */,
+				AD986815143D0E5E00E1D5B2 /* m68kcpu.c */,
+				AD986816143D0E5E00E1D5B2 /* m68kcpu.h */,
+				AD986817143D0E5E00E1D5B2 /* m68kopac.c */,
+				AD986818143D0E5E00E1D5B2 /* m68kopdm.c */,
+				AD986819143D0E5E00E1D5B2 /* m68kopnz.c */,
+				AD98681A143D0E5E00E1D5B2 /* m68kops.c */,
+				AD98681B143D0E5E00E1D5B2 /* m68kops.h */,
+			);
+			name = m68k;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8D1107260486CEB800E47090 /* AtariX-Application */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "AtariX-Application" */;
+			buildPhases = (
+				8D1107290486CEB800E47090 /* Resources */,
+				8D11072C0486CEB800E47090 /* Sources */,
+				8D11072E0486CEB800E47090 /* Frameworks */,
+				002F39FD09D0883400EBEB88 /* Copy Frameworks into .app bundle */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "AtariX-Application";
+			productInstallPath = "$(HOME)/Applications";
+			productName = SDLOpenGLIntro;
+			productReference = 8D1107320486CEB800E47090 /* AtariX.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		29B97313FDCFA39411CA2CEA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0610;
+			};
+			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "AtariX" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+				English,
+				de,
+				fr,
+			);
+			mainGroup = 29B97314FDCFA39411CA2CEA /* SDLOpenGLIntro */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8D1107260486CEB800E47090 /* AtariX-Application */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8D1107290486CEB800E47090 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
+				ADA0A1811460AB23002C580A /* Preferences.xib in Resources */,
+				AD60906B15A38E5D0073E842 /* atarix.xib in Resources */,
+				AD60907115A394D80073E842 /* AtariCrash.xib in Resources */,
+				AD995129157167CE009CCE96 /* ApplicationIcon.png in Resources */,
+				AD5F11981572401100F8BE63 /* rootfs in Resources */,
+				ADAF180A1572562500676157 /* MagicMacX.OS in Resources */,
+				AD42AFBD1572794F00F7B76E /* rootfs-common in Resources */,
+				AD82E54D157B6C85006EE53F /* AtariXApplicationIcon.icns in Resources */,
+				AD3B554715A7792200787C42 /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8D11072C0486CEB800E47090 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				38357A5F0A23B86E001C6B13 /* EmulationMain.cpp in Sources */,
+				38694A270A23D420005C94A3 /* EmulationRunner.cpp in Sources */,
+				AD027A5E1429382D003CBB79 /* SDLMainIntro.m in Sources */,
+				AD98681C143D0E5E00E1D5B2 /* m68kcpu.c in Sources */,
+				AD98681D143D0E5E00E1D5B2 /* m68kopac.c in Sources */,
+				AD98681E143D0E5E00E1D5B2 /* m68kopdm.c in Sources */,
+				AD98681F143D0E5E00E1D5B2 /* m68kopnz.c in Sources */,
+				AD986820143D0E5E00E1D5B2 /* m68kops.c in Sources */,
+				AD96C53D143E4EEC008E0D68 /* Clipboard.cpp in Sources */,
+				AD96C53E143E4EEC008E0D68 /* Globals.cpp in Sources */,
+				AD96C53F143E4EEC008E0D68 /* MacXFS.cpp in Sources */,
+				AD96C540143E4EEC008E0D68 /* MagiC.cpp in Sources */,
+				AD96C541143E4EEC008E0D68 /* MagiCKeyboard.cpp in Sources */,
+				AD96C542143E4EEC008E0D68 /* MagiCMouse.cpp in Sources */,
+				AD96C543143E4EEC008E0D68 /* MagiCPrint.cpp in Sources */,
+				AD96C544143E4EEC008E0D68 /* MagiCSerial.cpp in Sources */,
+				AD96C545143E4EEC008E0D68 /* MyMoreFiles.c in Sources */,
+				AD96C546143E4EEC008E0D68 /* PascalStrings.c in Sources */,
+				AD96C547143E4EEC008E0D68 /* TextConversion.cpp in Sources */,
+				AD96C548143E4EEC008E0D68 /* XCmd.cpp in Sources */,
+				AD96C54D143E4F56008E0D68 /* Debug.cpp in Sources */,
+				AD3E85A2143E50DF0054D0E8 /* MyPreferences.cpp in Sources */,
+				AD3E85A5143E50F90054D0E8 /* Preferences.cpp in Sources */,
+				AD3E85A8143E51170054D0E8 /* FullPath.c in Sources */,
+				AD3E85AF143E5DF50054D0E8 /* MachOCFMGlue.c in Sources */,
+				AD6D7DFF143FA90C00575FB1 /* missing.cpp in Sources */,
+				AD0936E21440B537006D73E9 /* gui.m in Sources */,
+				AD0792A31461EBCD0043E0F6 /* PreferencesWindowController.m in Sources */,
+				AD3A53FD15A8D76D000202C6 /* AppDelegate.m in Sources */,
+				ADD0A10D156EDED100FF1993 /* AtariCrashWindowController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		089C165CFE840E0CC02AAC07 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C165DFE840E0CC02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		AD3B554915A7792200787C42 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AD3B554815A7792200787C42 /* English */,
+				AD3B554D15A7793800787C42 /* de */,
+				AD3B554E15A7794100787C42 /* fr */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		AD5F11961572401100F8BE63 /* rootfs */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AD5F11971572401100F8BE63 /* English */,
+				ADAF1806157255BD00676157 /* de */,
+				ADAF1807157255C200676157 /* fr */,
+			);
+			name = rootfs;
+			sourceTree = "<group>";
+		};
+		AD60906D15A38E5D0073E842 /* atarix.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AD60906C15A38E5D0073E842 /* English */,
+				AD60906F15A38E820073E842 /* de */,
+				AD60907015A38E860073E842 /* fr */,
+			);
+			name = atarix.xib;
+			sourceTree = "<group>";
+		};
+		AD60907315A394D80073E842 /* AtariCrash.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AD60907215A394D80073E842 /* English */,
+				AD60907415A394F40073E842 /* de */,
+				AD60907515A394F60073E842 /* fr */,
+			);
+			name = AtariCrash.xib;
+			sourceTree = "<group>";
+		};
+		ADAF18081572562400676157 /* MagicMacX.OS */ = {
+			isa = PBXVariantGroup;
+			children = (
+				ADAF18091572562400676157 /* English */,
+				ADAF180B1572562B00676157 /* de */,
+				ADAF180C1572562E00676157 /* fr */,
+			);
+			name = MagicMacX.OS;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		C01FCF4B08A954540054247B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "_DEBUG=1";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/**",
+					"$(HEADER_SEARCH_PATHS)",
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/AtariX-MT-asflstiysslvtdackkywmbjgeicr/Build/Products/Debug",
+					"$(PROJECT_DIR)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = "";
+				PRODUCT_NAME = AtariX;
+				SDKROOT = macosx;
+				SKIP_INSTALL = NO;
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		C01FCF4C08A954540054247B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/**",
+					"$(HEADER_SEARCH_PATHS)",
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/AtariX-MT-asflstiysslvtdackkywmbjgeicr/Build/Products/Debug",
+					"$(PROJECT_DIR)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = "";
+				PRODUCT_NAME = AtariX;
+				SDKROOT = macosx;
+				SKIP_INSTALL = NO;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		C01FCF4F08A954540054247B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		C01FCF5008A954540054247B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_VERSION_ppc = 3.3;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET_ppc = 10.2;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "AtariX-Application" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C01FCF4B08A954540054247B /* Debug */,
+				C01FCF4C08A954540054247B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "AtariX" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C01FCF4F08A954540054247B /* Debug */,
+				C01FCF5008A954540054247B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 29B97313FDCFA39411CA2CEA /* Project object */;
+}

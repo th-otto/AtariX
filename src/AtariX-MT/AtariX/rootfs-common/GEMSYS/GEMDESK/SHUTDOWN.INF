@@ -1,0 +1,14 @@
+# Default-Konfigurationsdatei fÅr SHUTDOWN von MagiC 3
+# (c) Andreas Kromke 1995
+#
+# SchlÅsselworte:
+#
+#  timeout <zeit>   : max. Reaktionszeit fÅr "moderne" Programme
+#                     0 bedeutet "beliebig lang warten"
+#  ignore <prg>     : unkritische "alte" Programme
+#  terminate <prg>  : Sonderfall fÅr XCONTROL
+#
+
+timeout 10000
+ignore MGCLOCK
+#terminate XCONTROL

@@ -1,0 +1,24 @@
+/* 
+  Localizable.strings
+  AtariX
+
+  Created by Andreas Kromke on 06.07.12.
+  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+*/
+
+"OK" = "OK";
+"Cancel" = "Cancel";
+"Do not add" = "Do not add";
+"Add" = "Add";
+"Choose Atari Root-FS Directory (Boot Drive)" = "Choose Atari Root-FS Directory (Boot Drive)";
+"The directory must be named MAGIC_C. It will appear as virtual drive C: inside the virtual machine." = "The directory must be named MAGIC_C. It will appear as virtual drive C: inside the virtual machine.";
+"Create directory MAGIC_C inside the provided path?" = "Create directory MAGIC_C inside the provided path?";
+"The path provided does not end with directory MAGIC_C. It should be added automatically." = "The path provided does not end with directory MAGIC_C. It should be added automatically.";
+
+"Create or Revert" = "Create or Revert";
+"Overwrite files inside the provided directory?" = "Overwrite files inside the provided directory?";
+"You are going to create or revert the Atari boot drive. Existing files or directories inside the same directory will be overwritten." = "You are going to create or revert the Atari boot drive. Existing files or directories inside the same directory will be overwritten.";
+"Atari boot drive successfully created." = "Atari boot drive successfully created.";
+"All files and folders were successfully copied to the Atari boot drive directory." = "All files and folders were successfully copied to the Atari boot drive directory.";
+"There were errors during creation." = "There were errors during creation.";
+"Not all files and folders could be copied successfully. Your Atari boot drive may be incomplete." = "Not all files and folders could be copied successfully. Your Atari boot drive may be incomplete.";
