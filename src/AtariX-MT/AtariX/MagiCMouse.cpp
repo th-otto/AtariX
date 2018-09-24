@@ -24,7 +24,6 @@
 
 #include "config.h"
 // System-Header
-#include <Carbon/Carbon.h>
 #include <machine/endian.h>
 // Programm-Header
 #include "osd_cpu.h"

@@ -42,10 +42,12 @@ class CPreferences
 	long GetRsrcNum(CFStringRef key, long deflt, bool bAdd = true);
 
 //	void GetRsrcStringArray(const unsigned char *name, char ***str, UInt16 *len, void *pDeflt, short DfltLen);
-	AliasHandle GetRsrcAlias(CFStringRef key);
 	void SetRsrcStr(CFStringRef key, const char *szData);
 	void SetRsrcNum (CFStringRef key, long l);
+#if 0
+	AliasHandle GetRsrcAlias(CFStringRef key);
 	void SetRsrcAlias(CFStringRef key, AliasHandle alias);
+#endif
 
    private:
 	// Funktionen

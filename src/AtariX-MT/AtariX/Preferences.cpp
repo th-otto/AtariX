@@ -196,6 +196,7 @@ void CPreferences::GetRsrcStr
 *
 **********************************************************************/
 
+#if 0
 AliasHandle CPreferences::GetRsrcAlias(CFStringRef key)
 {
 	CFDataRef data;
@@ -222,6 +223,7 @@ AliasHandle CPreferences::GetRsrcAlias(CFStringRef key)
     CFRelease(data);
 	return(hdl);
 }
+#endif
 
 
 /**********************************************************************
@@ -271,6 +273,7 @@ void CPreferences::SetRsrcStr
 *
 **********************************************************************/
 
+#if 0
 void CPreferences::SetRsrcAlias(CFStringRef key, AliasHandle alias)
 {
 	CFDataRef data;
@@ -303,6 +306,7 @@ void CPreferences::SetRsrcAlias(CFStringRef key, AliasHandle alias)
 		Update();
 	}
 }
+#endif
 
 
 /**********************************************************************
