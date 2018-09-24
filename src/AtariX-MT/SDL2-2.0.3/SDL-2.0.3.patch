@@ -1,0 +1,216 @@
+diff -rup /home/sebilla/atari/SDL/Xcode/SDL/SDL.xcodeproj/project.pbxproj ./Xcode/SDL/SDL.xcodeproj/project.pbxproj
+--- /home/sebilla/atari/SDL/Xcode/SDL/SDL.xcodeproj/project.pbxproj	2018-09-24 01:16:11.595377296 +0200
++++ ./Xcode/SDL/SDL.xcodeproj/project.pbxproj	2018-05-22 11:09:45.798486400 +0200
+@@ -2230,7 +2230,6 @@
+ 				BECDF62A0761BA81005FE872 /* Resources */,
+ 				BECDF62C0761BA81005FE872 /* Sources */,
+ 				BECDF6680761BA81005FE872 /* Frameworks */,
+-				AA5C3FDC17A8C58600D6C8A1 /* Sign Frameworks */,
+ 			);
+ 			buildRules = (
+ 			);
+@@ -2306,7 +2305,7 @@
+ 		0867D690FE84028FC02AAC07 /* Project object */ = {
+ 			isa = PBXProject;
+ 			attributes = {
+-				LastUpgradeCheck = 0420;
++				LastUpgradeCheck = 0610;
+ 			};
+ 			buildConfigurationList = 0073178E0858DB0500B2BC32 /* Build configuration list for PBXProject "SDL" */;
+ 			compatibilityVersion = "Xcode 3.2";
+@@ -2359,20 +2358,6 @@
+ /* End PBXRezBuildPhase section */
+ 
+ /* Begin PBXShellScriptBuildPhase section */
+-		AA5C3FDC17A8C58600D6C8A1 /* Sign Frameworks */ = {
+-			isa = PBXShellScriptBuildPhase;
+-			buildActionMask = 2147483647;
+-			files = (
+-			);
+-			inputPaths = (
+-			);
+-			name = "Sign Frameworks";
+-			outputPaths = (
+-			);
+-			runOnlyForDeploymentPostprocessing = 0;
+-			shellPath = /bin/sh;
+-			shellScript = "if [ \"$USER\" = \"slouken\" ]; then\n    CODE_SIGN_IDENTITY=\"Mac Developer: Sam Lantinga (84TP7N5TA4)\" pkg-support/codesign-frameworks.sh || exit 1\nfi";
+-		};
+ 		BECDF6BD0761BA81005FE872 /* ShellScript */ = {
+ 			isa = PBXShellScriptBuildPhase;
+ 			buildActionMask = 12;
+@@ -2756,7 +2741,7 @@
+ 		00CFA621106A567900758660 /* Release */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
++				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				DEPLOYMENT_POSTPROCESSING = YES;
+ 				GCC_ALTIVEC_EXTENSIONS = YES;
+ 				GCC_AUTO_VECTORIZATION = YES;
+@@ -2764,8 +2749,9 @@
+ 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+ 				GCC_OPTIMIZATION_LEVEL = 3;
+ 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+-				MACOSX_DEPLOYMENT_TARGET = 10.5;
++				MACOSX_DEPLOYMENT_TARGET = 10.8;
+ 				SDKROOT = macosx;
++				SKIP_INSTALL = YES;
+ 				STRIP_STYLE = "non-global";
+ 			};
+ 			name = Release;
+@@ -2773,12 +2759,14 @@
+ 		00CFA622106A567900758660 /* Release */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
++				COMBINE_HIDPI_IMAGES = YES;
+ 				DYLIB_COMPATIBILITY_VERSION = 1.0.0;
+ 				DYLIB_CURRENT_VERSION = 3.1.0;
+ 				FRAMEWORK_VERSION = A;
+ 				HEADER_SEARCH_PATHS = /usr/X11R6/include;
+ 				INFOPLIST_FILE = "Info-Framework.plist";
+ 				INSTALL_PATH = "@rpath";
++				MACOSX_DEPLOYMENT_TARGET = 10.9;
+ 				OTHER_LDFLAGS = "-liconv";
+ 				PRODUCT_NAME = SDL2;
+ 				WRAPPER_EXTENSION = framework;
+@@ -2788,6 +2776,7 @@
+ 		00CFA623106A567900758660 /* Release */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
++				COMBINE_HIDPI_IMAGES = YES;
+ 				GCC_PREPROCESSOR_DEFINITIONS = (
+ 					"$(GCC_PREPROCESSOR_DEFINITIONS)",
+ 					"$(GCC_PREPROCESSOR_DEFINITIONS_QUOTED_1)",
+@@ -2812,14 +2801,16 @@
+ 		00CFA627106A568900758660 /* Debug */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
++				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				GCC_ALTIVEC_EXTENSIONS = YES;
+ 				GCC_AUTO_VECTORIZATION = YES;
+ 				GCC_ENABLE_SSE3_EXTENSIONS = YES;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+ 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+-				MACOSX_DEPLOYMENT_TARGET = 10.5;
++				MACOSX_DEPLOYMENT_TARGET = 10.8;
++				ONLY_ACTIVE_ARCH = YES;
+ 				SDKROOT = macosx;
++				SKIP_INSTALL = YES;
+ 				STRIP_INSTALLED_PRODUCT = NO;
+ 			};
+ 			name = Debug;
+@@ -2827,12 +2818,14 @@
+ 		00CFA628106A568900758660 /* Debug */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
++				COMBINE_HIDPI_IMAGES = YES;
+ 				DYLIB_COMPATIBILITY_VERSION = 1.0.0;
+ 				DYLIB_CURRENT_VERSION = 3.1.0;
+ 				FRAMEWORK_VERSION = A;
+ 				HEADER_SEARCH_PATHS = /usr/X11R6/include;
+ 				INFOPLIST_FILE = "Info-Framework.plist";
+ 				INSTALL_PATH = "@rpath";
++				MACOSX_DEPLOYMENT_TARGET = 10.9;
+ 				OTHER_LDFLAGS = "-liconv";
+ 				PRODUCT_NAME = SDL2;
+ 				WRAPPER_EXTENSION = framework;
+@@ -2842,6 +2835,7 @@
+ 		00CFA629106A568900758660 /* Debug */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
++				COMBINE_HIDPI_IMAGES = YES;
+ 				GCC_PREPROCESSOR_DEFINITIONS = (
+ 					"$(GCC_PREPROCESSOR_DEFINITIONS)",
+ 					"$(GCC_PREPROCESSOR_DEFINITIONS_QUOTED_1)",
+@@ -2866,6 +2860,7 @@
+ 		DB31407517554B71006C0E22 /* Debug */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
++				COMBINE_HIDPI_IMAGES = YES;
+ 				EXECUTABLE_PREFIX = lib;
+ 				GCC_PREPROCESSOR_DEFINITIONS = (
+ 					"$(GCC_PREPROCESSOR_DEFINITIONS)",
+@@ -2885,6 +2880,7 @@
+ 		DB31407617554B71006C0E22 /* Release */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
++				COMBINE_HIDPI_IMAGES = YES;
+ 				EXECUTABLE_PREFIX = lib;
+ 				GCC_PREPROCESSOR_DEFINITIONS = (
+ 					"$(GCC_PREPROCESSOR_DEFINITIONS)",
+diff -rup /home/sebilla/atari/SDL/include/SDL.h ./include/SDL.h
+--- /home/sebilla/atari/SDL/include/SDL.h	2018-09-24 01:16:11.603377295 +0200
++++ ./include/SDL.h	2018-05-22 11:09:45.802486400 +0200
+@@ -152,6 +152,11 @@ extern DECLSPEC Uint32 SDLCALL SDL_WasIn
+  */
+ extern DECLSPEC void SDLCALL SDL_Quit(void);
+ 
++/// begin kromke.andreas
++extern DECLSPEC int myKeyboardHack;
++extern DECLSPEC void SDLCALL SDL_KeyboardActivate(Uint32 flags);
++/// end kromke.andreas
++
+ /* Ends C function definitions when using C++ */
+ #ifdef __cplusplus
+ }
+diff -rup /home/sebilla/atari/SDL/src/SDL.c ./src/SDL.c
+--- /home/sebilla/atari/SDL/src/SDL.c	2018-09-24 01:16:11.647377294 +0200
++++ ./src/SDL.c	2018-05-22 11:09:45.806486400 +0200
+@@ -320,6 +320,14 @@ SDL_QuitSubSystem(Uint32 flags)
+ #endif
+ }
+ 
++/// begin kromke.andreas
++extern int myKeyboardHack;
++void SDL_KeyboardActivate(Uint32 flags)
++{
++    myKeyboardHack = (int) flags;
++}
++/// end kromke.andreas
++
+ Uint32
+ SDL_WasInit(Uint32 flags)
+ {
+diff -rup /home/sebilla/atari/SDL/src/dynapi/SDL_dynapi.h ./src/dynapi/SDL_dynapi.h
+--- /home/sebilla/atari/SDL/src/dynapi/SDL_dynapi.h	2018-09-24 01:16:11.651377294 +0200
++++ ./src/dynapi/SDL_dynapi.h	2018-05-22 11:09:45.810486400 +0200
+@@ -48,7 +48,7 @@
+ #elif SDL_BUILDING_WINRT /* probaly not useful on WinRT, given current .dll loading restrictions */
+ #define SDL_DYNAMIC_API 0
+ #else   /* everyone else. */
+-#define SDL_DYNAMIC_API 1
++#define SDL_DYNAMIC_API 0
+ #endif
+ 
+ #endif
+diff -rup /home/sebilla/atari/SDL/src/video/cocoa/SDL_cocoaevents.m ./src/video/cocoa/SDL_cocoaevents.m
+--- /home/sebilla/atari/SDL/src/video/cocoa/SDL_cocoaevents.m	2018-09-24 01:16:11.675377294 +0200
++++ ./src/video/cocoa/SDL_cocoaevents.m	2018-05-22 11:09:45.826486399 +0200
+@@ -293,6 +293,10 @@ Cocoa_RegisterApp(void)
+     [pool release];
+ }
+ 
++/// begin kromke.andreas
++int myKeyboardHack = 1;
++/// end kromke.andreas
++
+ void
+ Cocoa_PumpEvents(_THIS)
+ {
+@@ -333,7 +337,14 @@ Cocoa_PumpEvents(_THIS)
+         case NSKeyDown:
+         case NSKeyUp:
+         case NSFlagsChanged:
++            /// begin kromke.andreas
++            if (myKeyboardHack)
++            {
++            /// end kromke.andreas
+             Cocoa_HandleKeyEvent(_this, event);
++            /// begin kromke.andreas
++            }
++            /// end kromke.andreas
+             break;
+         default:
+             break;
