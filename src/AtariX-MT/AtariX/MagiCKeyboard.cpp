@@ -362,8 +362,8 @@ unsigned char CMagiCKeyboard::SdlScanCode2AtariScanCode(int s)
 		case SDL_SCANCODE_F8:			return ATARI_KBD_SCANCODE_F8;
 		case SDL_SCANCODE_F9:			return ATARI_KBD_SCANCODE_F9;
 		case SDL_SCANCODE_F10:			return ATARI_KBD_SCANCODE_F10;
-		case SDL_SCANCODE_F11:			return 0;
-		case SDL_SCANCODE_F12:			return 0;
+		case SDL_SCANCODE_F11:			return ATARI_KBD_SCANCODE_HELP;
+		case SDL_SCANCODE_F12:			return ATARI_KBD_SCANCODE_UNDO;
 
 		case SDL_SCANCODE_PRINTSCREEN:		return 0;
 		case SDL_SCANCODE_SCROLLLOCK:		return 0;
