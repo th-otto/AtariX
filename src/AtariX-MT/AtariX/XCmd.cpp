@@ -606,7 +606,7 @@ static void DebugPrintSymbolsInPefLib(CFragConnectionID id, long nSymbols)
 	OSErr err;
 	Str255 str;
 	Ptr ptr;
-	register long i;
+	long i;
 
 
 	DebugInfo("CXCmd::Command() -- Symbole:");
@@ -628,7 +628,7 @@ static void DebugPrintSymbolsInPefLib(CFragConnectionID id, long nSymbols)
 static void DebugPrintSymbolsInCFPlugIn(MagicMacXPluginInterfaceStruct *pInterface, UInt32 nSymbols)
 {
 	tfXCMDFunction *pFn;
-	register UInt32 i;
+	UInt32 i;
 	const char *s;
 
 
@@ -663,7 +663,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 	Str255 str;
 	OSErr err;
 	FSSpec Spec;
-	register UINT32 i;
+	UINT32 i;
 	enRunTimeFormat type;
 	long NumOfSymbols;
 	MagicMacXPluginInterfaceStruct *pInterface;

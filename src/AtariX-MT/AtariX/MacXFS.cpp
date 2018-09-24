@@ -212,7 +212,7 @@ static void GetTypeAndCreator(const char *name, OSType *pType, OSType *pCreator)
 	}
 /*
 	char **list = CGlobals::s_Preferences.m_DocTypes;
-	register int i = CGlobals::s_Preferences.m_DocTypesNum;
+	int i = CGlobals::s_Preferences.m_DocTypesNum;
 	char *s;
 
 	name = strrchr(name, '.');
@@ -1048,7 +1048,7 @@ INT32 CMacXFS::xfs_drv_open (UINT16 drv, MXFSDD *dd, INT32 flg_ask_diskchange)
 
 INT32 CMacXFS::vRefNum2drv(short vRefNum, UINT16 *drv)
 {
-	register UINT16 i;
+	UINT16 i;
 
 	for	(i = 0; i < NDRVS; i++)
 		if (drv_fsspec[i].vRefNum == vRefNum)
@@ -1249,8 +1249,8 @@ INT32 CMacXFS::xfs_path2DD
 	FSSpec fs;
 	CInfoPBRec pb;
 	unsigned char macpath[256];
-	register unsigned char *s,*t,*u;
-	register unsigned char c;
+	unsigned char *s,*t,*u;
+	unsigned char c;
 	bool get_parent;
 	short vRefNum;
 	long reldir = rel_dd->dirID;
@@ -1761,7 +1761,7 @@ INT32 CMacXFS::xfs_sfirst(UINT16 drv, MXFSDD *dd, char *name,
 	}
 	else
 	{
-		dta->macdta.index = (long) 1;				// erste Datei
+		dta->macdta.index = 1;				// erste Datei
 	}
 	
 	return(_snext(drv, dta));
@@ -3881,7 +3881,7 @@ INT32 CMacXFS::dev_read( MAC_FD *f, INT32 count, char *buf )
 		trigger = 0;
 	}
 #endif
-	lcount = (long) count;
+	lcount = count;
 	err = FSRead(f->refnum, &lcount, buf);
 	if (err == eofErr)
 		err = 0;				/* nur Teil eingelesen, kein Fehler! */
@@ -3902,7 +3902,7 @@ INT32 CMacXFS::dev_write( MAC_FD *f, INT32 count, char *buf )
 	OSErr err;
 	long lcount;
 
-	lcount = (long) count;
+	lcount = count;
 	err = FSWrite(f->refnum, &lcount, buf);
 	if (err)
 		return(cnverr(err));
@@ -3946,7 +3946,7 @@ INT32 CMacXFS::dev_seek(MAC_FD *f, INT32 pos, UINT16 mode)
 		case 2:   macmode = 2;break;
 		default:  return(EINVFN);
 	}
-	lpos = (long) pos;
+	lpos = pos;
 	err = SetFPos(f->refnum, macmode, lpos);
 	if (err)
 		return(cnverr(err));
@@ -4161,7 +4161,7 @@ INT32 CMacXFS::dev_ioctl(MAC_FD *f, UINT16 cmd, void *buf)
 
       		case MMEX_GETFREFNUM:
       			// Mac-Datei-Handle liefern
-      			mmex->longVal = (long) f->refnum;
+      			mmex->longVal = f->refnum;
       			return 0;
       		}
 		}
@@ -5053,8 +5053,8 @@ void CMacXFS::SetXFSDrive
 
 #ifdef SPECIALDRIVE_AB
 	if (drv >= 2)
-	{
 #endif
+	{
 	if (drvType == NoMacXFS)
 	{
 		// Laufwerk ist kein MacXFS-Laufwerk mehr => abmelden
@@ -5073,9 +5073,7 @@ void CMacXFS::SetXFSDrive
 		}
 	}
 
-#ifdef SPECIALDRIVE_AB
 	}
-#endif
 
 	drv_changed[drv] = true;
 	xfs_path[drv] = fs;

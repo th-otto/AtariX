@@ -1807,7 +1807,7 @@ void CMagiC::StopExec( void )
 #endif
 	m_bCanRun = false;		// darf nicht laufen
 #ifdef MAGICMACX_DEBUG68K
-	for	(register int i = 0; i < 100; i++)
+	for	(int i = 0; i < 100; i++)
 		CDebug::DebugInfo("### VideoRamWriteCounter(%2d) = %d", i, WriteCounters[i]);
 #endif
 }
@@ -2874,8 +2874,10 @@ UINT32 CMagiC::AtariDOSFn(UINT32 params, unsigned char *AdrOffset68k)
 	};
    	#pragma options align=reset
 
-	AtariDOSFnParm *theAtariDOSFnParm = (AtariDOSFnParm *) (AdrOffset68k + params);
-	DebugInfo("CMagiC::AtariDOSFn(fn = 0x%x)", CFSwapInt16BigToHost(theAtariDOSFnParm->dos_fnr));
+#ifdef _DEBUG
+    AtariDOSFnParm *theAtariDOSFnParm = (AtariDOSFnParm *) (AdrOffset68k + params);
+#endif
+    DebugInfo("CMagiC::AtariDOSFn(fn = 0x%x)", CFSwapInt16BigToHost(theAtariDOSFnParm->dos_fnr));
 	return((UINT32) EINVFN);
 }
 
@@ -3252,7 +3254,7 @@ UINT32 CMagiC::AtariExit(UINT32 params, unsigned char *AdrOffset68k)
 	// Nachricht and Haupt-Thread zum Beenden (entf. 4.11.07)
 //	SendMessageToMainThread(true, kHICommandQuit);
 #ifdef MAGICMACX_DEBUG68K
-	for	(register int i = 0; i < 100; i++)
+	for	(int i = 0; i < 100; i++)
 		CDebug::DebugInfo("### VideoRamWriteCounter(%2d) = %d", i, WriteCounters[i]);
 #endif
 #endif

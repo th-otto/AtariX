@@ -147,7 +147,7 @@ int CMyPreferences::GetPreferences()
 	// Laufwerke (au§er C: und M: und U:)
 
 #if 0
-	register int i;
+	int i;
 	char szData[256];
 	CFStringRef cfKey;
 
@@ -256,7 +256,7 @@ void CMyPreferences::Update_AtariScreen(void)
 void CMyPreferences::Update_Drives(void)
 {
 #if 0
-	register int i;
+	int i;
 	char szData[256];
 	CFStringRef cfKey;
 

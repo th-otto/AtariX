@@ -328,7 +328,7 @@ void CClipboard::Mac2Atari(const uint8_t *pData)
 
 #ifdef _DEBUG_VERBOSE
 	unsigned char uc;
-	for	(register int i = 0; i < strlen(pData); i++)
+	for	(int i = 0; i < strlen(pData); i++)
 	{
 		uc = (unsigned char) pData[i];
 		CDebug::DebugInfo("CClipboard::Mac2Atari() --- "

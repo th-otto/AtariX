@@ -59,7 +59,7 @@ void*	CFMFunctionPointerForMachOFunctionPointer( void* inMachProcPtr )
 
     vTVector = (TVector_rec*) malloc( sizeof(TVector_rec) );
 
-    if( MemError() == noErr && vTVector != NULL )
+    if( vTVector != NULL )
 	{
         vTVector->fProcPtr = (ProcPtr) inMachProcPtr;
         vTVector->fTOC = 0;  // ignored

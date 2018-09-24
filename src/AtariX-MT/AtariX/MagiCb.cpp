@@ -1419,7 +1419,7 @@ Reinstall the application.
 
 	// Andere Laufwerke außer C: machen
 
-	for	(register short i = 0; i < NDRIVES; i++)
+	for	(short i = 0; i < NDRIVES; i++)
 		ChangeXFSDrive(i);
 
 	//
@@ -1709,7 +1709,7 @@ void CMagiC::StopExec( void )
 #endif
 	m_bCanRun = false;		// darf nicht laufen
 #ifdef MAGICMACX_DEBUG68K
-	for	(register int i = 0; i < 100; i++)
+	for	(int i = 0; i < 100; i++)
 		CDebug::DebugInfo("### VideoRamWriteCounter(%2d) = %d", i, WriteCounters[i]);
 #endif
 }
@@ -2727,7 +2727,7 @@ UINT32 CMagiC::AtariSetcolor(UINT32 params, unsigned char *AdrOffset68k)
 
 UINT32 CMagiC::AtariVsetRGB(UINT32 params, unsigned char *AdrOffset68k)
 {
-	register int i,j;
+	int i,j;
 	unsigned short c;
 	ColorSpec *pColourTable;
 	RGBColor rgb;
@@ -2777,7 +2777,7 @@ UINT32 CMagiC::AtariVsetRGB(UINT32 params, unsigned char *AdrOffset68k)
 
 UINT32 CMagiC::AtariVgetRGB(UINT32 params, unsigned char *AdrOffset68k)
 {
-	register int i,j;
+	int i,j;
 	ColorSpec *pColourTable;
    	#pragma options align=packed
 	struct VgetRGBParm
@@ -3005,7 +3005,7 @@ UINT32 CMagiC::AtariExit(UINT32 params, unsigned char *AdrOffset68k)
 	// Nachricht and Haupt-Thread zum Beenden (entf. 4.11.07)
 //	SendMessageToMainThread(true, kHICommandQuit);
 #ifdef MAGICMACX_DEBUG68K
-	for	(register int i = 0; i < 100; i++)
+	for	(int i = 0; i < 100; i++)
 		CDebug::DebugInfo("### VideoRamWriteCounter(%2d) = %d", i, WriteCounters[i]);
 #endif
 	return(0);

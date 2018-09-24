@@ -185,7 +185,7 @@ UInt32 CMagiCSerial::Write(unsigned int cnt, const char *pBuffer)
 
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMagiCSerial::Write() -- %d Zeichen schreiben:", cnt);
-	for	(register int i = 0; i < cnt; i++)
+	for	(int i = 0; i < cnt; i++)
 	{
 		DebugInfo("CMagiCSerial::Write() -- ==> c = 0x%02x (%c)", (unsigned int) pBuffer[i], ((pBuffer[i] >= ' ') && (pBuffer[i] <= 'z')) ? pBuffer[i] : '?');
 	}
@@ -222,7 +222,7 @@ UInt32 CMagiCSerial::Read(unsigned int cnt, char *pBuffer)
 		if	(nBytesRead)
 			DebugInfo("CMagiCSerial::Read() -- buflen = %d, %d Zeichen erhalten:", cnt, nBytesRead);
 
-		for	(register int i = 0; i < nBytesRead; i++)
+		for	(int i = 0; i < nBytesRead; i++)
 		{
 			DebugInfo("CMagiCSerial::Read() -- <== c = 0x%02x (%c)", ((unsigned int) (pBuffer[i])) & 0xff, ((pBuffer[i] >= ' ') && (pBuffer[i] <= 'z')) ? pBuffer[i] : '?');
 		}
@@ -246,7 +246,7 @@ UInt32 CMagiCSerial::Read(unsigned int cnt, char *pBuffer)
 		if	(ret)
 			DebugInfo("CMagiCSerial::Read() -- buflen = %d, %d Zeichen erhalten:", cnt, ret);
 
-		for	(register int i = 0; i < ret; i++)
+		for	(int i = 0; i < ret; i++)
 		{
 			DebugInfo("CMagiCSerial::Read() -- <== c = 0x%02x (%c)", ((unsigned int) (pBuffer[i])) & 0xff, ((pBuffer[i] >= ' ') && (pBuffer[i] <= 'z')) ? pBuffer[i] : '?');
 		}
