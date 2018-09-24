@@ -152,17 +152,29 @@ void CMacXFS::Set68kAdressRange(UInt32 AtariMemSize)
 *
 ******************************************************************/
 
+/* äöüçé(a°)(ae)(oe)à(ij)(n˜)(a˜)(o/)(o˜) */
+static char const lowers[] = {'\x84','\x94','\x81','\x87','\x82','\x86','\x91','\xb4','\x85','\xc0','\xa4','\xb0','\xb3','\xb1',0};
+static char const uppers[] = {'\x8e','\x99','\x9a','\x80','\x90','\x8f','\x92','\xb5','\xb6','\xc1','\xa5','\xb7','\xb2','\xb8',0};
 char CMacXFS::ToUpper( char c )
 {
-	/* äöüçé(a°)(ae)(oe)à(ij)(n˜)(a˜)(o/)(o˜) */
-	static char lowers[] = {'\x84','\x94','\x81','\x87','\x82','\x86','\x91','\xb4','\x85','\xc0','\xa4','\xb0','\xb3','\xb1',0};
-	static char uppers[] = {'\x8e','\x99','\x9a','\x80','\x90','\x8f','\x92','\xb5','\xb6','\xc1','\xa5','\xb7','\xb2','\xb8',0};
 	char *found;
 
 	if (c >= 'a' && c <= 'z')
 		return((char) (c & '\x5f'));
 	if ((unsigned char) c >= 128 &&((found = strchr(lowers, c)) != NULL))
 		return(uppers[found - lowers]);
+	return(c);
+}
+
+char CMacXFS::ToLower( char c )
+{
+	/* äöüçé(a°)(ae)(oe)à(ij)(n˜)(a˜)(o/)(o˜) */
+	char *found;
+
+	if (c >= 'A' && c <= 'Z')
+		return((char) (c | '\x20'));
+	if ((unsigned char) c >= 128 &&((found = strchr(uppers, c)) != NULL))
+		return(lowers[found - uppers]);
 	return(c);
 }
 
@@ -492,7 +504,7 @@ bool CMacXFS::conv_path_elem(const char *path, char *name)
 *
 * (statisch)
 * Wandelt Mac-Dateinamen nach 8.3-Namen fuer GEMDOS.
-* Wenn <flg_longnames> == TRUE ist, wird nicht nach Gross-Schrift
+* Wenn <convmode> == 0 ist, wird nicht nach Gross-Schrift
 * konvertiert, das Format ist aber in jedem Fall 8+3.
 * Zeichen ' ' (Leerstelle) und '\' (Backslash) werden weggelassen.
 *
@@ -504,7 +516,7 @@ bool CMacXFS::conv_path_elem(const char *path, char *name)
 
 bool CMacXFS::nameto_8_3 (const unsigned char *macname,
 				unsigned char *dosname,
-				bool flg_longnames, bool toAtari)
+				int convmode, bool toAtari)
 {
 	short i;
 	bool truncated = false;
@@ -521,15 +533,21 @@ bool CMacXFS::nameto_8_3 (const unsigned char *macname,
 		}
 		if (toAtari)
 		{
-			if (flg_longnames)
+			if (convmode == 0)
 				*dosname++ = CTextConversion::Mac2AtariFilename(*macname++);
-			else	*dosname++ = (unsigned char) ToUpper((char) CTextConversion::Mac2AtariFilename(*macname++));
+			else if (convmode == 1)
+				*dosname++ = (unsigned char) ToUpper((char) CTextConversion::Mac2AtariFilename(*macname++));
+			else
+				*dosname++ = (unsigned char) ToLower((char) CTextConversion::Mac2AtariFilename(*macname++));
 		}
 		else
 		{
-			if (flg_longnames)
+			if (convmode == 0)
 				*dosname++ = *macname++;
-			else	*dosname++ = (unsigned char) ToUpper((char) (*macname++));
+			else if (convmode == 1)
+				*dosname++ = (unsigned char) ToUpper((char) (*macname++));
+			else
+				*dosname++ = (unsigned char) ToLower((char) (*macname++));
 		}
 		i++;
 	}
@@ -554,17 +572,21 @@ bool CMacXFS::nameto_8_3 (const unsigned char *macname,
 		}
 		if (toAtari)
 		{
-			if (flg_longnames)
+			if (convmode == 0)
 				*dosname++ = CTextConversion::Mac2AtariFilename(*macname++);
-			else
+			else if (convmode == 1)
 				*dosname++ = (unsigned char) ToUpper((char) CTextConversion::Mac2AtariFilename(*macname++));
+			else
+				*dosname++ = (unsigned char) ToLower((char) CTextConversion::Mac2AtariFilename(*macname++));
 		}
 		else
 		{
-			if (flg_longnames)
+			if (convmode == 0)
 				*dosname++ = *macname++;
-			else
+			else if (convmode == 1)
 				*dosname++ = (unsigned char) ToUpper((char) (*macname++));
+			else
+				*dosname++ = (unsigned char) ToLower((char) (*macname++));
 		}
 		i++;
 	}
@@ -646,7 +668,7 @@ long CMacXFS::cfss
 	else
 	{
 		// bzw. in 8+3 wandeln
-		nameto_8_3(name, fs->name + 1, drv_longnames[drv], false);
+		nameto_8_3(name, fs->name + 1, 2, false);
 	}
 
 	if (fromAtari)
@@ -1682,7 +1704,7 @@ INT32 CMacXFS::_snext(UINT16 drv, MAC_DTA *dta)
 		if (first)
 		{
 			first = false;
-			if (nameto_8_3(macname + 1, cmpname, false, true))
+			if (nameto_8_3(macname + 1, cmpname, 1, true))
 				goto again;		// mußte Dateinamen kürzen!
 
 			if (!strncmp (dta->mxdta.dta_name, (char *) cmpname, 12))
@@ -1708,7 +1730,7 @@ doit:
 	dta->mxdta.dta_time = CFSwapInt16HostToBig(dta->mxdta.dta_time);
 	dta->mxdta.dta_date = CFSwapInt16HostToBig(dta->mxdta.dta_date);
 
-	nameto_8_3 (macname + 1, (unsigned char *) dta->mxdta.dta_name, false, true);
+	nameto_8_3 (macname + 1, (unsigned char *) dta->mxdta.dta_name, 1, true);
 	return(E_OK);
 }
 
@@ -1854,7 +1876,7 @@ INT32 CMacXFS::xfs_fopen(char *name, UINT16 drv, MXFSDD *dd,
 	if (!drv_longnames[drv])
 	{
 		// keine langen Namen: nach Großschrift und 8+3
-		nameto_8_3 ((unsigned char *) name, dosname, false, false);
+		nameto_8_3 ((unsigned char *) name, dosname, 2, false);
 		name = (char *) dosname;
 	}
 
@@ -2283,7 +2305,7 @@ INT32 CMacXFS::xfs_xattr(UINT16 drv, MXFSDD *dd, char *name,
 	}
 	else
 	{
-		nameto_8_3((unsigned char *) name, fname + 1, false, false);
+		nameto_8_3((unsigned char *) name, fname + 1, 1, false);
 		AtariFnameToMacFname(fname + 1, fname + 1);
 	}
 	sp((char *) fname);
@@ -2418,7 +2440,7 @@ INT32 CMacXFS::xfs_attrib(UINT16 drv, MXFSDD *dd, char *name, UINT16 rwflag, UIN
 	}
 	else
 	{
-		nameto_8_3 ((unsigned char *) name, fname + 1, false, false);
+		nameto_8_3 ((unsigned char *) name, fname + 1, 1, false);
 		AtariFnameToMacFname(fname + 1, fname + 1);
 	}
 
@@ -2883,7 +2905,7 @@ INT32 CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, UINT16 drv,
 	{
 		if (size < 13)
 			return(ATARIERR_ERANGE);
-		if (nameto_8_3(macname + 1, (unsigned char *) buf, false, true))
+		if (nameto_8_3(macname + 1, (unsigned char *) buf, 1, true))
 			goto again;		// musste Dateinamen kuerzen
 	}
 	else
@@ -3352,7 +3374,7 @@ INT32 CMacXFS::xfs_symlink(UINT16 drv, MXFSDD *dd, char *name, char *to)
 
 	if (!drv_longnames[drv])
 	{	// keine langen Namen: nach Gross-Schrift und 8+3
-		nameto_8_3 ((unsigned char *) name, dosname, false, false);
+		nameto_8_3 ((unsigned char *) name, dosname, 2, false);
 		name = (char *) dosname;
 	}
 	cfss(drv, dd->dirID, dd->vRefNum, (unsigned char *) name, &fs, true);
@@ -3542,7 +3564,7 @@ INT32 CMacXFS::xfs_dcntl
 	}
 	else
 	{
-		nameto_8_3 ((unsigned char *) name, fname + 1, false, false);
+		nameto_8_3 ((unsigned char *) name, fname + 1, 2, false);
 		AtariFnameToMacFname(fname+1, fname + 1);
 	}
 

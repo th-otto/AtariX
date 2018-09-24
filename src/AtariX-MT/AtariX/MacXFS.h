@@ -240,6 +240,7 @@ typedef struct _mx_fd {
 	// statische Funktionen
 
 	static char ToUpper(char c);
+	static char ToLower(char c);
 	static void AtariFnameToMacFname(const unsigned char *src, unsigned char *dst);
 	static void MacFnameToAtariFname(const unsigned char *src, unsigned char *dst);
 	static void date_mac2dos( unsigned long macdate, UINT16 *time, UINT16 *date);
@@ -250,7 +251,7 @@ typedef struct _mx_fd {
 	static bool conv_path_elem(const char *path, char *name);
 	static bool nameto_8_3 (const unsigned char *macname,
 				unsigned char *dosname,
-				bool flg_longnames, bool toAtari);
+				int convmode, bool toAtari);
 	static char *ps(char *s);
 	static void sp(char *s);
 	static OSErr getInfo (CInfoPBPtr pb, FSSpec *fs);
