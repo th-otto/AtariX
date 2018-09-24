@@ -29,7 +29,7 @@
 // Programm-Header
 #include "Debug.h"
 #include "Globals.h"
-#include "MagiCPrint.h"
+#include "MagicPrint.h"
 #include "PascalStrings.h"
 
 // Schalter

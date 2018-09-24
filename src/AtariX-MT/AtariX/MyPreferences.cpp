@@ -28,7 +28,7 @@
 // Programm-Header
 #include "MyPreferences.h"
 #include "PascalStrings.h"
-#include "globals.h"
+#include "Globals.h"
 
 // Schalter
 

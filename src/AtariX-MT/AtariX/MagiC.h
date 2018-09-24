@@ -34,7 +34,7 @@
 #include "MagiCKeyboard.h"
 #include "MagiCMouse.h"
 #include "MagiCSerial.h"
-#include "MagiCPrint.h"
+#include "MagicPrint.h"
 // Schalter
 
 #define KEYBOARDBUFLEN	32

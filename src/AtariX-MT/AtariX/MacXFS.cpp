@@ -36,8 +36,8 @@
 // System-Header
 #include <Carbon/Carbon.h>
 #include <machine/endian.h>
-#include <StdLib.h>
-#include <String.h>
+#include <stdlib.h>
+#include <string.h>
 // Programm-Header
 #include "Debug.h"
 #include "Globals.h"
@@ -47,7 +47,7 @@
 #include "PascalStrings.h"
 extern "C" {
 #include "MyMoreFiles.h"
-#include "Fullpath.h"
+#include "FullPath.h"
 }
 
 #if defined(_DEBUG)
@@ -76,7 +76,7 @@ extern void _DumpAtariMem(const char *filename);
 
 CMacXFS::CMacXFS()
 {
-	register int i;
+	int i;
 
 	xfs_drvbits = 0;
 	for (i = 0; i < NDRVS; i++)
@@ -369,8 +369,8 @@ INT32 CMacXFS::cnverr(OSErr err)
 
 bool CMacXFS::filename_match(char *muster, char *fname)
 {
-	register int i;
-	register char c1,c2;
+	int i;
+	char c1,c2;
 
 
 	if (fname[0] == '\xe5')     /* Suche nach geloeschter Datei */
@@ -426,8 +426,8 @@ bool CMacXFS::filename_match(char *muster, char *fname)
 
 bool CMacXFS::conv_path_elem(const char *path, char *name)
 {
-	register int i;
-	register char c;
+	int i;
+	char c;
 	bool truncated = false;
 
 	/* max. 8 Zeichen fuer Dateinamen kopieren */
@@ -506,7 +506,7 @@ bool CMacXFS::nameto_8_3 (const unsigned char *macname,
 				unsigned char *dosname,
 				bool flg_longnames, bool toAtari)
 {
-	register short i;
+	short i;
 	bool truncated = false;
 
 

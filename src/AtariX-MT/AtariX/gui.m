@@ -23,7 +23,7 @@
  */
 
 #include <Cocoa/Cocoa.h>
-#include <AtariCrashWindowController.h>
+#include "AtariCrashWindowController.h"
 
 
 static int GuiMyMainThreadAlert(const char *msg_text, const char *info_text, int nButtons)

@@ -29,7 +29,7 @@
 // Programm-Header
 #include "Debug.h"
 #include "Globals.h"
-#include "Resource.h"
+#include "resource.h"
 #include "MagiCKeyboard.h"
 #include "Atari.h"
 #include <SDL2/SDL_scancode.h>

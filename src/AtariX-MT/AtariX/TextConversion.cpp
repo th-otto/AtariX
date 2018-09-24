@@ -28,7 +28,7 @@
 #include <machine/endian.h>
 // Programm-Header
 #include "Globals.h"
-#include "Resource.h"
+#include "resource.h"
 #include "Debug.h"
 #include "TextConversion.h"
 

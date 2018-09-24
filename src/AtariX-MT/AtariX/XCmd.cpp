@@ -25,8 +25,8 @@
 // System-Header
 #include <Carbon/Carbon.h>
 #include <machine/endian.h>
-#include <StdLib.h>
-#include <String.h>
+#include <stdlib.h>
+#include <string.h>
 // Programm-Header
 #include "Debug.h"
 #include "Globals.h"
@@ -175,7 +175,7 @@ OSErr CXCmd::Preload(void)
 		if	(err2)
 		{
 			P2C(fName);
-			DebugWarning("CXCmd::Preload() -- Fehler beim Öffnen von %s", fName+1);
+			DebugWarning("CXCmd::Preload() -- error opening %s", fName+1);
 			continue;	// überspringen
 		}
 
@@ -894,7 +894,7 @@ OSErr CXCmd::OnCommandFindSymbol
 #endif
 	if	(XCmdDescriptor > MAX_PLUGINS)
 	{
-		DebugError("CXCmd::OnCommandFindSymbol()-- ungültiger Deskriptor", SymIndex);
+		DebugError("CXCmd::OnCommandFindSymbol()-- illegal Descriptor", SymIndex);
 		return(fnfErr);
 	}
 	type = s_Plugins[XCmdDescriptor].RunTimeFormat;

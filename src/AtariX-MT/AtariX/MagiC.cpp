@@ -1529,7 +1529,7 @@ Reinstall the application.
 
 	// Andere Laufwerke außer C: machen
 
-	for	(register short i = 0; i < NDRIVES; i++)
+	for	(short i = 0; i < NDRIVES; i++)
 	{
 		ChangeXFSDrive(i);
 	}
@@ -2971,7 +2971,7 @@ UINT32 CMagiC::AtariSetcolor(UINT32 params, unsigned char *AdrOffset68k)
 
 UINT32 CMagiC::AtariVsetRGB(UINT32 params, unsigned char *AdrOffset68k)
 {
-	register int i,j;
+	int i,j;
 	UInt32 c;
 	UInt32 *pColourTable;
   	#pragma options align=packed
@@ -3021,7 +3021,7 @@ UINT32 CMagiC::AtariVsetRGB(UINT32 params, unsigned char *AdrOffset68k)
 
 UINT32 CMagiC::AtariVgetRGB(UINT32 params, unsigned char *AdrOffset68k)
 {
-	register int i,j;
+	int i,j;
 	UInt32 *pColourTable;
    	#pragma options align=packed
 	struct VgetRGBParm

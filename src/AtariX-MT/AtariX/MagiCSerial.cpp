@@ -94,25 +94,25 @@ UInt32 CMagiCSerial::Open(const char *BsdPath)
 	m_InBufFill = 0;
 #endif
 
-	DebugInfo("CMagiCSerial::Open() -- …ffne GerŠtedatei \"%s\"", BsdPath);
+	DebugInfo("CMagiCSerial::Open() -- open device \"%s\"", BsdPath);
 
 	m_fd = open(BsdPath, O_RDWR | O_NOCTTY | O_NDELAY);
 	if (m_fd == -1)
 	{
-		DebugError("CMagiCSerial::Open() -- " "Fehler beim …ffnen der seriellen Schnittstelle %s - %s(%d).\n", BsdPath, strerror(errno), errno);
+		DebugError("CMagiCSerial::Open() -- error opening serial device %s - %s(%d).\n", BsdPath, strerror(errno), errno);
 		return((UInt32) -1);
 	}
 
 	if	(fcntl(m_fd, F_SETFL, 0) == -1)
 	{
-		DebugError("CMagiCSerial::Open() -- " "Fehler beim Lšschen von O_NDELAY %s - %s(%d).", BsdPath, strerror(errno), errno);
+		DebugError("CMagiCSerial::Open() -- error removing O_NDELAY %s - %s(%d).", BsdPath, strerror(errno), errno);
 		return((UInt32) -2);
 	}
     
 	// Get the current options and save them for later reset
 	if (tcgetattr(m_fd, &gOriginalTTYAttrs) == -1)
 	{
-		DebugError("CMagiCSerial::Open() -- " "Fehler beim Ermitteln der tty->Attribute %s - %s(%d).", BsdPath, strerror(errno), errno);
+		DebugError("CMagiCSerial::Open() -- error getting tty attributes %s - %s(%d).", BsdPath, strerror(errno), errno);
 		return((UInt32) -3);
 	}
 
