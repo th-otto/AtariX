@@ -966,12 +966,14 @@ void EmulationRunner::EventLoop(void)
 			case SDL_WINDOWEVENT:
 				{
 					const SDL_WindowEvent *ev = (SDL_WindowEvent *) &event;
+#if 0
 					fprintf(stderr, "INF: SDL window event: evt=%u, wid=%u, ev=%s, data1=0x%08x, data2=0x%08x\n",
 							ev->type,
 							ev->windowID,
 							SDL_WindowEventID_to_str((SDL_WindowEventID) ev->event),
 							ev->data1,
 							ev->data2);
+#endif
 					switch(ev->event)
 					{
 						case SDL_WINDOWEVENT_SHOWN:
@@ -1028,9 +1030,11 @@ void EmulationRunner::EventLoop(void)
             case SDL_KEYUP:
 				{
 					const SDL_KeyboardEvent *ev = (SDL_KeyboardEvent *) &event;
+#if 0
 					fprintf(stderr, "INF: type %s\n", ev->type == SDL_KEYUP ? "up" : "down");
 					fprintf(stderr, "INF: state %s\n", ev->state == SDL_PRESSED ? "pressed" : "released");
 					fprintf(stderr, "INF: scancode = %08x, keycode = %08x, mod = %04x\n", ev->keysym.scancode, ev->keysym.sym, ev->keysym.mod);
+#endif
 					(void) m_Emulator.SendSdlKeyboard(ev->keysym.scancode, ev->type == SDL_KEYUP);
 				}
                 // Quit when user presses a key.
@@ -1041,7 +1045,9 @@ void EmulationRunner::EventLoop(void)
 			case SDL_MOUSEMOTION:
 				{
 					const SDL_MouseMotionEvent *ev = (SDL_MouseMotionEvent *) &event;
+#if 0
 					fprintf(stderr, "INF: mouse motion x = %d, y = %d, xrel = %d, yrel = %d\n", ev->x, ev->y, ev->xrel, ev->yrel);
+#endif
 					int x = ev->x;
 					int y = ev->y;
 					if (m_atariScreenStretchX)
@@ -1056,8 +1062,10 @@ void EmulationRunner::EventLoop(void)
 			case SDL_MOUSEBUTTONUP:
 				{
 					const SDL_MouseButtonEvent *ev = (SDL_MouseButtonEvent *) &event;
+#if 0
 					fprintf(stderr, "INF: mouse button %s: x = %d, y = %d, button = %d\n",
 							ev->type == SDL_MOUSEBUTTONUP ? "up" : "down", ev->x, ev->y, ev->button);
+#endif
 					int atariMouseButton = -1;
 					if (ev->button == 1)
 						atariMouseButton = 0;
@@ -1074,8 +1082,10 @@ void EmulationRunner::EventLoop(void)
 
 			case SDL_MOUSEWHEEL:
 				{
+#if 0
 					const SDL_MouseWheelEvent *ev = (SDL_MouseWheelEvent *) &event;
 					fprintf(stderr, "INF: mouse wheel: x = %d, y = %d\n", ev->x, ev->y);
+#endif
 				}
 				break;
 
@@ -1151,7 +1161,9 @@ void EmulationRunner::EmulatorWindowUpdate(void)
 	SDL_Rect rc2 = { 0, 0, (int) m_atariScreenW, (int) m_atariScreenH };	// src
 	if (OSAtomicTestAndClear(0, &m_Emulator.bVideoBufChanged))
 	{
+#if 0
 		fprintf(stderr, "INF: Atari Screen dirty\n");
+#endif
 		if (m_sdl_atari_surface != m_sdl_surface)
 		{
 			ConvertSurface(m_sdl_atari_surface, m_sdl_surface, m_EmulatorScreen.m_pColourTable, m_atariScreenStretchX, m_atariScreenStretchY);
