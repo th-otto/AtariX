@@ -88,7 +88,7 @@ static UINT32 AdrOsRomEnd;			// Ende schreibgeschützter Bereich
 #endif
 static unsigned char *HostVideoAddr;		// Beginn Bildschirmspeicher Host
 //static unsigned char *HostVideo2Addr;		// Beginn Bildschirmspeicher Host (Hintergrundpuffer)
-static char *p_bVideoBufChanged;
+static atomic_char *p_bVideoBufChanged;
 static bool bAtariVideoRamHostEndian = true;
 
 static const char *AtariAddr2Description(UInt32 addr);
@@ -370,7 +370,7 @@ void m68k_write_memory_8(m68k_addr_type address, m68k_data_type value)
 		address -= Adr68kVideo;
 		*((UINT8 *) (HostVideoAddr + address)) = (UINT8) value;
 		//*((UINT8*) (HostVideo2Addr + address)) = (UINT8) value;
-		(void) OSAtomicTestAndSet(0, p_bVideoBufChanged);
+		(void) atomic_exchange(p_bVideoBufChanged, 1);
 		//DebugInfo("vchg");
 		//usleep(100000);
 	}
@@ -436,7 +436,7 @@ void m68k_write_memory_16(m68k_addr_type address, m68k_data_type value)
 
 // //		*((UINT16*) (HostVideo2Addr + address)) = (UINT16) CFSwapInt16HostToBig(value);
 //		*((UINT16 *) (HostVideo2Addr + address)) = (UINT16) value;	// x86 has bgr instead of rgb
-		(void) OSAtomicTestAndSet(0, p_bVideoBufChanged);
+		(void) atomic_exchange(p_bVideoBufChanged, 1);
 		//DebugInfo("vchg");
 	}
 	else
@@ -806,7 +806,7 @@ void m68k_write_memory_32(m68k_addr_type address, m68k_data_type value)
 
 // //		*((UINT32*) (HostVideo2Addr + address)) = value;		// x86 has brg instead of rgb
 //		*((UINT32 *) (HostVideo2Addr + address)) = CFSwapInt32HostToBig(value);
-		(void) OSAtomicTestAndSet(0, p_bVideoBufChanged);
+		(void) atomic_exchange(p_bVideoBufChanged, 1);
 		//DebugInfo("vchg");
 	}
 	else
@@ -2630,7 +2630,7 @@ int CMagiC::SendHz200( void )
 		{
 			// delayed shutdown
 			m_AtariShutDownDelay--;
-			//(void) OSAtomicTestAndSet(0, p_bVideoBufChanged);
+			//(void) atomic_exchange(p_bVideoBufChanged, 1);
 			if (!m_AtariShutDownDelay)
 			{
 				DebugInfo("CMagiC::SendHz200() -- execute delayed shutdown");
@@ -3007,7 +3007,7 @@ UINT32 CMagiC::AtariVsetRGB(UINT32 params, unsigned char *AdrOffset68k)
 		*pColourTable++ = c;
 	}
 
-	(void) OSAtomicTestAndSet(0, p_bVideoBufChanged);
+	(void) atomic_exchange(p_bVideoBufChanged, 1);
 
 	return(0);
 }

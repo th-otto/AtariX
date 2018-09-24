@@ -1159,7 +1159,7 @@ void EmulationRunner::EmulatorWindowUpdate(void)
 	// also does stretching:
 	SDL_Rect rc = { 0, 0, (int) m_hostScreenW, (int) m_hostScreenH };		// dst
 	SDL_Rect rc2 = { 0, 0, (int) m_atariScreenW, (int) m_atariScreenH };	// src
-	if (OSAtomicTestAndClear(0, &m_Emulator.bVideoBufChanged))
+	if (atomic_exchange(&m_Emulator.bVideoBufChanged, 0))
 	{
 #if 0
 		fprintf(stderr, "INF: Atari Screen dirty\n");

@@ -35,6 +35,7 @@
 #include "MagiCMouse.h"
 #include "MagiCSerial.h"
 #include "MagicPrint.h"
+#include <stdatomic.h>
 // Schalter
 
 #define KEYBOARDBUFLEN	32
@@ -71,7 +72,7 @@ class CMagiC
 	bool m_bShutdown;
 	void DumpAtariMem(const char *filename);
 
-	char bVideoBufChanged;
+	atomic_char bVideoBufChanged;
    private:
    	// Typdefinitionen
    	#pragma options align=packed
