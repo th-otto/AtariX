@@ -489,7 +489,7 @@ struct SYSHDR
 #define ATARI_KBD_SCANCODE_L			38
 #define ATARI_KBD_SCANCODE_SEMICOLON	39				// de: '…'  us: ';'
 #define ATARI_KBD_SCANCODE_APOSTROPHE	40				// de: '€'  us: '''
-#define ATARI_KBD_SCANCODE_NUMBER		41				// de: '#'
+#define ATARI_KBD_SCANCODE_GRAVE		41				// de: '#'
 #define ATARI_KBD_SCANCODE_LSHIFT		42
 #define ATARI_KBD_SCANCODE_BACKSLASH	43				// de: --   us: '\'
 #define ATARI_KBD_SCANCODE_Z			44				// de: 'Y'  us: 'Z'
