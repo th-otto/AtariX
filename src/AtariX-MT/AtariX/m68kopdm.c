@@ -4143,9 +4143,9 @@ void m68k_op_eori_32_al(void)
 }
 
 
-void m68k_op_eori_16_toc(void)
+void m68k_op_eori_8_toc(void)
 {
-	m68ki_set_ccr(m68ki_get_ccr() ^ OPER_I_16());
+	m68ki_set_ccr(m68ki_get_ccr() ^ OPER_I_8());
 }
 
 
@@ -4463,9 +4463,6 @@ void m68k_op_lsr_8_s(void)
 	uint src = MASK_OUT_ABOVE_8(*r_dst);
 	uint res = src >> shift;
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	*r_dst = MASK_OUT_BELOW_8(*r_dst) | res;
 
 	FLAG_N = NFLAG_CLEAR;
@@ -4482,9 +4479,6 @@ void m68k_op_lsr_16_s(void)
 	uint src = MASK_OUT_ABOVE_16(*r_dst);
 	uint res = src >> shift;
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	*r_dst = MASK_OUT_BELOW_16(*r_dst) | res;
 
 	FLAG_N = NFLAG_CLEAR;
@@ -4500,9 +4494,6 @@ void m68k_op_lsr_32_s(void)
 	uint shift = (((REG_IR >> 9) - 1) & 7) + 1;
 	uint src = *r_dst;
 	uint res = src >> shift;
-
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
 
 	*r_dst = res;
 
@@ -4735,9 +4726,6 @@ void m68k_op_lsl_8_s(void)
 	uint src = MASK_OUT_ABOVE_8(*r_dst);
 	uint res = MASK_OUT_ABOVE_8(src << shift);
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	*r_dst = MASK_OUT_BELOW_8(*r_dst) | res;
 
 	FLAG_N = NFLAG_8(res);
@@ -4754,9 +4742,6 @@ void m68k_op_lsl_16_s(void)
 	uint src = MASK_OUT_ABOVE_16(*r_dst);
 	uint res = MASK_OUT_ABOVE_16(src << shift);
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	*r_dst = MASK_OUT_BELOW_16(*r_dst) | res;
 
 	FLAG_N = NFLAG_16(res);
@@ -4772,9 +4757,6 @@ void m68k_op_lsl_32_s(void)
 	uint shift = (((REG_IR >> 9) - 1) & 7) + 1;
 	uint src = *r_dst;
 	uint res = MASK_OUT_ABOVE_32(src << shift);
-
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
 
 	*r_dst = res;
 
@@ -11683,17 +11665,6 @@ void m68k_op_moves_32_al(void)
 }
 
 
-void m68k_op_moveq_32(void)
-{
-	uint res = DX = MAKE_INT_8(MASK_OUT_ABOVE_8(REG_IR));
-
-	FLAG_N = NFLAG_32(res);
-	FLAG_Z = res;
-	FLAG_V = VFLAG_CLEAR;
-	FLAG_C = CFLAG_CLEAR;
-}
-
-
 void m68k_op_move16_32(void)
 {
 	uint16 w2 = OPER_I_16();
@@ -11707,6 +11678,17 @@ void m68k_op_move16_32(void)
 
 	REG_A[ax] += 16;
 	REG_A[ay] += 16;
+}
+
+
+void m68k_op_moveq_32(void)
+{
+	uint res = DX = MAKE_INT_8(MASK_OUT_ABOVE_8(REG_IR));
+
+	FLAG_N = NFLAG_32(res);
+	FLAG_Z = res;
+	FLAG_V = VFLAG_CLEAR;
+	FLAG_C = CFLAG_CLEAR;
 }
 
 

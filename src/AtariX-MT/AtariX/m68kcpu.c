@@ -5,25 +5,31 @@
 /* ======================================================================== */
 /* ========================= LICENSING & COPYRIGHT ======================== */
 /* ======================================================================== */
+/*
+ *                                  MUSASHI
+ *                                Version 3.4
+ *
+ * A portable Motorola M680x0 processor emulation engine.
+ * Copyright 1998-2001 Karl Stenerud.  All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
 
-#if 0
-static const char* copyright_notice =
-"MUSASHI\n"
-"Version 3.3 (2001-01-29)\n"
-"A portable Motorola M680x0 processor emulation engine.\n"
-"Copyright 1998-2001 Karl Stenerud.  All rights reserved.\n"
-"\n"
-"This code may be freely used for non-commercial purpooses as long as this\n"
-"copyright notice remains unaltered in the source code and any binary files\n"
-"containing this code in compiled form.\n"
-"\n"
-"All other lisencing terms must be negotiated with the author\n"
-"(Karl Stenerud).\n"
-"\n"
-"The latest version of this code can be obtained at:\n"
-"http://kstenerud.cjb.net\n"
-;
-#endif
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 
 /* ======================================================================== */
@@ -44,11 +50,13 @@ static const char* copyright_notice =
 /* ======================================================================== */
 
 #if COUNT_CYCLES == OPT_OFF
-// in case there are no cycles to count, poll variable that is set
-// from a different thread
+/*
+ * in case there are no cycles to count, poll variable that is set
+ * from a different thread
+ */
 volatile unsigned char sExitImmediately;
-unsigned char *sBaseAddr;						// host address of 68k address 0x00000000
-unsigned sHiMem = 0xffffffff;			// length of 68k address space
+unsigned char *sBaseAddr;						/* host address of 68k address 0x00000000 */
+unsigned sHiMem = 0xffffffff;			/* length of 68k address space */
 #else
 int  m68ki_initial_cycles;
 int  m68ki_remaining_cycles = 0;                     /* Number of clocks remaining */
@@ -58,7 +66,7 @@ uint m68ki_tracing = 0;
 uint m68ki_address_space;
 
 #ifdef M68K_LOG_ENABLE
-const char* m68ki_cpu_names[] =
+const char* const m68ki_cpu_names[] =
 {
 	"Invalid CPU",
 	"M68000",
@@ -131,7 +139,7 @@ const uint m68ki_shift_32_table[65] =
 /* Number of clock cycles to use for exception processing.
  * I used 4 for any vectors that are undocumented for processing times.
  */
-const uint8 m68ki_exception_cycle_table[4][256] =
+const uint8 m68ki_exception_cycle_table[NUM_CPU_TYPES][256] =
 {
 	{ /* 000 */
 		  4, /*  0: Reset - Initial Stack Pointer                      */
@@ -144,8 +152,8 @@ const uint8 m68ki_exception_cycle_table[4][256] =
 		 34, /*  7: TRAPV                                              */
 		 34, /*  8: Privilege Violation                                */
 		 34, /*  9: Trace                                              */
-		  4, /* 10: 1010                                               */
-		  4, /* 11: 1111                                               */
+		 34, /* 10: 1010                                               */
+		 34, /* 11: 1111                                               */
 		  4, /* 12: RESERVED                                           */
 		  4, /* 13: Coprocessor Protocol Violation        (unemulated) */
 		  4, /* 14: Format Error                                       */
@@ -352,7 +360,7 @@ const uint8 m68ki_exception_cycle_table[4][256] =
 		  4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
 		  4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4
 	},
-	{ /* 040 */ // TODO: these values are not correct
+	{ /* 040 */ /* TODO: these values are not correct */
 		  4, /*  0: Reset - Initial Stack Pointer                      */
 		  4, /*  1: Reset - Initial Program Counter                    */
 		 50, /*  2: Bus Error                             (unemulated) */
@@ -484,16 +492,6 @@ static void default_reset_instr_callback(void)
 {
 }
 
-/* Called when a cmpi.l #v, dn instruction is executed */
-static void default_cmpild_instr_callback(unsigned int val, int reg)
-{
-}
-
-/* Called when a rte instruction is executed */
-static void default_rte_instr_callback(void)
-{
-}
-
 /* Called when the program counter changed by a large value */
 static unsigned int default_pc_changed_callback_data;
 static void default_pc_changed_callback(unsigned int new_pc)
@@ -529,7 +527,7 @@ extern unsigned char *trigger_ProcessStartAddr;
 extern unsigned trigger_ProcessFileLen;
 
 
-//#define TRACE_BUFLEN 10000
+/* #define TRACE_BUFLEN 10000 */
 
 #if defined(TRACE_BUFLEN)
 typedef struct
@@ -543,14 +541,14 @@ typedef struct
 
 static tsRegSet68k TraceBuffer68k[TRACE_BUFLEN];
 
-// fill circular buffer
+/* fill circular buffer */
 static unsigned ntrace = 0;
 static void m68k_trace_state(void)
 {
 	unsigned int pc = m68k_get_reg(NULL, M68K_REG_PC);
 	if ((pc >= 0x007cb4ac) && (pc <= 0x007cb4b0))
 	{
-		// checksum calculation loop
+		/* checksum calculation loop */
 		return;
 	}
 
@@ -575,7 +573,7 @@ static void m68k_trace_state(void)
 			printf("hallo\n");
 			count = 100;
 		}
-		/*
+#if 0
 		static int lastval = 0;
 		if (!lastval)
 		{
@@ -587,7 +585,7 @@ static void m68k_trace_state(void)
 			if (*((unsigned short *) (sBaseAddr + pd + 0x20b2)) == 0)
 				lastval = 2;
 		}
-		*/
+#endif
 	}
 
 	tsRegSet68k *regs = TraceBuffer68k + ntrace;
@@ -629,7 +627,7 @@ static void m68k_dump_trace(FILE *f, tsRegSet68k *regs)
 	{
 		if ((sr & 0x0700) == 0x0000)
 		{
-			// rte
+			/* rte */
 			in_int = 0;
 		}
 
@@ -638,14 +636,14 @@ static void m68k_dump_trace(FILE *f, tsRegSet68k *regs)
 
 	if ((pc == 0x7cb93e) || (pc == 0x7cbc6c))
 	{
-		// start interrupt routine
+		/* start interrupt routine */
 		in_int = 1;
 		return;
 	}
 
 	if ((sr & 0x0700) == 0x0000)
 	{
-		// interrupt mask is 0, i.e. all interrupts are allowed
+		/* interrupt mask is 0, i.e. all interrupts are allowed */
 		fprintf(f, "d0 = 0x%08x\n", regs->d[0]);
 		fprintf(f, "d1 = 0x%08x\n", regs->d[1]);
 		fprintf(f, "d2 = 0x%08x\n", regs->d[2]);
@@ -671,7 +669,7 @@ static void m68k_dump_trace(FILE *f, tsRegSet68k *regs)
 	}
 	else
 	{
-		// some interrupts are masked
+		/* some interrupts are masked */
 		fprintf(f, "* d0 = 0x%08x\n", regs->d[0]);
 		fprintf(f, "* d1 = 0x%08x\n", regs->d[1]);
 		fprintf(f, "* d2 = 0x%08x\n", regs->d[2]);
@@ -727,17 +725,17 @@ void m68k_trace_print(const char *fname){}
 static void m68k_dump_state(void)
 {
 	static FILE *f = NULL;
-	static int ninstructions = 10000;	// number of instructions to dump
+	static int ninstructions = 10000;	/* number of instructions to dump */
 	static int startpos = 0;
-	//static int in_int = 0;
+	/*static int in_int = 0; */
 	unsigned int pc, sr;
-	//extern int m68k_trace_trigger;
+	/*extern int m68k_trace_trigger; */
 	static unsigned int last_pc = 0;
 
 
 	if (!trigger_ProcessStartAddr)
 	{
-		// process not yet loaded
+		/* process not yet loaded */
 		return;
 	}
 
@@ -755,40 +753,40 @@ static void m68k_dump_state(void)
 		startpos = 1;
 	}
 
-/*
+#if 0
 	if (sr & 0x2000)
 	{
-		// do not debug interrupt or OS code (Supervisor mode)
+		/* do not debug interrupt or OS code (Supervisor mode) */
 		return;
 	}
 
 	if (pc == last_pc)
 	{
-		// came from interrupt
+		/* came from interrupt */
 		return;
 	}
 	last_pc = pc;
 
 	if ((pc < pd) || (pc >= pd + trigger_ProcessFileLen))
 	{
-		// pc outside of process text segment
+		/* pc outside of process text segment */
 		return;
 	}
-*/
+#endif
 
 	if (!f)
 	{
-		//create file
+		/*create file */
 		f = fopen("m68k_musashi_instructions_dump.txt", "wt");
 		fprintf(f, "TEXT = 0x%08x\n\n", pd);
 	}
 
-/*
+#if 0
 	if (in_int)
 	{
 		if ((sr & 0x0700) == 0x0000)
 		{
-			// rte
+			/* rte */
 			in_int = 0;
 		}
 
@@ -797,15 +795,15 @@ static void m68k_dump_state(void)
 
 	if ((pc == 0x7cb93e) || (pc == 0x7cbc6c))
 	{
-		// start interrupt routine
+		/* start interrupt routine */
 		in_int = 1;
 		return;
 	}
-*/
+#endif
 
 	if ((sr & 0x0700) == 0x0000)
 	{
-		// interrupt mask is 0, i.e. all interrupts are allowed
+		/* interrupt mask is 0, i.e. all interrupts are allowed */
 		fprintf(f, "d0 = 0x%08x\n", m68k_get_reg(NULL, M68K_REG_D0));
 		fprintf(f, "d1 = 0x%08x\n", m68k_get_reg(NULL, M68K_REG_D1));
 		fprintf(f, "d2 = 0x%08x\n", m68k_get_reg(NULL, M68K_REG_D2));
@@ -831,7 +829,7 @@ static void m68k_dump_state(void)
 	}
 	else
 	{
-		// some interrupts are masked
+		/* some interrupts are masked */
 		fprintf(f, "* d0 = 0x%08x\n", m68k_get_reg(NULL, M68K_REG_D0));
 		fprintf(f, "* d1 = 0x%08x\n", m68k_get_reg(NULL, M68K_REG_D1));
 		fprintf(f, "* d2 = 0x%08x\n", m68k_get_reg(NULL, M68K_REG_D2));
@@ -874,7 +872,7 @@ static void m68k_dump_state(void)
 /* Access the internals of the CPU */
 unsigned int m68k_get_reg(void* context, m68k_register_t regnum)
 {
-	m68ki_cpu_core* cpu = (context != NULL) ? (m68ki_cpu_core *) context : (&m68ki_cpu);
+	m68ki_cpu_core* cpu = context != NULL ? (m68ki_cpu_core *)context : &m68ki_cpu;
 
 	switch(regnum)
 	{
@@ -1001,16 +999,6 @@ void m68k_set_reset_instr_callback(void  (*callback)(void))
 	CALLBACK_RESET_INSTR = callback ? callback : default_reset_instr_callback;
 }
 
-void m68k_set_cmpild_instr_callback(void  (*callback)(unsigned int, int))
-{
-	CALLBACK_CMPILD_INSTR = callback ? callback : default_cmpild_instr_callback;
-}
-
-void m68k_set_rte_instr_callback(void  (*callback)(void))
-{
-	CALLBACK_RTE_INSTR = callback ? callback : default_rte_instr_callback;
-}
-
 void m68k_set_pc_changed_callback(void  (*callback)(unsigned int new_pc))
 {
 	CALLBACK_PC_CHANGED = callback ? callback : default_pc_changed_callback;
@@ -1026,7 +1014,6 @@ void m68k_set_instr_hook_callback(void  (*callback)(void))
 	CALLBACK_INSTR_HOOK = callback ? callback : default_instr_hook_callback;
 }
 
-#include <stdio.h>
 /* Set the CPU type. */
 void m68k_set_cpu_type(unsigned int cpu_type)
 {
@@ -1112,12 +1099,12 @@ void m68k_set_cpu_type(unsigned int cpu_type)
 			CYC_SHIFT        = 0;
 			CYC_RESET        = 518;
 			return;
-		case M68K_CPU_TYPE_68040:		// TODO: these values are not correct
+		case M68K_CPU_TYPE_68040:		/* TODO: these values are not correct */
 			CPU_TYPE         = CPU_TYPE_040;
 			CPU_ADDRESS_MASK = 0xffffffff;
 			CPU_SR_MASK      = 0xf71f; /* T1 T0 S  M  -- I2 I1 I0 -- -- -- X  N  Z  V  C  */
-			CYC_INSTRUCTION  = m68ki_cycles[2];
-			CYC_EXCEPTION    = m68ki_exception_cycle_table[2];
+			CYC_INSTRUCTION  = m68ki_cycles[3];
+			CYC_EXCEPTION    = m68ki_exception_cycle_table[3];
 			CYC_BCC_NOTAKE_B = -2;
 			CYC_BCC_NOTAKE_W = 0;
 			CYC_DBCC_F_NOEXP = 0;
@@ -1142,7 +1129,7 @@ void m68k_execute(void)
 	/* Main loop.  Keep going until we run out of clock cycles */
 	while(!sExitImmediately)
 	{
-		/* Set tracing accodring to T1. (T0 is done inside instruction) */
+		/* Set tracing according to T1. (T0 is done inside instruction) */
 		m68ki_trace_t1(); /* auto-disable (see m68kcpu.h) */
 
 		/* Set the address space for reads */
@@ -1214,46 +1201,6 @@ void m68k_exception_bus_error(void)
 
 	/* Use up some clock cycles and undo the instruction's cycles */
 	USE_CYCLES(CYC_EXCEPTION[EXCEPTION_BUS_ERROR] - CYC_INSTRUCTION[REG_IR]);
-}
-
-// MagicMacX specific
-void m68k_op_call_emu_proc(void)
-{
-	unsigned a0, a1;
-	unsigned char *p;
-	typedef unsigned tfHostCall(unsigned a1, unsigned char *emubase);
-	tfHostCall *proc;
-
-	a0 = m68ki_cpu.dar[8];	// hopefully in host's endianess mode
-	a1 = m68ki_cpu.dar[9];
-	p = sBaseAddr + a0;		// address in host's address range
-	// geht nicht:
-	proc = *((tfHostCall *)(p));
-	a0 = *((unsigned *) (p + 0));
-	proc = (tfHostCall *) a0;
-	// call host function. Put return value into d0 (all in host endian-mode)
-	m68ki_cpu.dar[0] = proc(a1, sBaseAddr);
-}
-
-void m68k_op_call_emu_cproc(void)
-{
-	unsigned a0, a1;
-	unsigned char *p;
-	unsigned self;
-	typedef unsigned tfHostCallCpp(unsigned self, unsigned a1, unsigned char *emubase);
-	tfHostCallCpp *proc;
-
-
-	a0 = m68ki_cpu.dar[8];	// hopefully in host's endianess mode
-	a1 = m68ki_cpu.dar[9];
-	p = sBaseAddr + a0;		// address in host's address range
-	// geht nicht:
-	proc = *((tfHostCallCpp *)(p));
-	a0 = *((unsigned *) (p + 0));
-	proc = (tfHostCallCpp *) a0;
-	self = *((unsigned *) (p + 12));
-	// call host function. Put return value into d0 (all in host endian-mode)
-	m68ki_cpu.dar[0] = proc(self, a1, sBaseAddr);
 }
 
 #else
@@ -1367,7 +1314,7 @@ void m68k_init(void)
 
 	/* The first call to this function initializes the opcode handler jump table */
 	if(!emulation_initialized)
-		{
+	{
 		m68ki_build_opcode_table();
 		emulation_initialized = 1;
 	}
@@ -1375,8 +1322,6 @@ void m68k_init(void)
 	m68k_set_int_ack_callback(NULL);
 	m68k_set_bkpt_ack_callback(NULL);
 	m68k_set_reset_instr_callback(NULL);
-	m68k_set_cmpild_instr_callback(NULL);
-	m68k_set_rte_instr_callback(NULL);
 	m68k_set_pc_changed_callback(NULL);
 	m68k_set_fc_callback(NULL);
 	m68k_set_instr_hook_callback(NULL);
@@ -1393,6 +1338,7 @@ void m68k_pulse_reset(void)
 	SET_CYCLES(0);
 
 	CPU_RUN_MODE = RUN_MODE_BERR_AERR_RESET;
+	CPU_INSTR_MODE = INSTRUCTION_YES;
 
 	/* Turn off tracing */
 	FLAG_T1 = FLAG_T0 = 0;

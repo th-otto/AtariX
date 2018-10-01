@@ -3,20 +3,28 @@
 /* ======================================================================== */
 /*
  *                                  MUSASHI
- *                                Version 3.3
+ *                                Version 3.4
  *
  * A portable Motorola M680x0 processor emulation engine.
  * Copyright 1998-2001 Karl Stenerud.  All rights reserved.
  *
- * This code may be freely used for non-commercial purposes as long as this
- * copyright notice remains unaltered in the source code and any binary files
- * containing this code in compiled form.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * All other lisencing terms must be negotiated with the author
- * (Karl Stenerud).
- *
- * The latest version of this code can be obtained at:
- * http://kstenerud.cjb.net
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -41,7 +49,7 @@
 /* =========================== MagicMacX STUFF ============================ */
 /* ======================================================================== */
 
-// do not count cycles
+/* do not count cycles */
 #define COUNT_CYCLES		OPT_OFF
 
 /* ======================================================================== */
@@ -52,11 +60,13 @@
  * to OPT_ON and use m68kmame.h to configure the 68k core.
  */
 #ifndef M68K_COMPILE_FOR_MAME
-#define M68K_COMPILE_FOR_MAME      OPT_OFF		// changed
+#define M68K_COMPILE_FOR_MAME      OPT_OFF		/* changed */
 #endif /* M68K_COMPILE_FOR_MAME */
 
+#if M68K_COMPILE_FOR_MAME == OPT_ON
+#include "m68kmame.h"
+#else
 
-#if M68K_COMPILE_FOR_MAME == OPT_OFF
 
 
 /* ======================================================================== */
@@ -112,20 +122,6 @@ extern void m68k_clear_irq(int int_level);
  */
 #define M68K_EMULATE_RESET          OPT_OFF
 #define M68K_RESET_CALLBACK()       your_reset_handler_function()
-
-
-/* If ON, CPU will call the callback when it encounters a cmpi.l #v, dn
- * instruction.
- */
-#define M68K_CMPILD_HAS_CALLBACK     OPT_OFF
-#define M68K_CMPILD_CALLBACK(v,r)    your_cmpild_handler_function(v,r)
-
-
-/* If ON, CPU will call the callback when it encounters a rte
- * instruction.
- */
-#define M68K_RTE_HAS_CALLBACK       OPT_OFF
-#define M68K_RTE_CALLBACK()         your_rte_handler_function()
 
 
 /* If ON, CPU will call the set fc callback on every memory access to

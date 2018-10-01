@@ -2618,9 +2618,9 @@ void m68k_op_ori_32_al(void)
 }
 
 
-void m68k_op_ori_16_toc(void)
+void m68k_op_ori_8_toc(void)
 {
-	m68ki_set_ccr(m68ki_get_ccr() | OPER_I_16());
+	m68ki_set_ccr(m68ki_get_ccr() | OPER_I_8());
 }
 
 
@@ -2806,9 +2806,6 @@ void m68k_op_ror_8_s(void)
 	uint src = MASK_OUT_ABOVE_8(*r_dst);
 	uint res = ROR_8(src, shift);
 
-	if(orig_shift != 0)
-		USE_CYCLES(orig_shift<<CYC_SHIFT);
-
 	*r_dst = MASK_OUT_BELOW_8(*r_dst) | res;
 
 	FLAG_N = NFLAG_8(res);
@@ -2825,9 +2822,6 @@ void m68k_op_ror_16_s(void)
 	uint src = MASK_OUT_ABOVE_16(*r_dst);
 	uint res = ROR_16(src, shift);
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	*r_dst = MASK_OUT_BELOW_16(*r_dst) | res;
 
 	FLAG_N = NFLAG_16(res);
@@ -2843,9 +2837,6 @@ void m68k_op_ror_32_s(void)
 	uint shift = (((REG_IR >> 9) - 1) & 7) + 1;
 	uint64 src = *r_dst;
 	uint res = ROR_32(src, shift);
-
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
 
 	*r_dst = res;
 
@@ -3050,9 +3041,6 @@ void m68k_op_rol_8_s(void)
 	uint src = MASK_OUT_ABOVE_8(*r_dst);
 	uint res = ROL_8(src, shift);
 
-	if(orig_shift != 0)
-		USE_CYCLES(orig_shift<<CYC_SHIFT);
-
 	*r_dst = MASK_OUT_BELOW_8(*r_dst) | res;
 
 	FLAG_N = NFLAG_8(res);
@@ -3069,9 +3057,6 @@ void m68k_op_rol_16_s(void)
 	uint src = MASK_OUT_ABOVE_16(*r_dst);
 	uint res = ROL_16(src, shift);
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	*r_dst = MASK_OUT_BELOW_16(*r_dst) | res;
 
 	FLAG_N = NFLAG_16(res);
@@ -3087,9 +3072,6 @@ void m68k_op_rol_32_s(void)
 	uint shift = (((REG_IR >> 9) - 1) & 7) + 1;
 	uint64 src = *r_dst;
 	uint res = ROL_32(src, shift);
-
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
 
 	*r_dst = res;
 
@@ -3310,9 +3292,6 @@ void m68k_op_roxr_8_s(void)
 	uint src = MASK_OUT_ABOVE_8(*r_dst);
 	uint res = ROR_9(src | (XFLAG_AS_1() << 8), shift);
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	FLAG_C = FLAG_X = res;
 	res = MASK_OUT_ABOVE_8(res);
 
@@ -3330,9 +3309,6 @@ void m68k_op_roxr_16_s(void)
 	uint shift = (((REG_IR >> 9) - 1) & 7) + 1;
 	uint src = MASK_OUT_ABOVE_16(*r_dst);
 	uint res = ROR_17(src | (XFLAG_AS_1() << 16), shift);
-
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
 
 	FLAG_C = FLAG_X = res >> 8;
 	res = MASK_OUT_ABOVE_16(res);
@@ -3354,9 +3330,6 @@ void m68k_op_roxr_32_s(void)
 	uint64 src   = *r_dst;
 	uint64 res   = src | (((uint64)XFLAG_AS_1()) << 32);
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	res = ROR_33_64(res, shift);
 
 	FLAG_C = FLAG_X = res >> 24;
@@ -3375,9 +3348,6 @@ void m68k_op_roxr_32_s(void)
 	uint src = *r_dst;
 	uint res = MASK_OUT_ABOVE_32((ROR_33(src, shift) & ~(1 << (32 - shift))) | (XFLAG_AS_1() << (32 - shift)));
 	uint new_x_flag = src & (1 << (shift - 1));
-
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
 
 	*r_dst = res;
 
@@ -3636,9 +3606,6 @@ void m68k_op_roxl_8_s(void)
 	uint src = MASK_OUT_ABOVE_8(*r_dst);
 	uint res = ROL_9(src | (XFLAG_AS_1() << 8), shift);
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	FLAG_C = FLAG_X = res;
 	res = MASK_OUT_ABOVE_8(res);
 
@@ -3656,9 +3623,6 @@ void m68k_op_roxl_16_s(void)
 	uint shift = (((REG_IR >> 9) - 1) & 7) + 1;
 	uint src = MASK_OUT_ABOVE_16(*r_dst);
 	uint res = ROL_17(src | (XFLAG_AS_1() << 16), shift);
-
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
 
 	FLAG_C = FLAG_X = res >> 8;
 	res = MASK_OUT_ABOVE_16(res);
@@ -3680,9 +3644,6 @@ void m68k_op_roxl_32_s(void)
 	uint64 src   = *r_dst;
 	uint64 res   = src | (((uint64)XFLAG_AS_1()) << 32);
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	res = ROL_33_64(res, shift);
 
 	FLAG_C = FLAG_X = res >> 24;
@@ -3701,9 +3662,6 @@ void m68k_op_roxl_32_s(void)
 	uint src = *r_dst;
 	uint res = MASK_OUT_ABOVE_32((ROL_33(src, shift) & ~(1 << (shift - 1))) | (XFLAG_AS_1() << (shift - 1)));
 	uint new_x_flag = src & (1 << (32 - shift));
-
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
 
 	*r_dst = res;
 
@@ -3979,7 +3937,6 @@ void m68k_op_rte_32(void)
 		uint new_pc;
 		uint format_word;
 
-		m68ki_rte_callback();		   /* auto-disable (see m68kcpu.h) */
 		m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
 
 		if(CPU_TYPE_IS_000(CPU_TYPE))
@@ -4065,7 +4022,7 @@ void m68k_op_rtm_32(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_illegal();
 }
@@ -4093,25 +4050,19 @@ void m68k_op_sbcd_8_rr(void)
 	uint dst = *r_dst;
 	uint res = LOW_NIBBLE(dst) - LOW_NIBBLE(src) - XFLAG_AS_1();
 
-//  FLAG_V = ~res; /* Undefined V behavior */
-	FLAG_V = VFLAG_CLEAR;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to assume cleared. */
+	FLAG_V = ~res; /* Undefined V behavior */
 
 	if(res > 9)
 		res -= 6;
 	res += HIGH_NIBBLE(dst) - HIGH_NIBBLE(src);
-	if(res > 0x99)
-	{
+	FLAG_X = FLAG_C = (res > 0x99) << 8;
+	if(FLAG_C)
 		res += 0xa0;
-		FLAG_X = FLAG_C = CFLAG_SET;
-		FLAG_N = NFLAG_SET;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to follow carry. */
-	}
-	else
-		FLAG_N = FLAG_X = FLAG_C = 0;
 
 	res = MASK_OUT_ABOVE_8(res);
 
-//  FLAG_V &= res; /* Undefined V behavior part II */
-//  FLAG_N = NFLAG_8(res); /* Undefined N behavior */
+	FLAG_V &= res; /* Undefined V behavior part II */
+	FLAG_N = NFLAG_8(res); /* Undefined N behavior */
 	FLAG_Z |= res;
 
 	*r_dst = MASK_OUT_BELOW_8(*r_dst) | res;
@@ -4125,25 +4076,19 @@ void m68k_op_sbcd_8_mm_ax7(void)
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(dst) - LOW_NIBBLE(src) - XFLAG_AS_1();
 
-//  FLAG_V = ~res; /* Undefined V behavior */
-	FLAG_V = VFLAG_CLEAR;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to return zero. */
+	FLAG_V = ~res; /* Undefined V behavior */
 
 	if(res > 9)
 		res -= 6;
 	res += HIGH_NIBBLE(dst) - HIGH_NIBBLE(src);
-	if(res > 0x99)
-	{
+	FLAG_X = FLAG_C = (res > 0x99) << 8;
+	if(FLAG_C)
 		res += 0xa0;
-		FLAG_X = FLAG_C = CFLAG_SET;
-		FLAG_N = NFLAG_SET;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to follow carry. */
-	}
-	else
-		FLAG_N = FLAG_X = FLAG_C = 0;
 
 	res = MASK_OUT_ABOVE_8(res);
 
-//  FLAG_V &= res; /* Undefined V behavior part II */
-//  FLAG_N = NFLAG_8(res); /* Undefined N behavior */
+	FLAG_V &= res; /* Undefined V behavior part II */
+	FLAG_N = NFLAG_8(res); /* Undefined N behavior */
 	FLAG_Z |= res;
 
 	m68ki_write_8(ea, res);
@@ -4157,25 +4102,19 @@ void m68k_op_sbcd_8_mm_ay7(void)
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(dst) - LOW_NIBBLE(src) - XFLAG_AS_1();
 
-//  FLAG_V = ~res; /* Undefined V behavior */
-	FLAG_V = VFLAG_CLEAR;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to return zero. */
+	FLAG_V = ~res; /* Undefined V behavior */
 
 	if(res > 9)
 		res -= 6;
 	res += HIGH_NIBBLE(dst) - HIGH_NIBBLE(src);
-	if(res > 0x99)
-	{
+	FLAG_X = FLAG_C = (res > 0x99) << 8;
+	if(FLAG_C)
 		res += 0xa0;
-		FLAG_X = FLAG_C = CFLAG_SET;
-		FLAG_N = NFLAG_SET;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to follow carry. */
-	}
-	else
-		FLAG_N = FLAG_X = FLAG_C = 0;
 
 	res = MASK_OUT_ABOVE_8(res);
 
-//  FLAG_V &= res; /* Undefined V behavior part II */
-//  FLAG_N = NFLAG_8(res); /* Undefined N behavior */
+	FLAG_V &= res; /* Undefined V behavior part II */
+	FLAG_N = NFLAG_8(res); /* Undefined N behavior */
 	FLAG_Z |= res;
 
 	m68ki_write_8(ea, res);
@@ -4189,25 +4128,19 @@ void m68k_op_sbcd_8_mm_axy7(void)
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(dst) - LOW_NIBBLE(src) - XFLAG_AS_1();
 
-//  FLAG_V = ~res; /* Undefined V behavior */
-	FLAG_V = VFLAG_CLEAR;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to return zero. */
+	FLAG_V = ~res; /* Undefined V behavior */
 
 	if(res > 9)
 		res -= 6;
 	res += HIGH_NIBBLE(dst) - HIGH_NIBBLE(src);
-	if(res > 0x99)
-	{
+	FLAG_X = FLAG_C = (res > 0x99) << 8;
+	if(FLAG_C)
 		res += 0xa0;
-		FLAG_X = FLAG_C = CFLAG_SET;
-		FLAG_N = NFLAG_SET;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to follow carry. */
-	}
-	else
-		FLAG_N = FLAG_X = FLAG_C = 0;
 
 	res = MASK_OUT_ABOVE_8(res);
 
-//  FLAG_V &= res; /* Undefined V behavior part II */
-//  FLAG_N = NFLAG_8(res); /* Undefined N behavior */
+	FLAG_V &= res; /* Undefined V behavior part II */
+	FLAG_N = NFLAG_8(res); /* Undefined N behavior */
 	FLAG_Z |= res;
 
 	m68ki_write_8(ea, res);
@@ -4221,25 +4154,19 @@ void m68k_op_sbcd_8_mm(void)
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(dst) - LOW_NIBBLE(src) - XFLAG_AS_1();
 
-//  FLAG_V = ~res; /* Undefined V behavior */
-	FLAG_V = VFLAG_CLEAR;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to return zero. */
+	FLAG_V = ~res; /* Undefined V behavior */
 
 	if(res > 9)
 		res -= 6;
 	res += HIGH_NIBBLE(dst) - HIGH_NIBBLE(src);
-	if(res > 0x99)
-	{
+	FLAG_X = FLAG_C = (res > 0x99) << 8;
+	if(FLAG_C)
 		res += 0xa0;
-		FLAG_X = FLAG_C = CFLAG_SET;
-		FLAG_N = NFLAG_SET;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to follow carry. */
-	}
-	else
-		FLAG_N = FLAG_X = FLAG_C = 0;
 
 	res = MASK_OUT_ABOVE_8(res);
 
-//  FLAG_V &= res; /* Undefined V behavior part II */
-//  FLAG_N = NFLAG_8(res); /* Undefined N behavior */
+	FLAG_V &= res; /* Undefined V behavior part II */
+	FLAG_N = NFLAG_8(res); /* Undefined N behavior */
 	FLAG_Z |= res;
 
 	m68ki_write_8(ea, res);
@@ -5298,9 +5225,12 @@ void m68k_op_stop(void)
 		m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
 		CPU_STOPPED |= STOP_LEVEL_STOP;
 		m68ki_set_sr(new_sr);
-		#if COUNT_CYCLES == OPT_ON
-		m68ki_remaining_cycles = 0;
-		#endif
+#if COUNT_CYCLES == OPT_ON
+		if(m68ki_remaining_cycles >= CYC_INSTRUCTION[REG_IR])
+			m68ki_remaining_cycles = CYC_INSTRUCTION[REG_IR];
+		else
+			USE_ALL_CYCLES();
+#endif
 		return;
 	}
 	m68ki_exception_privilege_violation();
@@ -6285,81 +6215,91 @@ void m68k_op_suba_16_a(void)
 
 void m68k_op_suba_16_ai(void)
 {
+	signed short src = MAKE_INT_16(OPER_AY_AI_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - MAKE_INT_16(OPER_AY_AI_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_16_pi(void)
 {
+	signed short src = MAKE_INT_16(OPER_AY_PI_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - MAKE_INT_16(OPER_AY_PI_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_16_pd(void)
 {
+	signed short src = MAKE_INT_16(OPER_AY_PD_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - MAKE_INT_16(OPER_AY_PD_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_16_di(void)
 {
+	signed short src = MAKE_INT_16(OPER_AY_DI_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - MAKE_INT_16(OPER_AY_DI_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_16_ix(void)
 {
+	signed short src = MAKE_INT_16(OPER_AY_IX_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - MAKE_INT_16(OPER_AY_IX_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_16_aw(void)
 {
+	signed short src = MAKE_INT_16(OPER_AW_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - MAKE_INT_16(OPER_AW_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_16_al(void)
 {
+	signed short src = MAKE_INT_16(OPER_AL_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - MAKE_INT_16(OPER_AL_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_16_pcdi(void)
 {
+	signed short src = MAKE_INT_16(OPER_PCDI_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - MAKE_INT_16(OPER_PCDI_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_16_pcix(void)
 {
+	signed short src = MAKE_INT_16(OPER_PCIX_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - MAKE_INT_16(OPER_PCIX_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_16_i(void)
 {
+	signed short src = MAKE_INT_16(OPER_I_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - MAKE_INT_16(OPER_I_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
@@ -6381,81 +6321,91 @@ void m68k_op_suba_32_a(void)
 
 void m68k_op_suba_32_ai(void)
 {
+	uint src = OPER_AY_AI_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - OPER_AY_AI_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_32_pi(void)
 {
+	uint src = OPER_AY_PI_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - OPER_AY_PI_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_32_pd(void)
 {
+	uint src = OPER_AY_PD_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - OPER_AY_PD_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_32_di(void)
 {
+	uint src = OPER_AY_DI_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - OPER_AY_DI_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_32_ix(void)
 {
+	uint src = OPER_AY_IX_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - OPER_AY_IX_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_32_aw(void)
 {
+	uint src = OPER_AW_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - OPER_AW_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_32_al(void)
 {
+	uint src = OPER_AL_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - OPER_AL_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_32_pcdi(void)
 {
+	uint src = OPER_PCDI_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - OPER_PCDI_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_32_pcix(void)
 {
+	uint src = OPER_PCIX_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - OPER_PCIX_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 
 void m68k_op_suba_32_i(void)
 {
+	uint src = OPER_I_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst - OPER_I_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst - src);
 }
 
 

@@ -1129,93 +1129,91 @@ void m68k_op_adda_16_a(void)
 
 void m68k_op_adda_16_ai(void)
 {
+	signed short src = MAKE_INT_16(OPER_AY_AI_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + MAKE_INT_16(OPER_AY_AI_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_16_pi(void)
 {
+	signed short src = MAKE_INT_16(OPER_AY_PI_16());
 	uint* r_dst = &AX;
 
-	// AK
-	// note that AX can be the same as AY
-	sint16 val = MAKE_INT_16(OPER_AY_PI_16());		// val is value to add, postincr. AY
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + val);		// add val to AX
-	/*
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + MAKE_INT_16(OPER_AY_PI_16()));
-	*/
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_16_pd(void)
 {
+	signed short src = MAKE_INT_16(OPER_AY_PD_16());
 	uint* r_dst = &AX;
 
-	// AK
-	// note that AX can be the same as AY
-	sint16 val = MAKE_INT_16(OPER_AY_PD_16());
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + val);
-	/*
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + MAKE_INT_16(OPER_AY_PD_16()));
-	*/
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_16_di(void)
 {
+	signed short src = MAKE_INT_16(OPER_AY_DI_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + MAKE_INT_16(OPER_AY_DI_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_16_ix(void)
 {
+	signed short src = MAKE_INT_16(OPER_AY_IX_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + MAKE_INT_16(OPER_AY_IX_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_16_aw(void)
 {
+	signed short src = MAKE_INT_16(OPER_AW_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + MAKE_INT_16(OPER_AW_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_16_al(void)
 {
+	signed short src = MAKE_INT_16(OPER_AL_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + MAKE_INT_16(OPER_AL_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_16_pcdi(void)
 {
+	signed short src = MAKE_INT_16(OPER_PCDI_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + MAKE_INT_16(OPER_PCDI_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_16_pcix(void)
 {
+	signed short src = MAKE_INT_16(OPER_PCIX_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + MAKE_INT_16(OPER_PCIX_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_16_i(void)
 {
+	signed short src = MAKE_INT_16(OPER_I_16());
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + MAKE_INT_16(OPER_I_16()));
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
@@ -1237,93 +1235,91 @@ void m68k_op_adda_32_a(void)
 
 void m68k_op_adda_32_ai(void)
 {
+	uint src = OPER_AY_AI_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + OPER_AY_AI_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_32_pi(void)
 {
+	uint src = OPER_AY_PI_32();
 	uint* r_dst = &AX;
 
-	// AK
-	// note that AX can be the same as AY
-	sint32 val = OPER_AY_PI_32();		// val is value to add, postincr. AY
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + val);
-	/*
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + OPER_AY_PI_32());
-	*/
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_32_pd(void)
 {
+	uint src = OPER_AY_PD_32();
 	uint* r_dst = &AX;
 
-	// AK
-	// note that AX can be the same as AY
-	sint32 val = OPER_AY_PD_32();
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + val);
-	/*
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + OPER_AY_PD_32());
-	*/
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_32_di(void)
 {
+	uint src = OPER_AY_DI_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + OPER_AY_DI_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_32_ix(void)
 {
+	uint src = OPER_AY_IX_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + OPER_AY_IX_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_32_aw(void)
 {
+	uint src = OPER_AW_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + OPER_AW_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_32_al(void)
 {
+	uint src = OPER_AL_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + OPER_AL_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_32_pcdi(void)
 {
+	uint src = OPER_PCDI_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + OPER_PCDI_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_32_pcix(void)
 {
+	uint src = OPER_PCIX_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + OPER_PCIX_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
 void m68k_op_adda_32_i(void)
 {
+	uint src = OPER_I_32();
 	uint* r_dst = &AX;
 
-	*r_dst = MASK_OUT_ABOVE_32(*r_dst + OPER_I_32());
+	*r_dst = MASK_OUT_ABOVE_32(*r_dst + src);
 }
 
 
@@ -3391,9 +3387,9 @@ void m68k_op_andi_32_al(void)
 }
 
 
-void m68k_op_andi_16_toc(void)
+void m68k_op_andi_8_toc(void)
 {
-	m68ki_set_ccr(m68ki_get_ccr() & OPER_I_16());
+	m68ki_set_ccr(m68ki_get_ccr() & OPER_I_8());
 }
 
 
@@ -3417,9 +3413,6 @@ void m68k_op_asr_8_s(void)
 	uint src = MASK_OUT_ABOVE_8(*r_dst);
 	uint res = src >> shift;
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	if(GET_MSB_8(src))
 		res |= m68ki_shift_8_table[shift];
 
@@ -3439,9 +3432,6 @@ void m68k_op_asr_16_s(void)
 	uint src = MASK_OUT_ABOVE_16(*r_dst);
 	uint res = src >> shift;
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	if(GET_MSB_16(src))
 		res |= m68ki_shift_16_table[shift];
 
@@ -3460,9 +3450,6 @@ void m68k_op_asr_32_s(void)
 	uint shift = (((REG_IR >> 9) - 1) & 7) + 1;
 	uint src = *r_dst;
 	uint res = src >> shift;
-
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
 
 	if(GET_MSB_32(src))
 		res |= m68ki_shift_32_table[shift];
@@ -3765,9 +3752,6 @@ void m68k_op_asl_8_s(void)
 	uint src = MASK_OUT_ABOVE_8(*r_dst);
 	uint res = MASK_OUT_ABOVE_8(src << shift);
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	*r_dst = MASK_OUT_BELOW_8(*r_dst) | res;
 
 	FLAG_X = FLAG_C = src << shift;
@@ -3785,9 +3769,6 @@ void m68k_op_asl_16_s(void)
 	uint src = MASK_OUT_ABOVE_16(*r_dst);
 	uint res = MASK_OUT_ABOVE_16(src << shift);
 
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
-
 	*r_dst = MASK_OUT_BELOW_16(*r_dst) | res;
 
 	FLAG_N = NFLAG_16(res);
@@ -3804,9 +3785,6 @@ void m68k_op_asl_32_s(void)
 	uint shift = (((REG_IR >> 9) - 1) & 7) + 1;
 	uint src = *r_dst;
 	uint res = MASK_OUT_ABOVE_32(src << shift);
-
-	if(shift != 0)
-		USE_CYCLES(shift<<CYC_SHIFT);
 
 	*r_dst = res;
 
@@ -4434,16 +4412,7 @@ void m68k_op_bhi_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_HI())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4462,16 +4431,7 @@ void m68k_op_bls_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_LS())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4490,16 +4450,7 @@ void m68k_op_bcc_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_CC())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4518,16 +4469,7 @@ void m68k_op_bcs_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_CS())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4546,16 +4488,7 @@ void m68k_op_bne_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_NE())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4574,16 +4507,7 @@ void m68k_op_beq_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_EQ())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4602,16 +4526,7 @@ void m68k_op_bvc_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_VC())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4630,16 +4545,7 @@ void m68k_op_bvs_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_VS())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4658,16 +4564,7 @@ void m68k_op_bpl_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_PL())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4686,16 +4583,7 @@ void m68k_op_bmi_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_MI())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4714,16 +4602,7 @@ void m68k_op_bge_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_GE())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4742,16 +4621,7 @@ void m68k_op_blt_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_LT())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4770,16 +4640,7 @@ void m68k_op_bgt_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_GT())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -4798,16 +4659,7 @@ void m68k_op_ble_32(void)
 		REG_PC += 4;
 		return;
 	}
-	else
-	{
-		if(COND_LE())
-		{
-			m68ki_trace_t0();			   /* auto-disable (see m68kcpu.h) */
-			m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-			return;
-		}
-		USE_CYCLES(CYC_BCC_NOTAKE_B);
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -8087,13 +7939,7 @@ void m68k_op_bra_32(void)
 			USE_ALL_CYCLES();
 		return;
 	}
-	else
-	{
-		m68ki_trace_t0();				   /* auto-disable (see m68kcpu.h) */
-		m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-		if(REG_PC == REG_PPC)
-			USE_ALL_CYCLES();
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -8344,12 +8190,7 @@ void m68k_op_bsr_32(void)
 		m68ki_branch_32(offset);
 		return;
 	}
-	else
-	{
-		m68ki_trace_t0();				   /* auto-disable (see m68kcpu.h) */
-		m68ki_push_32(REG_PC);
-		m68ki_branch_8(MASK_OUT_ABOVE_8(REG_IR));
-	}
+	m68ki_exception_illegal();
 }
 
 
@@ -8538,7 +8379,7 @@ void m68k_op_callm_32_ai(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_illegal();
 }
@@ -8557,7 +8398,7 @@ void m68k_op_callm_32_di(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_illegal();
 }
@@ -8576,7 +8417,7 @@ void m68k_op_callm_32_ix(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_illegal();
 }
@@ -8595,7 +8436,7 @@ void m68k_op_callm_32_aw(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_illegal();
 }
@@ -8614,7 +8455,7 @@ void m68k_op_callm_32_al(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_illegal();
 }
@@ -8633,7 +8474,7 @@ void m68k_op_callm_32_pcdi(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_illegal();
 }
@@ -8652,9 +8493,50 @@ void m68k_op_callm_32_pcix(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_illegal();
+}
+
+
+void m68k_op_call_emu_proc(void)
+{
+	unsigned a0, a1;
+	unsigned char *p;
+	typedef unsigned tfHostCall(unsigned a1, unsigned char *emubase);
+	tfHostCall *proc;
+
+	a0 = m68ki_cpu.dar[8];	/* hopefully in host's endianess mode */
+	a1 = m68ki_cpu.dar[9];
+	p = sBaseAddr + a0;		/* address in host's address range */
+	/* geht nicht: */
+	/* proc = *((tfHostCall *)(p)); */
+	a0 = *((unsigned *) (p + 0));
+	proc = (tfHostCall *) a0;
+	/* call host function. Put return value into d0 (all in host endian-mode) */
+	m68ki_cpu.dar[0] = proc(a1, sBaseAddr);
+}
+
+
+void m68k_op_call_emu_cproc(void)
+{
+	unsigned a0, a1;
+	unsigned char *p;
+	unsigned self;
+	typedef unsigned tfHostCallCpp(unsigned self, unsigned a1, unsigned char *emubase);
+	tfHostCallCpp *proc;
+
+
+	a0 = m68ki_cpu.dar[8];	/* hopefully in host's endianess mode */
+	a1 = m68ki_cpu.dar[9];
+	p = sBaseAddr + a0;		/* address in host's address range */
+	/* geht nicht: */
+	/* proc = *((tfHostCallCpp *)(p)); */
+	a0 = *((unsigned *) (p + 0));
+	proc = (tfHostCallCpp *) a0;
+	self = *((unsigned *) (p + 12));
+	/* call host function. Put return value into d0 (all in host endian-mode) */
+	m68ki_cpu.dar[0] = proc(self, a1, sBaseAddr);
 }
 
 
@@ -11941,8 +11823,6 @@ void m68k_op_cmpi_32_d(void)
 	uint dst = DY;
 	uint res = dst - src;
 
-	m68ki_cmpild_callback(src, REG_IR & 7);		   /* auto-disable (see m68kcpu.h) */
-
 	FLAG_N = NFLAG_32(res);
 	FLAG_Z = MASK_OUT_ABOVE_32(res);
 	FLAG_V = VFLAG_SUB_32(src, dst, res);
@@ -12162,7 +12042,7 @@ void m68k_op_cpbcc_32(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_1111();
 }
@@ -12175,7 +12055,7 @@ void m68k_op_cpdbcc_32(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_1111();
 }
@@ -12188,7 +12068,7 @@ void m68k_op_cpgen_32(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_1111();
 }
@@ -12201,7 +12081,7 @@ void m68k_op_cpscc_32(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_1111();
 }
@@ -12214,7 +12094,7 @@ void m68k_op_cptrapcc_32(void)
 		M68K_DO_LOG((M68K_LOG_FILEHANDLE "%s at %08x: called unimplemented instruction %04x (%s)\n",
 					 m68ki_cpu_names[CPU_TYPE], ADDRESS_68K(REG_PC - 2), REG_IR,
 					 m68k_disassemble_quick(ADDRESS_68K(REG_PC - 2))));
-		return;
+		/* return; */ /* AK: No FPU => LineF Exception */
 	}
 	m68ki_exception_1111();
 }

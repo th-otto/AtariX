@@ -1,23 +1,30 @@
-#include <stdio.h>
 /* ======================================================================== */
 /* ========================= LICENSING & COPYRIGHT ======================== */
 /* ======================================================================== */
 /*
  *                                  MUSASHI
- *                                Version 3.3
+ *                                Version 3.4
  *
  * A portable Motorola M680x0 processor emulation engine.
  * Copyright 1998-2001 Karl Stenerud.  All rights reserved.
  *
- * This code may be freely used for non-commercial purposes as long as this
- * copyright notice remains unaltered in the source code and any binary files
- * containing this code in compiled form.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * All other lisencing terms must be negotiated with the author
- * (Karl Stenerud).
- *
- * The latest version of this code can be obtained at:
- * http://kstenerud.cjb.net
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -265,8 +272,8 @@
 	#define LSL_32(A, C) ((A) << (C))
 #else
 	/* We have to do this because the morons at ANSI decided that shifts
-     * by >= data size are undefined.
-     */
+	 * by >= data size are undefined.
+	 */
 	#define LSR_32(A, C) ((C) < 32 ? (A) >> (C) : 0)
 	#define LSL_32(A, C) ((C) < 32 ? (A) << (C) : 0)
 #endif /* M68K_INT_GT_32_BIT */
@@ -350,14 +357,12 @@
 #define CYC_RESET        m68ki_cpu.cyc_reset
 
 
-#define CALLBACK_INT_ACK      m68ki_cpu.int_ack_callback
-#define CALLBACK_BKPT_ACK     m68ki_cpu.bkpt_ack_callback
-#define CALLBACK_RESET_INSTR  m68ki_cpu.reset_instr_callback
-#define CALLBACK_CMPILD_INSTR m68ki_cpu.cmpild_instr_callback
-#define CALLBACK_RTE_INSTR    m68ki_cpu.rte_instr_callback
-#define CALLBACK_PC_CHANGED   m68ki_cpu.pc_changed_callback
-#define CALLBACK_SET_FC       m68ki_cpu.set_fc_callback
-#define CALLBACK_INSTR_HOOK   m68ki_cpu.instr_hook_callback
+#define CALLBACK_INT_ACK     m68ki_cpu.int_ack_callback
+#define CALLBACK_BKPT_ACK    m68ki_cpu.bkpt_ack_callback
+#define CALLBACK_RESET_INSTR m68ki_cpu.reset_instr_callback
+#define CALLBACK_PC_CHANGED  m68ki_cpu.pc_changed_callback
+#define CALLBACK_SET_FC      m68ki_cpu.set_fc_callback
+#define CALLBACK_INSTR_HOOK  m68ki_cpu.instr_hook_callback
 
 
 
@@ -454,26 +459,6 @@
 #else
 	#define m68ki_output_reset()
 #endif /* M68K_EMULATE_RESET */
-
-#if M68K_CMPILD_HAS_CALLBACK
-	#if M68K_CMPILD_HAS_CALLBACK == OPT_SPECIFY_HANDLER
-		#define m68ki_cmpild_callback(v,r) M68K_CMPILD_CALLBACK(v,r)
-	#else
-		#define m68ki_cmpild_callback(v,r) CALLBACK_CMPILD_INSTR(v,r)
-	#endif
-#else
-	#define m68ki_cmpild_callback(v,r)
-#endif /* M68K_CMPILD_HAS_CALLBACK */
-
-#if M68K_RTE_HAS_CALLBACK
-	#if M68K_RTE_HAS_CALLBACK == OPT_SPECIFY_HANDLER
-		#define m68ki_rte_callback() M68K_RTE_CALLBACK()
-	#else
-		#define m68ki_rte_callback() CALLBACK_RTE_INSTR()
-	#endif
-#else
-	#define m68ki_rte_callback()
-#endif /* M68K_RTE_HAS_CALLBACK */
 
 #if M68K_INSTRUCTION_HOOK
 	#if M68K_INSTRUCTION_HOOK == OPT_SPECIFY_HANDLER
@@ -784,7 +769,7 @@
 #define USE_CYCLES(A)    m68ki_remaining_cycles -= (A)
 #define SET_CYCLES(A)    m68ki_remaining_cycles = A
 #define GET_CYCLES()     m68ki_remaining_cycles
-#define USE_ALL_CYCLES() m68ki_remaining_cycles = 0
+#define USE_ALL_CYCLES() m68ki_remaining_cycles %= CYC_INSTRUCTION[REG_IR]
 #endif
 
 
@@ -880,8 +865,6 @@ typedef struct
 	int  (*int_ack_callback)(int int_line);           /* Interrupt Acknowledge */
 	void (*bkpt_ack_callback)(unsigned int data);     /* Breakpoint Acknowledge */
 	void (*reset_instr_callback)(void);               /* Called when a RESET instruction is encountered */
-	void (*cmpild_instr_callback)(unsigned int, int); /* Called when a CMPI.L #v, Dn instruction is encountered */
-	void (*rte_instr_callback)(void);                 /* Called when a RTE instruction is encountered */
 	void (*pc_changed_callback)(unsigned int new_pc); /* Called when the PC changes by a large amount */
 	void (*set_fc_callback)(unsigned int new_fc);     /* Called when the CPU function code changes */
 	void (*instr_hook_callback)(void);                /* Called every instruction cycle prior to execution */
@@ -1650,9 +1633,9 @@ INLINE void m68ki_stack_frame_buserr_new(uint sr)
 void m68ki_stack_frame_1000(uint pc, uint sr, uint vector)
 {
 	/* VERSION
-     * NUMBER
-     * INTERNAL INFORMATION, 16 WORDS
-     */
+	 * NUMBER
+	 * INTERNAL INFORMATION, 16 WORDS
+	 */
 	m68ki_fake_push_32();
 	m68ki_fake_push_32();
 	m68ki_fake_push_32();
@@ -1830,8 +1813,8 @@ INLINE void m68ki_exception_trap(uint vector)
 
 	m68ki_jump_vector(vector);
 
-	/* Use up some clock cycles */
-	USE_CYCLES(CYC_EXCEPTION[vector]);
+	/* Use up some clock cycles and undo the instruction's cycles */
+	USE_CYCLES(CYC_EXCEPTION[vector] - CYC_INSTRUCTION[REG_IR]);
 }
 
 /* Trap#n stacks a 0 frame but behaves like group2 otherwise */
@@ -1841,8 +1824,8 @@ INLINE void m68ki_exception_trapN(uint vector)
 	m68ki_stack_frame_0000(REG_PC, sr, vector);
 	m68ki_jump_vector(vector);
 
-	/* Use up some clock cycles */
-	USE_CYCLES(CYC_EXCEPTION[vector]);
+	/* Use up some clock cycles and undo the instruction's cycles */
+	USE_CYCLES(CYC_EXCEPTION[vector] - CYC_INSTRUCTION[REG_IR]);
 }
 
 /* Exception for trace mode */
@@ -1970,9 +1953,9 @@ INLINE void m68ki_exception_address_error(void)
 	uint sr = m68ki_init_exception();
 
 	/* If we were processing a bus error, address error, or reset,
-     * this is a catastrophic failure.
-     * Halt the CPU
-     */
+	 * this is a catastrophic failure.
+	 * Halt the CPU
+	 */
 	if(CPU_RUN_MODE == RUN_MODE_BERR_AERR_RESET)
 	{
 m68k_read_memory_8(0x00ffff01);
@@ -1986,8 +1969,11 @@ m68k_read_memory_8(0x00ffff01);
 
 	m68ki_jump_vector(EXCEPTION_ADDRESS_ERROR);
 
-	/* Use up some clock cycles and undo the instruction's cycles */
-	USE_CYCLES(CYC_EXCEPTION[EXCEPTION_ADDRESS_ERROR] - CYC_INSTRUCTION[REG_IR]);
+	/* Use up some clock cycles. Note that we don't need to undo the 
+	instruction's cycles here as we've longjmp:ed directly from the
+	instruction handler without passing the part of the excecute loop
+	that deducts instruction cycles */
+	USE_CYCLES(CYC_EXCEPTION[EXCEPTION_ADDRESS_ERROR]); 
 }
 
 

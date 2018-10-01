@@ -1,14 +1,12 @@
 #ifndef M68KOPS__HEADER
 #define M68KOPS__HEADER
 
+#define NUM_CPU_TYPES 4
+
 /* ======================================================================== */
 /* ============================ OPCODE HANDLERS =========================== */
 /* ======================================================================== */
 
-
-// MagicMacX specific
-void m68k_op_call_emu_proc(void);
-void m68k_op_call_emu_cproc(void);
 
 void m68k_op_1010(void);
 void m68k_op_1111(void);
@@ -248,7 +246,7 @@ void m68k_op_andi_32_di(void);
 void m68k_op_andi_32_ix(void);
 void m68k_op_andi_32_aw(void);
 void m68k_op_andi_32_al(void);
-void m68k_op_andi_16_toc(void);
+void m68k_op_andi_8_toc(void);
 void m68k_op_andi_16_tos(void);
 void m68k_op_asr_8_s(void);
 void m68k_op_asr_16_s(void);
@@ -473,6 +471,8 @@ void m68k_op_callm_32_aw(void);
 void m68k_op_callm_32_al(void);
 void m68k_op_callm_32_pcdi(void);
 void m68k_op_callm_32_pcix(void);
+void m68k_op_call_emu_proc(void);
+void m68k_op_call_emu_cproc(void);
 void m68k_op_cas_8_ai(void);
 void m68k_op_cas_8_pi(void);
 void m68k_op_cas_8_pi7(void);
@@ -772,7 +772,7 @@ void m68k_op_eori_32_di(void);
 void m68k_op_eori_32_ix(void);
 void m68k_op_eori_32_aw(void);
 void m68k_op_eori_32_al(void);
-void m68k_op_eori_16_toc(void);
+void m68k_op_eori_8_toc(void);
 void m68k_op_eori_16_tos(void);
 void m68k_op_exg_32_dd(void);
 void m68k_op_exg_32_aa(void);
@@ -1275,8 +1275,8 @@ void m68k_op_moves_32_di(void);
 void m68k_op_moves_32_ix(void);
 void m68k_op_moves_32_aw(void);
 void m68k_op_moves_32_al(void);
-void m68k_op_moveq_32(void);
 void m68k_op_move16_32(void);
+void m68k_op_moveq_32(void);
 void m68k_op_muls_16_d(void);
 void m68k_op_muls_16_ai(void);
 void m68k_op_muls_16_pi(void);
@@ -1483,7 +1483,7 @@ void m68k_op_ori_32_di(void);
 void m68k_op_ori_32_ix(void);
 void m68k_op_ori_32_aw(void);
 void m68k_op_ori_32_al(void);
-void m68k_op_ori_16_toc(void);
+void m68k_op_ori_8_toc(void);
 void m68k_op_ori_16_tos(void);
 void m68k_op_pack_16_rr(void);
 void m68k_op_pack_16_mm_ax7(void);
@@ -1978,7 +1978,7 @@ void m68k_op_unpk_16_mm(void);
 void m68ki_build_opcode_table(void);
 
 extern void (*m68ki_instruction_jump_table[0x10000])(void); /* opcode handler jump table */
-extern unsigned char m68ki_cycles[][0x10000];
+extern unsigned char m68ki_cycles[NUM_CPU_TYPES][0x10000];
 
 
 /* ======================================================================== */
