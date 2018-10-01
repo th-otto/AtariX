@@ -65,10 +65,15 @@
 
 #define sint8  signed   char			/* ASG: changed from char to signed char */
 #define sint16 signed   short
-#define sint32 signed   long
 #define uint8  unsigned char
 #define uint16 unsigned short
+#if UINT_MAX == 0xffffffff
+#define sint32 signed   int
+#define uint32 unsigned int
+#else
+#define sint32 signed   long
 #define uint32 unsigned long
+#endif
 
 /* signed and unsigned int must be at least 32 bits wide */
 #define sint   signed   int
@@ -116,7 +121,7 @@
 
 
 /* Allow for architectures that don't have 32-bit sizes */
-#if ULONG_MAX == 0xffffffff
+#if (ULONG_MAX == 0xffffffff) || (UINT_MAX == 0xffffffff)
 	#define MAKE_INT_32(A) (sint32)(A)
 #else
 	#undef  sint32
