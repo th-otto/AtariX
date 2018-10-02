@@ -3,6 +3,8 @@
 #if defined(USE_MUSASHI_68K_EMU)
 
 #include "m68kcpu.h"
+#include <stddef.h>
+#include "natfeat.h"
 
 /* ======================================================================== */
 /* ========================= INSTRUCTION HANDLERS ========================= */
@@ -1162,6 +1164,18 @@ void m68k_op_negx_32_al(void)
 	FLAG_Z |= res;
 
 	m68ki_write_32(ea, res);
+}
+
+
+void m68k_op_nf_id(void)
+{
+	REG_D[0] = nf_get_id(REG_SP + 4);
+}
+
+
+void m68k_op_nf_call(void)
+{
+	REG_D[0] = nf_call(REG_SP + 4);
 }
 
 

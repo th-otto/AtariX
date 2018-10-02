@@ -1944,6 +1944,8 @@ static opcode_handler_struct m68k_opcode_handler_table[] =
 	{m68k_op_bgt_32              , 0xffff, 0x6eff, {  0,   0,   6,   6}},
 	{m68k_op_ble_16              , 0xffff, 0x6f00, { 10,  10,   6,   6}},
 	{m68k_op_ble_32              , 0xffff, 0x6fff, {  0,   0,   6,   6}},
+	{m68k_op_nf_id               , 0xffff, 0x7300, {  0,   0,   0,   0}},
+	{m68k_op_nf_call             , 0xffff, 0x7301, {  0,   0,   0,   0}},
 	{m68k_op_sbcd_8_mm_axy7      , 0xffff, 0x8f0f, { 18,  18,  16,  16}},
 	{m68k_op_pack_16_mm_axy7     , 0xffff, 0x8f4f, {  0,   0,  13,  13}},
 	{m68k_op_unpk_16_mm_axy7     , 0xffff, 0x8f8f, {  0,   0,  13,  13}},

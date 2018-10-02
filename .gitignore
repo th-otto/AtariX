@@ -13,6 +13,7 @@ depcomp
 missing
 compile
 test-driver
+m68kmake
 stamp-*
 .DS_Store
 *.framework

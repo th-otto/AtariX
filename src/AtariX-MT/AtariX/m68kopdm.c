@@ -3,6 +3,8 @@
 #if defined(USE_MUSASHI_68K_EMU)
 
 #include "m68kcpu.h"
+#include <stddef.h>
+#include "natfeat.h"
 
 /* ======================================================================== */
 /* ========================= INSTRUCTION HANDLERS ========================= */

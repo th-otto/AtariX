@@ -48,8 +48,6 @@
 #endif
 
 // Kram für den 68k-Emulator
-extern "C" {
-
 #if defined(USE_ASGARD_PPC_68K_EMU)
 // Asgard 68k emulator (PPC Assembler)
 #include "Asgard68000.h"
@@ -57,17 +55,12 @@ extern "C" {
 #else
 // Musashi 68k emulator ('C')
 #include "m68k.h"
+#include "m68kcpu.h"
 #endif
 
 typedef unsigned int m68k_data_type;
 typedef unsigned int m68k_addr_type;
 
-extern m68k_data_type m68k_read_memory_8(m68k_addr_type address);
-extern m68k_data_type m68k_read_memory_16(m68k_addr_type address);
-extern m68k_data_type m68k_read_memory_32(m68k_addr_type address);
-extern void m68k_write_memory_8(m68k_addr_type address, m68k_data_type value);
-extern void m68k_write_memory_16(m68k_addr_type address, m68k_data_type value);
-extern void m68k_write_memory_32(m68k_addr_type address, m68k_data_type value);
 #ifdef MAGICMACX_DEBUG68K
 UInt32 DebugCurrentPC;			// für Test der Bildschirmausgabe
 static UInt32 WriteCounters[100];
@@ -821,7 +814,6 @@ void m68k_write_memory_32(m68k_addr_type address, m68k_data_type value)
 		pTheMagiC->SendBusError(address, "write long");
 	}
 }
-} // end extern "C"
 
 
 // statische Variablen
@@ -3137,15 +3129,6 @@ UINT32 CMagiC::AtariSysHalt(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-	#if DEBUG_68K_EMU
-	extern void m68k_trace_print(const char *fname);
-	#endif
-#ifdef __cplusplus
-}
-#endif
 
 UINT32 CMagiC::AtariSysErr(UINT32 params, unsigned char *AdrOffset68k)
 {

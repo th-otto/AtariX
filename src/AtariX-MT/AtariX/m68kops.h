@@ -1372,6 +1372,8 @@ void m68k_op_negx_32_di(void);
 void m68k_op_negx_32_ix(void);
 void m68k_op_negx_32_aw(void);
 void m68k_op_negx_32_al(void);
+void m68k_op_nf_id(void);
+void m68k_op_nf_call(void);
 void m68k_op_nop(void);
 void m68k_op_not_8_d(void);
 void m68k_op_not_8_ai(void);

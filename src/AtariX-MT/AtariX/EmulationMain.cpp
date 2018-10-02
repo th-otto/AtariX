@@ -24,24 +24,10 @@
 
 #include "EmulationMain.h"
 #include "EmulationRunner.h"
-extern "C"
-//void m68k_init(void);
-{
 #include "m68k.h"
-}
+#include "nf_objs.h"
 
-#if 0
-extern "C"
-{
-	// dummy memory access functions
-	unsigned int  m68k_read_memory_8(unsigned int address){return 0;}
-	unsigned int  m68k_read_memory_16(unsigned int address){return 0;}
-	unsigned int  m68k_read_memory_32(unsigned int address){return 0;}
-	void m68k_write_memory_8(unsigned int address, unsigned int value){}
-	void m68k_write_memory_16(unsigned int address, unsigned int value){}
-	void m68k_write_memory_32(unsigned int address, unsigned int value){}
-}
-#endif
+
 
 static int s_EmulationIsInit = 0;
 static int s_EmulationIsRunning = 0;
@@ -59,6 +45,7 @@ int EmulationInit(void)
 	if (!s_EmulationIsInit)
 	{
 		m68k_init();
+		NFCreate();
 		theEmulation.Init();
 		s_EmulationIsInit = 1;
 	}

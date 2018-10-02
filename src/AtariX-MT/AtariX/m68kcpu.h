@@ -40,6 +40,10 @@
 #include <setjmp.h>
 #endif /* M68K_EMULATE_ADDRESS_ERROR */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* ======================================================================== */
 /* ==================== ARCHITECTURE-DEPENDANT DEFINES ==================== */
 /* ======================================================================== */
@@ -67,7 +71,7 @@
 #define sint16 signed   short
 #define uint8  unsigned char
 #define uint16 unsigned short
-#if UINT_MAX == 0xffffffff
+#if UINT_MAX == 0xffffffffU
 #define sint32 signed   int
 #define uint32 unsigned int
 #else
@@ -91,7 +95,7 @@
 
 
 /* Allow for architectures that don't have 8-bit sizes */
-#if UCHAR_MAX == 0xff
+#if UCHAR_MAX == 0xffU
 	#define MAKE_INT_8(A) (sint8)(A)
 #else
 	#undef  sint8
@@ -106,7 +110,7 @@
 
 
 /* Allow for architectures that don't have 16-bit sizes */
-#if USHRT_MAX == 0xffff
+#if USHRT_MAX == 0xffffU
 	#define MAKE_INT_16(A) (sint16)(A)
 #else
 	#undef  sint16
@@ -121,7 +125,7 @@
 
 
 /* Allow for architectures that don't have 32-bit sizes */
-#if (ULONG_MAX == 0xffffffff) || (UINT_MAX == 0xffffffff)
+#if (ULONG_MAX == 0xffffffffUL) || (UINT_MAX == 0xffffffffU)
 	#define MAKE_INT_32(A) (sint32)(A)
 #else
 	#undef  sint32
@@ -2063,6 +2067,10 @@ INLINE void m68ki_check_interrupts(void)
 }
 
 
+#ifdef __cplusplus
+}
+#endif
+		
 
 /* ======================================================================== */
 /* ============================== END OF FILE ============================= */

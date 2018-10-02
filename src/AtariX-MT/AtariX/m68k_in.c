@@ -88,7 +88,7 @@ must fix:
  * Example:
  * clr       32  .     .     0100001010......  A+-DXWL...  U U U   12   6   4
  *
- * This table entry says that the clr.l opcde has 7 variations (A+-DXWL).
+ * This table entry says that the clr.l opcode has 7 variations (A+-DXWL).
  * It is run in user or supervisor mode for all CPUs, and uses 12 cycles for
  * 68000, 6 cycles for 68010, and 4 cycles for 68020.
  */
@@ -289,6 +289,8 @@ M68KMAKE_OPCODE_HANDLER_HEADER
 #if defined(USE_MUSASHI_68K_EMU)
 
 #include "m68kcpu.h"
+#include <stddef.h>
+#include "natfeat.h"
 
 /* ======================================================================== */
 /* ========================= INSTRUCTION HANDLERS ========================= */
@@ -746,6 +748,8 @@ negx      16  .     d     0100000001000...  ..........  U U U U    4   4   2   2
 negx      16  .     .     0100000001......  A+-DXWL...  U U U U    8   8   4   4
 negx      32  .     d     0100000010000...  ..........  U U U U    6   6   2   2
 negx      32  .     .     0100000010......  A+-DXWL...  U U U U   12  12   4   4
+nf_id      0  .     .     0111001100000000  ..........  U U U U    .   .   .   .  MagicMacX specific; conflicts with CF mvs d0,d1
+nf_call    0  .     .     0111001100000001  ..........  U U U U    .   .   .   .  MagicMacX specific; conflicts with CF mvs d1,d1
 nop        0  .     .     0100111001110001  ..........  U U U U    4   4   2   2
 not        8  .     d     0100011000000...  ..........  U U U U    4   4   2   2
 not        8  .     .     0100011000......  A+-DXWL...  U U U U    8   8   4   4
@@ -3269,15 +3273,15 @@ M68KMAKE_OP(call_emu_proc, 0, ., .)
 	typedef unsigned tfHostCall(unsigned a1, unsigned char *emubase);
 	tfHostCall *proc;
 
-	a0 = m68ki_cpu.dar[8];	/* hopefully in host's endianess mode */
-	a1 = m68ki_cpu.dar[9];
+	a0 = REG_A[0];	/* hopefully in host's endianess mode */
+	a1 = REG_A[1];
 	p = sBaseAddr + a0;		/* address in host's address range */
 	/* geht nicht: */
 	/* proc = *((tfHostCall *)(p)); */
 	a0 = *((unsigned *) (p + 0));
 	proc = (tfHostCall *) a0;
 	/* call host function. Put return value into d0 (all in host endian-mode) */
-	m68ki_cpu.dar[0] = proc(a1, sBaseAddr);
+	REG_D[0] = proc(a1, sBaseAddr);
 }
 
 
@@ -3290,9 +3294,8 @@ M68KMAKE_OP(call_emu_cproc, 0, ., .)
 	typedef unsigned tfHostCallCpp(unsigned self, unsigned a1, unsigned char *emubase);
 	tfHostCallCpp *proc;
 
-
-	a0 = m68ki_cpu.dar[8];	/* hopefully in host's endianess mode */
-	a1 = m68ki_cpu.dar[9];
+	a0 = REG_A[0];	/* hopefully in host's endianess mode */
+	a1 = REG_A[1];
 	p = sBaseAddr + a0;		/* address in host's address range */
 	/* geht nicht: */
 	/* proc = *((tfHostCallCpp *)(p)); */
@@ -3300,7 +3303,7 @@ M68KMAKE_OP(call_emu_cproc, 0, ., .)
 	proc = (tfHostCallCpp *) a0;
 	self = *((unsigned *) (p + 12));
 	/* call host function. Put return value into d0 (all in host endian-mode) */
-	m68ki_cpu.dar[0] = proc(self, a1, sBaseAddr);
+	REG_D[0] = proc(self, a1, sBaseAddr);
 }
 
 
@@ -8016,6 +8019,20 @@ M68KMAKE_OP(negx, 32, ., .)
 	FLAG_Z |= res;
 
 	m68ki_write_32(ea, res);
+}
+
+
+/* MagicMacX specific */
+M68KMAKE_OP(nf_id, 0, ., .)
+{
+	REG_D[0] = nf_get_id(REG_SP + 4);
+}
+
+
+/* MagicMacX specific */
+M68KMAKE_OP(nf_call, 0, ., .)
+{
+	REG_D[0] = nf_call(REG_SP + 4);
 }
 
 

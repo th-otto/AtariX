@@ -58,4 +58,36 @@
 #define USE_MUSASHI_68K_EMU 1
 #endif
 
+#define NAME_STRING "AtariX"
+#define VERSION_STRING "0.3"
+
+#if defined(__APPLE__)
+#define OS_TYPE "macOS"
+#define HOST_SCREEN_DRIVER "Quartz"
+#elif defined(__ANDROID__)
+#define OS_TYPE "Android"
+#define HOST_SCREEN_DRIVER "X"
+#elif defined(__linux__)
+#define OS_TYPE "Linux"
+#define HOST_SCREEN_DRIVER "X"
+#elif defined(_WIN32) || defined(__CYGWIN__)
+#define OS_TYPE "Windows"
+#define HOST_SCREEN_DRIVER "GDI"
+#else
+#define OS_TYPE "Unknown"
+#define HOST_SCREEN_DRIVER "Unknown"
+#endif
+
+#ifdef __x86_64__
+#define HOST_CPU_TYPE "x86-64"
+#elif defined(__i386__)
+#define HOST_CPU_TYPE "x86"
+#elif defined(__aarch64__)
+#define HOST_CPU_TYPE "aarch64"
+#elif defined(__arm__)
+#define HOST_CPU_TYPE "arm"
+#else
+#define HOST_CPU_TYPE "Unknown"
+#endif
+
 #endif
