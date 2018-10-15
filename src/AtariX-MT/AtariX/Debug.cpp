@@ -116,6 +116,14 @@ void CDebug::_DebugPrint(const char *head, const char *format, va_list arglist)
 *
 **********************************************************************/
 
+void CDebug::_DebugTrace(const char *format, ...)
+{
+	va_list arglist;
+	va_start(arglist, format);
+
+	_DebugPrint( "", format, arglist);
+}
+
 void CDebug::_DebugInfo(const char *format, ...)
 {
 	va_list arglist;

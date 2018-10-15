@@ -33,7 +33,7 @@
 
 EmulationRunner::EmulationRunner(void)
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
     m_bQuitLoop = false;
     //drawContext = NULL;
 	m_EmulatorThread = NULL;
@@ -58,7 +58,7 @@ EmulationRunner::EmulationRunner(void)
 
 EmulationRunner::~EmulationRunner(void)
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 }
 
 
@@ -72,7 +72,7 @@ EmulationRunner::~EmulationRunner(void)
 
 void EmulationRunner::Init(void)
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
     int ret;
 
 	m_counter = 0;
@@ -105,7 +105,7 @@ void EmulationRunner::Config
 	const char *atariSerialDevice
 )
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 
 	// memory size is passed as Megabytes (2 ^ 20)
 	if (atariMemorySize < 1)
@@ -149,11 +149,11 @@ void EmulationRunner::Config
 	else
 		Globals.s_Preferences.m_atariScreenColourMode = atariScreenMode16M;
 
-	printf("%s(): atariScreenColourMode (%u)\n", __func__, atariScreenColourMode);
+	DebugTrace("%s(): atariScreenColourMode (%u)", __func__, atariScreenColourMode);
 
 	m_atariScreenStretchX = atariScreenStretchX;
 	m_atariScreenStretchY = atariScreenStretchY;
-	printf("%s(): atariHideHostMouse(%u) -- ignored, because unreliable in SDL\n", __func__, atariHideHostMouse);
+	DebugTrace("%s(): atariHideHostMouse(%u) -- ignored, because unreliable in SDL", __func__, atariHideHostMouse);
 //	m_atariHideHostMouse  = atariHideHostMouse;
 
 	if ((atariPrintCommand) && strlen(atariPrintCommand) < 255)
@@ -162,7 +162,7 @@ void EmulationRunner::Config
 	}
 	else
 	{
-		printf("%s(): atariPrintCommand string empty or too long, ignored\n", __func__);
+		DebugWarning("%s(): atariPrintCommand string empty or too long, ignored", __func__);
 	}
 
 	if ((atariSerialDevice) && strlen(atariSerialDevice) < 255)
@@ -171,7 +171,7 @@ void EmulationRunner::Config
 	}
 	else
 	{
-		printf("%s(): atariSerialDevice string empty or too long, ignored\n", __func__);
+		DebugWarning("%s(): atariSerialDevice string empty or too long, ignored", __func__);
 	}
 
 	if ((atariKernelPathUrl) && strlen(atariKernelPathUrl) < 1024)
@@ -180,7 +180,7 @@ void EmulationRunner::Config
 	}
 	else
 	{
-		printf("%s(): atariKernelPathUrl string empty or too long, ignored\n", __func__);
+		DebugWarning("%s(): atariKernelPathUrl string empty or too long, ignored", __func__);
 	}
 
 	if ((atariRootfsPathUrl) && strlen(atariRootfsPathUrl) < 1024)
@@ -189,7 +189,7 @@ void EmulationRunner::Config
 	}
 	else
 	{
-		printf("%s(): s_atariRootfsPathUrl string empty or too long, ignored\n", __func__);
+		DebugWarning("%s(): s_atariRootfsPathUrl string empty or too long, ignored", __func__);
 	}
 }
 
@@ -202,7 +202,7 @@ void EmulationRunner::Config
 
 void EmulationRunner::ChangeAtariDrive(unsigned drvnr, CFURLRef drvUrl)
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 	if (drvnr < NDRIVES)
 	{
 		Globals.s_Preferences.m_drvPath[drvnr] = drvUrl;
@@ -222,7 +222,7 @@ void EmulationRunner::ChangeAtariDrive(unsigned drvnr, CFURLRef drvUrl)
 
 int EmulationRunner::StartEmulatorThread(void)
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 	if (!m_EmulatorThread)
 	{
 		// Send user event to event loop
@@ -250,7 +250,7 @@ int EmulationRunner::StartEmulatorThread(void)
 
 int EmulationRunner::OpenWindow(void)
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 	if (!m_sdl_window)
 	{
 		// Send user event to event loop
@@ -289,7 +289,7 @@ static void UpdateTextureFromRect(SDL_Texture *txtu, const SDL_Surface *srf, con
 	r = SDL_UpdateTexture(txtu, rect, pixels, srf->pitch);
 	if (r == -1)
 	{
-		fprintf(stderr, "ERR: SDL %s", SDL_GetError());
+		DebugError("SDL %s", SDL_GetError());
 	}
 }
 
@@ -798,7 +798,7 @@ void EmulationRunner::_OpenWindow(void)
 	m_sdl_renderer = SDL_CreateRenderer(m_sdl_window, -1, SDL_RENDERER_ACCELERATED);
 	if (!m_sdl_renderer)
 	{
-		fprintf(stderr, "ERR: SDL %s\n", SDL_GetError());
+		DebugError("SDL %s", SDL_GetError());
 	}
 	assert(m_sdl_renderer);
 
@@ -823,7 +823,7 @@ void EmulationRunner::_OpenWindow(void)
 	ret = SDL_FillRect(m_sdl_surface, &r, 0x88888888);
 	if (ret == -1)
 	{
-		fprintf(stderr, "ERR: SDL %s\n", SDL_GetError());
+		DebugError("SDL %s", SDL_GetError());
 		//exit(-1);
 	}
 	UpdateTextureFromRect(m_sdl_texture, m_sdl_surface, &r);
@@ -953,7 +953,7 @@ void EmulationRunner::EventLoop(void)
 {
 	uint8_t *clipboardData;
 
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
     SDL_Event event;
 
 	// Do not catch keyboard events, leave them for dialogue windows
@@ -967,7 +967,7 @@ void EmulationRunner::EventLoop(void)
 				{
 					const SDL_WindowEvent *ev = (SDL_WindowEvent *) &event;
 #if 0
-					fprintf(stderr, "INF: SDL window event: evt=%u, wid=%u, ev=%s, data1=0x%08x, data2=0x%08x\n",
+					DebugInfo("SDL window event: evt=%u, wid=%u, ev=%s, data1=0x%08x, data2=0x%08x",
 							ev->type,
 							ev->windowID,
 							SDL_WindowEventID_to_str((SDL_WindowEventID) ev->event),
@@ -1031,9 +1031,9 @@ void EmulationRunner::EventLoop(void)
 				{
 					const SDL_KeyboardEvent *ev = (SDL_KeyboardEvent *) &event;
 #if 0
-					fprintf(stderr, "INF: type %s\n", ev->type == SDL_KEYUP ? "up" : "down");
-					fprintf(stderr, "INF: state %s\n", ev->state == SDL_PRESSED ? "pressed" : "released");
-					fprintf(stderr, "INF: scancode = %08x, keycode = %08x, mod = %04x\n", ev->keysym.scancode, ev->keysym.sym, ev->keysym.mod);
+					DebugInfo("type %s", ev->type == SDL_KEYUP ? "up" : "down");
+					DebugInfo("state %s", ev->state == SDL_PRESSED ? "pressed" : "released");
+					DebugInfo("scancode = %08x, keycode = %08x, mod = %04x", ev->keysym.scancode, ev->keysym.sym, ev->keysym.mod);
 #endif
 					(void) m_Emulator.SendSdlKeyboard(ev->keysym.scancode, ev->type == SDL_KEYUP);
 				}
@@ -1046,7 +1046,7 @@ void EmulationRunner::EventLoop(void)
 				{
 					const SDL_MouseMotionEvent *ev = (SDL_MouseMotionEvent *) &event;
 #if 0
-					fprintf(stderr, "INF: mouse motion x = %d, y = %d, xrel = %d, yrel = %d\n", ev->x, ev->y, ev->xrel, ev->yrel);
+					DebugInfo("mouse motion x = %d, y = %d, xrel = %d, yrel = %d", ev->x, ev->y, ev->xrel, ev->yrel);
 #endif
 					int x = ev->x;
 					int y = ev->y;
@@ -1063,7 +1063,7 @@ void EmulationRunner::EventLoop(void)
 				{
 					const SDL_MouseButtonEvent *ev = (SDL_MouseButtonEvent *) &event;
 #if 0
-					fprintf(stderr, "INF: mouse button %s: x = %d, y = %d, button = %d\n",
+					DebugInfo("mouse button %s: x = %d, y = %d, button = %d",
 							ev->type == SDL_MOUSEBUTTONUP ? "up" : "down", ev->x, ev->y, ev->button);
 #endif
 					int atariMouseButton = -1;
@@ -1084,7 +1084,7 @@ void EmulationRunner::EventLoop(void)
 				{
 #if 0
 					const SDL_MouseWheelEvent *ev = (SDL_MouseWheelEvent *) &event;
-					fprintf(stderr, "INF: mouse wheel: x = %d, y = %d\n", ev->x, ev->y);
+					DebugInfo("mouse wheel: x = %d, y = %d", ev->x, ev->y);
 #endif
 				}
 				break;
@@ -1101,13 +1101,13 @@ void EmulationRunner::EventLoop(void)
                 break;
 
             default:
-				fprintf(stderr, "WRN: unhandled SDL event %u\n", event.type);
+				/* DebugWarn("unhandled SDL event %u", event.type); */
                 break;
-        }   // End switch
+        }
             
-    }   // End while
+    }
 
-	printf("%s() =>\n", __func__);
+	DebugTrace("%s() =>", __func__);
 }
 
 
@@ -1162,7 +1162,7 @@ void EmulationRunner::EmulatorWindowUpdate(void)
 	if (atomic_exchange(&m_Emulator.bVideoBufChanged, 0))
 	{
 #if 0
-		fprintf(stderr, "INF: Atari Screen dirty\n");
+		DebugInfo("Atari Screen dirty");
 #endif
 		if (m_sdl_atari_surface != m_sdl_surface)
 		{
@@ -1210,28 +1210,28 @@ void EmulationRunner::EmulatorWindowUpdate(void)
 
 int EmulationRunner::EmulatorThread()
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 	int err;
 
 	DebugInit(NULL /* stderr */);
 	err = CGlobals::Init();
 	if (err)
 	{
-		fprintf(stderr, "ERR: CGlobals::Init() => %d\n", err);
+		DebugError("CGlobals::Init() => %d", err);
 		return 0;
 	}
 
 	err = m_Emulator.Init(&m_EmulatorScreen, &m_EmulatorXcmd);
 	if (err)
 	{
-		fprintf(stderr, "ERR: m_Emulator.Init() => %d\n", err);
+		DebugError("m_Emulator.Init() => %d", err);
 		return 0;
 	}
 
 	err = m_Emulator.CreateThread();
 	if (err)
 	{
-		fprintf(stderr, "ERR: m_Emulator.CreateThread() => %d\n", err);
+		DebugError("m_Emulator.CreateThread() => %d", err);
 		return 0;
 	}
 
@@ -1239,6 +1239,6 @@ int EmulationRunner::EmulatorThread()
 
 	m_Emulator.StartExec();
 
-	printf("%s() =>\n", __func__);
+	DebugTrace("%s() =>", __func__);
 	return 0;
 }

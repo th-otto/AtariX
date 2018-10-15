@@ -36,6 +36,7 @@ class CDebug
 {
 	public:
 	static void _DebugInit(const unsigned char *DebugFileName);
+	static void _DebugTrace(const char *format, ...);
 	static void _DebugInfo(const char *format, ...);
 	static void _DebugWarning(const char *format, ...);
 	static void _DebugError(const char *format, ...);
@@ -47,40 +48,18 @@ class CDebug
 	static short RefNum;
 };
 
-#if 0
-#define DebugInit(...)
-#define DebugInfo(format, ...) fprintf(stderr, "INF: " format "\n", ##__VA_ARGS__)
-#define DebugWarning(format, ...) fprintf(stderr, "WRN: " format "\n", ##__VA_ARGS__)
-#define DebugError(format, ...) fprintf(stderr, "ERR: " format "\n", ##__VA_ARGS__)
-
-#else
 #define DebugInit CDebug::_DebugInit
+#define DebugTrace(...) CDebug::_DebugTrace(__VA_ARGS__)
 #define DebugInfo(...) CDebug::_DebugInfo(__VA_ARGS__)
 #define DebugWarning(...) CDebug::_DebugWarning(__VA_ARGS__)
 #define DebugError(...) CDebug::_DebugError(__VA_ARGS__)
-#endif
+
 #else
-/*
-class CDebug
-{
-	public:
-	inline static void DebugInit(unsigned char *DebugFileName)
-	{
-	};
-	inline static void _DebugInfo(const char *format, ...)
-	{
-	};
-	inline static void _DebugWarning(const char *format, ...)
-	{
-	};
-	inline static void _DebugError(const char *format, ...)
-	{
-	};
-	private:
-};
-*/
+
 #define DebugInit(...)
+#define DebugTrace(...)
 #define DebugInfo(...)
 #define DebugWarning(...)
 #define DebugError(...)
+
 #endif
