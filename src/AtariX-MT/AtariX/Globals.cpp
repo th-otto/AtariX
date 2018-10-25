@@ -43,9 +43,6 @@ ProcessInfoRec CGlobals::s_ProcessInfo;
 uint8_t CGlobals::s_atariKernelPathUrl[1024];
 uint8_t CGlobals::s_atariRootfsPathUrl[1024];
 uint8_t CGlobals::s_atariScrapFileUnixPath[1024];
-/*
-FSSpec CGlobals::s_ProcessPath;
-*/
 FSSpec CGlobals::s_ProcDir;
 long CGlobals::s_ProcDirID;					// hier liegt das Bundle
 long CGlobals::s_ExecutableDirID;				// hier liegt die ausführbare Datei
@@ -53,7 +50,6 @@ char CGlobals::s_ThisPathNameCarbon[256];
 char CGlobals::s_ThisPathNameUnix[256];
 
 NumVersion CGlobals::s_ProgramVersion;
-//Str255 CGlobals::s_MagiCKernelFilename;
 CFURLRef CGlobals::s_MagiCKernelUrl;
 CFURLRef CGlobals::s_rootfsUrl;
 
@@ -82,49 +78,6 @@ CGlobals::CGlobals()
 //	RegisterAppearanceClient();
 }
 
-/**********************************************************************
-*
-* (STATIC) Zeichenketten aus Programm-Ressource ermitteln
-*
-**********************************************************************/
-
-/* ersetzt durch "localizable.strings"
-void CGlobals::GetRsrcStr(const unsigned char * name, char *s)
-{
-	Handle hdl;
-	short oldres;
-
-	oldres = CurResFile();			// aktuelle Resourcedatei retten
-	UseResFile(s_ThisResFile);		// Programm durchsuchen
-	hdl = Get1NamedResource('STR ', name);	// Resource suchen
-	if	(hdl)
-	{
-		p2cstrcpy(s, (StringPtr) *hdl);
-		ReleaseResource(hdl);
-	}
-	else
-	{
-		s[0] = '\0';
-		DebugError("CGlobals::GetRsrcStr() -- Zeichenkette %s nicht gefunden", name);
-	}
-	UseResFile(oldres);
-}
-*/
-
-#if 0
-/*****************************************************************
-*
-*  explizite erste Initialisierung
-*  Muß vor Init() aufgerufen werden. Wäre vielleicht besser
-*  im Konstruktor aufgehoben?
-*
-******************************************************************/
-
-void CGlobals::InitDirectories(void)
-{
-	GetExeLocation(&s_ownPSN, &s_ProcessInfo, &s_ProcDir, &s_ProcDirID, &s_ExecutableDirID);
-}
-#endif
 
 
 /*****************************************************************
@@ -189,75 +142,6 @@ int CGlobals::Init(void)
 		strcat((char *) s_atariScrapFileUnixPath, scrapFileName);
 		DebugInfo("CClipboard::Mac2Atari() --- scrap file is \"%s\".\n", s_atariScrapFileUnixPath);
 	}
-
-	{
-//		CFStringRef CFStrPath;
-//		const char *s;
-//		char buf[512];
-//		Boolean b;
-
-/*
-		s_MagiCKernelUrl = CFBundleCopyResourceURL(
-					CFBundleGetMainBundle(),	// this is our Bundle
-					CFSTR("MagicMacX"),				// CFStringRef resourceName,
-					CFSTR("OS"),						// CFStringRef resourceType,
-					NULL							// CFStringRef subDirName
-					);
-		DebugInfo("CGlobals::Init() -- URLRef for kernel = 0x%08x", s_MagiCKernelUrl);
-*/
-/*
-		s_rootfsUrl = CFBundleCopyResourceURL(
-							  CFBundleGetMainBundle(),	// this is our Bundle
-							  CFSTR("rootfs"),				// CFStringRef resourceName,
-							  NULL,						// CFStringRef resourceType,
-							  NULL							// CFStringRef subDirName
-							  );
-		DebugInfo("CGlobals::Init() -- URLRef for rootfs = 0x%08x", s_rootfsUrl);
-*/
-
-#if 0
-		if	(s_MagiCKernelUrl)
-		{
-	/*
-			CFStrPath = CFURLCopyFileSystemPath(CFUrlRef, kCFURLPOSIXPathStyle);
-	//		s = CFStringGetCStringPtr(CFStrPath, kCFStringEncodingMacRoman);
-	//		if	(s)
-			b = CFStringGetCString(CFStrPath, buf, 511, kCFStringEncodingMacRoman);
-			if	(b)
-			{
-				DebugInfo("CGlobals::Init() -- URLRef as Posix path = %s", buf);
-			}
-			CFRelease(CFStrPath);
-	*/
-			CFStrPath = CFURLCopyFileSystemPath(CFUrlRef, kCFURLHFSPathStyle);
-			b = CFStringGetCString(CFStrPath, (char *) (s_MagiCKernelFilename + 1), 254, kCFStringEncodingMacRoman);
-			if	(b)
-			{
-				DebugInfo("CGlobals::Init() -- URLRef as HFS path = %s", s_MagiCKernelFilename+1);
-				C2P(s_MagiCKernelFilename);
-			}
-			CFRelease(CFStrPath);
-	/*
-			CFStrPath = CFURLCopyFileSystemPath(CFUrlRef, kCFURLWindowsPathStyle);
-			b = CFStringGetCString(CFStrPath, buf, 511, kCFStringEncodingMacRoman);
-			if	(b)
-			{
-				DebugInfo("CGlobals::Init() -- URLRef as Windows path = %s", buf);
-			}
-			CFRelease(CFStrPath);
-	*/
-			CFRelease(CFUrlRef);
-		}
-		else
-			pstrcpy(s_MagiCKernelFilename, "\pMagicMacX.OS");
-	}
-	s_MBarHeight = GetMBarHeight();
-	s_ThisResFile = CurResFile();
-	// Anzahl Bildschirme ermitteln
-	s_NoOfMonitors = GetNoOfMonitors();
-#else
-	}
-#endif
 
 	// Carbon-Pfad ermitteln
 

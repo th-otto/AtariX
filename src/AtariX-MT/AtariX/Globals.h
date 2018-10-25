@@ -79,23 +79,14 @@ class CGlobals
 	static uint8_t s_atariKernelPathUrl[1024];		// UTF8 encoded
 	static uint8_t s_atariRootfsPathUrl[1024];		// UTF8 encoded
 	static uint8_t s_atariScrapFileUnixPath[1024];
-//	static void InitDirectories(void);
 	static int Init(void);
-/* ersetzt durch "localizable.strings"
-	static void GetRsrcStr(const unsigned char * name, char *s);
-*/
 	static OSErr GetDosPath(
 				const FSSpec *pSpec,
 				char *pBuf,
 				unsigned uBufLen);
 	static bool s_bRunning;
-//	static short s_ThisResFile;
-//	static ProcessSerialNumber s_ownPSN;
 	static ProcessInfoRec s_ProcessInfo;
 	// die ausführbare Datei
-/*
-	static FSSpec s_ProcessPath;
-*/
 	// der Ordner, in dem die ausführbare Datei bzw. das Bundle liegt
 	static FSSpec s_ProcDir;
 	static long s_ProcDirID;			// hier liegt das Bundle bzw. die PEF-Datei
@@ -106,10 +97,6 @@ class CGlobals
 	static char s_ThisPathNameUnix[256];
 	// Programmversion
 	static NumVersion s_ProgramVersion;
-#if 0
-	// HFS-Pfad des MagiC-Kernels (lokalisiert!)
-	static Str255 s_MagiCKernelFilename;
-#endif
 	static CFURLRef s_MagiCKernelUrl;
 	static CFURLRef s_rootfsUrl;
 	// Mac-Menü eingeschaltet lassen, kein Vollbild
