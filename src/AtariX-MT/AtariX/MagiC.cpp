@@ -1198,13 +1198,13 @@ static void PixmapToBigEndian(MXVDI_PIXMAP *thePixMap)
 	thePixMap->cmpCount      = CFSwapInt16HostToBig(thePixMap->cmpCount);
 	thePixMap->cmpSize       = CFSwapInt16HostToBig(thePixMap->cmpSize);
 	thePixMap->planeBytes    = CFSwapInt32HostToBig(thePixMap->planeBytes);
-/*
+#if 0
 	if (thePixMap->pixelFormat == k32BGRAPixelFormat)
 	{
 		DebugInfo("PixmapToBigEndian() -- k32BGRAPixelFormat => k32ARGBPixelFormat");
 		thePixMap->pixelFormat = CFSwapInt32HostToBig(k32ARGBPixelFormat);
 	}
-*/
+#endif
 }
 #endif
 
@@ -1573,7 +1573,7 @@ void CMagiC::UpdateAtariDoubleBuffer(void)
 	DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideoAddr =0x%08x", m_pFgBuffer);
 	HostVideoAddr = m_pFgBuffer;
 
-/*
+#if 0
 	if	(m_pBgBuffer)
 	{
 		DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideo2Addr =0x%08x", m_pBgBuffer);
@@ -1584,7 +1584,7 @@ void CMagiC::UpdateAtariDoubleBuffer(void)
 		DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideo2Addr =0x%08x", m_pFgBuffer);
 		HostVideo2Addr = m_pFgBuffer;
 	}
-*/
+#endif
 }
 
 
@@ -1950,11 +1950,11 @@ OSStatus CMagiC::EmuThread( void )
 			}
 			m_bInterruptMouseKeyboardPending = false;
 
-/*
+#if 0
 			errl = MPResetEvent(			// kein "pending kb interrupt"
 					m_InterruptEventsId,
 					EMU_INTPENDING_KBMOUSE);
-*/
+#endif
 			OS_ExitCriticalRegion(m_KbCriticalRegionId);
 #ifdef _DEBUG_KB_CRITICAL_REGION
 			CDebug::DebugInfo("CMagiC::EmuThread() --- Exited critical region m_KbCriticalRegionId");
@@ -2208,7 +2208,7 @@ void CMagiC::SendShutdown(void)
 *
 **********************************************************************/
 
-/*
+#if 0
 int CMagiC::SendKeyboard(UInt32 message, bool KeyUp)
 {
 	unsigned char val;
@@ -2230,16 +2230,16 @@ int CMagiC::SendKeyboard(UInt32 message, bool KeyUp)
 			}
 		}
 
-	#ifdef _DEBUG_KB_CRITICAL_REGION
+#ifdef _DEBUG_KB_CRITICAL_REGION
 		CDebug::DebugInfo("CMagiC::SendKeyboard() --- Enter critical region m_KbCriticalRegionId");
-	#endif
+#endif
 		OS_EnterCriticalRegion(m_KbCriticalRegionId, kDurationForever);
 		if	(GetKbBufferFree() < 1)
 		{
 			OS_ExitCriticalRegion(m_KbCriticalRegionId);
-	#ifdef _DEBUG_KB_CRITICAL_REGION
+#ifdef _DEBUG_KB_CRITICAL_REGION
 			CDebug::DebugInfo("CMagiC::SendKeyboard() --- Exited critical region m_KbCriticalRegionId");
-	#endif
+#endif
 			DebugError("CMagiC::SendKeyboard() --- Tastenpuffer ist voll");
 			return(1);
 		}
@@ -2250,9 +2250,9 @@ int CMagiC::SendKeyboard(UInt32 message, bool KeyUp)
 		if	(!val)
 		{
 			OS_ExitCriticalRegion(m_KbCriticalRegionId);
-	#ifdef _DEBUG_KB_CRITICAL_REGION
+#ifdef _DEBUG_KB_CRITICAL_REGION
 			CDebug::DebugInfo("CMagiC::SendKeyboard() --- Exited critical region m_KbCriticalRegionId");
-	#endif
+#endif
 			return(0);		// unbekannte Taste
 		}
 
@@ -2264,25 +2264,25 @@ int CMagiC::SendKeyboard(UInt32 message, bool KeyUp)
 		// Interrupt-Vektor 70 für Tastatur/MIDI mitliefern
 
 		m_bInterruptMouseKeyboardPending = true;
-	#if defined(USE_ASGARD_PPC_68K_EMU)
+#if defined(USE_ASGARD_PPC_68K_EMU)
 		Asgard68000SetExitImmediately();
-	#else
+#else
 		m68k_StopExecution();
-	#endif
+#endif
 
 		OS_SetEvent(			// aufwecken, wenn in "idle task"
 				m_InterruptEventsId,
 				EMU_INTPENDING_KBMOUSE);
 
 		OS_ExitCriticalRegion(m_KbCriticalRegionId);
-	#ifdef _DEBUG_KB_CRITICAL_REGION
+#ifdef _DEBUG_KB_CRITICAL_REGION
 		CDebug::DebugInfo("CMagiC::SendKeyboard() --- Exited critical region m_KbCriticalRegionId");
-	#endif
+#endif
 	}
 
 	return(0);	// OK
 }
-*/
+#endif
 
 
 /**********************************************************************
@@ -2388,24 +2388,22 @@ int CMagiC::SendKeyboardShift( UInt32 modifiers )
 
 	if (m_bEmulatorIsRunning)
 	{
-
 		// Emulation der rechten Maustaste mit der linken und gedrückter Cmd-Taste
-	/*
+#if 0
 		if	((!Globals.s_Preferences.m_KeyCodeForRightMouseButton) &&
 			 (m_CurrModifierKeys & cmdKey) != (modifiers & cmdKey))
 		{
 			// linken Mausknopf immer loslassen
 			SendMouseButton(1, false);
 		}
-	*/
+#endif
 		m_CurrModifierKeys = modifiers;
-	#ifdef _DEBUG_KB_CRITICAL_REGION
+#ifdef _DEBUG_KB_CRITICAL_REGION
 		CDebug::DebugInfo("CMagiC::SendKeyboardShift() --- Enter critical region m_KbCriticalRegionId");
-	#endif
+#endif
 		OS_EnterCriticalRegion(m_KbCriticalRegionId, kDurationForever);
 		for	(;;)
 		{
-
 			// Umrechnen in Atari-Scancode und abschicken
 
 			val = m_MagiCKeyboard.GetModifierScanCode(modifiers, &bAutoBreak);
@@ -2416,9 +2414,9 @@ int CMagiC::SendKeyboardShift( UInt32 modifiers )
 			if	(GetKbBufferFree() < nKeys)
 			{
 				OS_ExitCriticalRegion(m_KbCriticalRegionId);
-	#ifdef _DEBUG_KB_CRITICAL_REGION
+#ifdef _DEBUG_KB_CRITICAL_REGION
 				CDebug::DebugInfo("CMagiC::SendKeyboardShift() --- Exited critical region m_KbCriticalRegionId");
-	#endif
+#endif
 				DebugError("CMagiC::SendKeyboardShift() --- Tastenpuffer ist voll");
 				return(1);
 			}
@@ -2435,11 +2433,11 @@ int CMagiC::SendKeyboardShift( UInt32 modifiers )
 		if	(done)
 		{
 			m_bInterruptMouseKeyboardPending = true;
-	#if defined(USE_ASGARD_PPC_68K_EMU)
+#if defined(USE_ASGARD_PPC_68K_EMU)
 			Asgard68000SetExitImmediately();
-	#else
+#else
 			m68k_StopExecution();
-	#endif
+#endif
 		}
 
 		OS_SetEvent(			// aufwecken, wenn in "idle task"
@@ -2447,9 +2445,9 @@ int CMagiC::SendKeyboardShift( UInt32 modifiers )
 				EMU_INTPENDING_KBMOUSE);
 
 		OS_ExitCriticalRegion(m_KbCriticalRegionId);
-	#ifdef _DEBUG_KB_CRITICAL_REGION
+#ifdef _DEBUG_KB_CRITICAL_REGION
 		CDebug::DebugInfo("CMagiC::SendKeyboardShift() --- Exited critical region m_KbCriticalRegionId");
-	#endif
+#endif
 	}
 
 	return(0);	// OK
@@ -2484,27 +2482,27 @@ int CMagiC::SendMousePosition(int x, int y)
 		if	(y < 0)
 			y = 0;
 
-	#ifdef _DEBUG_KB_CRITICAL_REGION
+#ifdef _DEBUG_KB_CRITICAL_REGION
 		CDebug::DebugInfo("CMagiC::SendMousePosition() --- Enter critical region m_KbCriticalRegionId");
-	#endif
+#endif
 		OS_EnterCriticalRegion(m_KbCriticalRegionId, kDurationForever);
 		m_InterruptMouseWhere.h = (short) x;
 		m_InterruptMouseWhere.v = (short) y;
 		m_bInterruptMouseKeyboardPending = true;
-	#if defined(USE_ASGARD_PPC_68K_EMU)
+#if defined(USE_ASGARD_PPC_68K_EMU)
 		Asgard68000SetExitImmediately();
-	#else
+#else
 		m68k_StopExecution();
-	#endif
+#endif
 
 		OS_SetEvent(			// aufwecken, wenn in "idle task"
 				m_InterruptEventsId,
 				EMU_INTPENDING_KBMOUSE);
 
 		OS_ExitCriticalRegion(m_KbCriticalRegionId);
-	#ifdef _DEBUG_KB_CRITICAL_REGION
+#ifdef _DEBUG_KB_CRITICAL_REGION
 		CDebug::DebugInfo("CMagiC::SendMousePosition() --- Exited critical region m_KbCriticalRegionId");
-	#endif
+#endif
 	}
 
 	return(0);	// OK
@@ -2536,9 +2534,9 @@ int CMagiC::SendMouseButton(unsigned int NumOfButton, bool bIsDown)
 			return(1);
 		}
 
-	#ifdef _DEBUG_KB_CRITICAL_REGION
+#ifdef _DEBUG_KB_CRITICAL_REGION
 		CDebug::DebugInfo("CMagiC::SendMouseButton() --- Enter critical region m_KbCriticalRegionId");
-	#endif
+#endif
 		OS_EnterCriticalRegion(m_KbCriticalRegionId, kDurationForever);
 #if 0
 		if	(!Globals.s_Preferences.m_KeyCodeForRightMouseButton)
@@ -2576,20 +2574,20 @@ int CMagiC::SendMouseButton(unsigned int NumOfButton, bool bIsDown)
 		}
 
 		m_bInterruptMouseKeyboardPending = true;
-	#if defined(USE_ASGARD_PPC_68K_EMU)
+#if defined(USE_ASGARD_PPC_68K_EMU)
 		Asgard68000SetExitImmediately();
-	#else
+#else
 		m68k_StopExecution();
-	#endif
+#endif
 
 		OS_SetEvent(			// aufwecken, wenn in "idle task"
 				m_InterruptEventsId,
 				EMU_INTPENDING_KBMOUSE);
 
 		OS_ExitCriticalRegion(m_KbCriticalRegionId);
-	#ifdef _DEBUG_KB_CRITICAL_REGION
+#ifdef _DEBUG_KB_CRITICAL_REGION
 		CDebug::DebugInfo("CMagiC::SendMouseButton() --- Exited critical region m_KbCriticalRegionId");
-	#endif
+#endif
 	}
 
 	return(0);	// OK
@@ -2615,8 +2613,8 @@ int CMagiC::SendHz200( void )
 
 	if (m_bEmulatorIsRunning)
 	{
-		/*
-		 is of no use, because guest calls: "jsr v_clswk" to close VDI, no more redraws!
+#if 0
+		/* is of no use, because guest calls: "jsr v_clswk" to close VDI, no more redraws! */
 
 		if (m_AtariShutDownDelay)
 		{
@@ -2638,7 +2636,7 @@ int CMagiC::SendHz200( void )
 				return(0);
 			}
 		}
-		 */
+#endif
 
 		m_bInterrupt200HzPending = true;
 #if defined(USE_ASGARD_PPC_68K_EMU)
@@ -2867,9 +2865,9 @@ UINT32 CMagiC::AtariDOSFn(UINT32 params, unsigned char *AdrOffset68k)
    	#pragma options align=reset
 
 #ifdef _DEBUG
-    AtariDOSFnParm *theAtariDOSFnParm = (AtariDOSFnParm *) (AdrOffset68k + params);
+	AtariDOSFnParm *theAtariDOSFnParm = (AtariDOSFnParm *) (AdrOffset68k + params);
 #endif
-    DebugInfo("CMagiC::AtariDOSFn(fn = 0x%x)", CFSwapInt16BigToHost(theAtariDOSFnParm->dos_fnr));
+	DebugInfo("CMagiC::AtariDOSFn(fn = 0x%x)", CFSwapInt16BigToHost(theAtariDOSFnParm->dos_fnr));
 	return((UINT32) EINVFN);
 }
 
@@ -2884,11 +2882,12 @@ UINT32 CMagiC::AtariGettime(UINT32 params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
-/*
+#if 0
 	DateTimeRec dtr;
+
 	GetTime (&dtr);
 	return (dtr.second>>1) + (dtr.minute<<5) + ((unsigned short)dtr.hour<<11) + (((UINT32)dtr.day)<<16) + (((UINT32)dtr.month)<<21) + ((((UINT32)dtr.year)-1980)<<25);
-*/
+#endif
 
 	CFAbsoluteTime at = CFAbsoluteTimeGetCurrent();
 	CFTimeZoneRef tz = CFTimeZoneCopyDefault();
