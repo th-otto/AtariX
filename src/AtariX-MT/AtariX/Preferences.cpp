@@ -319,9 +319,9 @@ long CPreferences::GetRsrcNum(CFStringRef key, long deflt, bool bAdd)
 {
 	char s[256], sdeflt[256];
 
-	ultoa10((unsigned long) deflt, sdeflt);
+	sprintf(sdeflt, "%ld", deflt);
 	GetRsrcStr(key, s, sdeflt, bAdd);
-	return(atol(s));
+	return strtol(s, NULL, 0);
 /*
 	CFIndex theValue;
 	Boolean keyExistsAndHasValidFormat;
@@ -425,6 +425,6 @@ void CPreferences::SetRsrcNum(CFStringRef key, long l)
 {
 	char s[256];
 
-	ultoa10((unsigned long) l, s);
+	sprintf(s, "%ld", l);
 	SetRsrcStr(key, s);
 }

@@ -31,11 +31,6 @@
 
 // C-Strings (hat MW in stdlib vergessen!)
 
-void ultoa10(unsigned long val, char *str)
-{
-	sprintf(str, "%lu", val);
-}
-
 // Pascal-Strings
 
 void pstrcpy(Str255 dst, ConstStr255Param src)

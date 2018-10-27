@@ -21,8 +21,6 @@ extern "C" {
 #endif
 
 // C-Strings (hat MW in stdlib vergessen!)
-void ultoa10(unsigned long val, char *str);
-#define _ltoa(x, y, z) _itoa(x, y, z)
 // Pascal-Strings
 void pstrcpy(Str255 dst, ConstStr255Param src);
 // Konvertierungen
