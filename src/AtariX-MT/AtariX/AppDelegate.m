@@ -190,7 +190,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	
 	NSString *atariKernelUrlString = [self getAtariKernelUrl:atariLanguage];
 	EmulationConfig(
-					[atariKernelUrlString cStringUsingEncoding:NSUTF8StringEncoding],
+					atariKernelUrlString ? [atariKernelUrlString cStringUsingEncoding:NSUTF8StringEncoding] : NULL,
 					[atariRootfsUrlString cStringUsingEncoding:NSUTF8StringEncoding],
 					atariMemorySize, atariScreenWidth, atariScreenHeight,
 					atariScreenColourMode,
@@ -392,10 +392,12 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 		printf("invalid localisation code %d\n", (int) atariLanguage);
 		pathUrl = NULL;
 	}
-
-	NSString *pathUrlString = [pathUrl absoluteString];
-
-	printf("kernel localized path = %s\n", [pathUrlString UTF8String]);
+	NSString *pathUrlString;
+	if (pathUrl)
+		pathUrlString = [pathUrl absoluteString];
+	else
+		pathUrlString = NULL;
+	printf("kernel localized path = %s\n", pathUrlString ? [pathUrlString UTF8String] : "(nil)");
 	return pathUrlString;
 }
 

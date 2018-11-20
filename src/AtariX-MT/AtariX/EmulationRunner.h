@@ -67,7 +67,7 @@ class EmulationRunner
 		int OpenWindow(void);
 		void Cleanup(void);
 		void ChangeAtariDrive(unsigned drvnr, CFURLRef drvUrl);
-
+		bool isRunning(void) { return m_EmulatorRunning; }
 	private:
         static Uint32 LoopTimer(Uint32 interval, void* param);
 

@@ -33,22 +33,6 @@
 #include "Debug.h"
 #include "missing.h"
 
-extern "C" int GuiMyAlert(const char *msg_text, const char *info_txt, int nButtons);
-extern "C" void GuiAtariCrash
-(
-	UInt16 exc,
-	UInt32 ErrAddr,
-	const char *AccessMode,
-	UInt32 pc,
-	UInt16 sr,
-	UInt32 usp,
-	const UInt32 *pDx,
-	const UInt32 *pAx,
-	const char *ProcPath,
-	UInt32 pd
-);
-extern "C" void GuiShowMouse(void);
-
 DialogItemIndex MyAlert(SInt16 alertID, AlertType alertType)
 {
 	const char *msgtxt = "unknown message";

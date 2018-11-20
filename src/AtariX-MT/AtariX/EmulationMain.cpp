@@ -64,7 +64,8 @@ void EmulationRun(void)
 	if (s_EmulationIsInit && !s_EmulationIsRunning)
 	{
 		theEmulation.StartEmulatorThread();
-		s_EmulationIsRunning = 1;
+		if (theEmulation.isRunning())
+			s_EmulationIsRunning = 1;
 	}
 	DebugTrace("%s() =>", __func__);
 }

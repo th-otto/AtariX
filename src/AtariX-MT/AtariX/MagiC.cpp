@@ -920,7 +920,7 @@ OSErr CMagiC::LoadReloc
 )
 {
 	OSErr err = 0;
-	FSIORefNum f;
+	FSIORefNum f = 0;
 	bool bf = false;
 	unsigned long len, codlen;
 	ExeHeader exehead;
@@ -933,7 +933,7 @@ OSErr CMagiC::LoadReloc
 	long Fpos;
 	SInt64 FileSize;
 	unsigned long RelocBufSize;
-	FSRef fs;
+	FSRef fs = { 0 };
 	HFSUniStr255 dataForkName;
 	ByteCount bytes_read;
 
@@ -991,23 +991,23 @@ Reinstall the application.
 		goto exitReloc;
 	}
 
-	DebugInfo("CMagiC::LoadReloc() - Länge TEXT = %ld", CFSwapInt32BigToHost(exehead.tlen));
-	DebugInfo("CMagiC::LoadReloc() - Länge DATA = %ld", CFSwapInt32BigToHost(exehead.dlen));
-	DebugInfo("CMagiC::LoadReloc() - Länge BSS = %ld", CFSwapInt32BigToHost(exehead.blen));
+	DebugInfo("CMagiC::LoadReloc() - Length TEXT = %ld", CFSwapInt32BigToHost(exehead.tlen));
+	DebugInfo("CMagiC::LoadReloc() - Length DATA = %ld", CFSwapInt32BigToHost(exehead.dlen));
+	DebugInfo("CMagiC::LoadReloc() - Length BSS = %ld", CFSwapInt32BigToHost(exehead.blen));
 
 	codlen = CFSwapInt32BigToHost(exehead.tlen) + CFSwapInt32BigToHost(exehead.dlen);
 	if	(CFSwapInt32BigToHost(exehead.blen) & 1)
 	{
-	//	exehead.blen++;		// BSS-Segment auf gerade Länge
+		// BSS-Segment auf gerade Länge
 		exehead.blen = CFSwapInt32HostToBig(CFSwapInt32BigToHost(exehead.blen) + 1);
 	}
 	tpaSize = sizeof(BasePage) + codlen + CFSwapInt32BigToHost(exehead.blen) + stackSize;
 
-	DebugInfo("CMagiC::LoadReloc() - result. Gesamtlänge inkl. Basepage und Stack = 0x%08x (%ld)", tpaSize, tpaSize);
+	DebugInfo("CMagiC::LoadReloc() - total length incl. basepage and stack = 0x%08x (%ld)", tpaSize, tpaSize);
 
 	if	(tpaSize > m_RAM68ksize)
 	{
-		DebugError("CMagiC::LoadReloc() - Zuwenig Speicher");
+		DebugError("CMagiC::LoadReloc() - program size too large");
 		err = memFullErr;
 		goto exitReloc;
 	}
@@ -1019,7 +1019,7 @@ Reinstall the application.
 		reladdr = (long) (m_RAM68ksize - ((tpaSize + 2) & ~3));
 	if	(reladdr + tpaSize > m_RAM68ksize)
 	{
-		DebugError("CMagiC::LoadReloc() - Ungültige Ladeadresse");
+		DebugError("CMagiC::LoadReloc() - illegal load address");
 		err = 2;
 		goto exitReloc;
 	}

@@ -28,8 +28,11 @@
 
 static int GuiMyMainThreadAlert(const char *msg_text, const char *info_text, int nButtons)
 {
-	NSString *nmsg  = [NSString stringWithCString: msg_text encoding:NSUTF8StringEncoding/*NSISOLatin1StringEncoding*/];
-	NSString *ninfo = [NSString stringWithCString: info_text encoding:NSUTF8StringEncoding/*NSISOLatin1StringEncoding*/];
+	// have to create pool to avoid debug error messages like:
+	// "... Object 0x7a6429e0 of class ... autoreleased with no pool in place - just leaking - break on objc_autoreleaseNoPool() to debug"
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	NSString *nmsg  = [[NSString stringWithCString: msg_text encoding:NSUTF8StringEncoding/*NSISOLatin1StringEncoding*/] retain];
+	NSString *ninfo = [[NSString stringWithCString: info_text encoding:NSUTF8StringEncoding/*NSISOLatin1StringEncoding*/] retain];
 
 	NSAlert *alert = [[NSAlert alloc] init];
 //	NSAlert *alert = [[[NSAlert alloc] init] autorelease];
@@ -46,7 +49,7 @@ static int GuiMyMainThreadAlert(const char *msg_text, const char *info_text, int
 	[alert beginSheetModalForWindow:[searchField window] modalDelegate:self didEndSelector:@selector(alertDidEnd:returnCode:contextInfo:) contextInfo:nil];
 	 */
 	[alert retain];		// avoid SEGV
-#if 1
+#if 0
 	// make sure Dialogue is run in main thread (necessary in Cocoa)
 	NSInteger __block retcode;
 	dispatch_sync(dispatch_get_main_queue(), ^
@@ -60,17 +63,18 @@ static int GuiMyMainThreadAlert(const char *msg_text, const char *info_text, int
 	[ninfo release];
 	[alert release];
 
+	/* [pool release]; crashes :( */
 	return (int) retcode;
 }
 
 int GuiMyAlert(const char *msg_text, const char *info_text, int nButtons)
 {
-	// have to create pool to avoid debug error messages like:
-	// "... Object 0x7a6429e0 of class ... autoreleased with no pool in place - just leaking - break on objc_autoreleaseNoPool() to debug"
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	int ret;
-	ret = GuiMyMainThreadAlert(msg_text, info_text, nButtons);
-	[pool release];
+	// make sure Dialogue is run in main thread (necessary in Cocoa)
+	NSInteger __block ret;
+	dispatch_async(dispatch_get_main_queue(), ^
+				  {
+					  ret = GuiMyMainThreadAlert(msg_text, info_text, nButtons);
+				  });
 	return ret;
 }
 

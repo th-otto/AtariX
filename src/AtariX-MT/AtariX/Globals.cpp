@@ -90,24 +90,27 @@ int CGlobals::Init(void)
 {
 	CFStringRef theString;
 
-	// convert UTF8 encoded byte array containing URL to CFString
-	theString = CFStringCreateWithBytes(
-							NULL,							// CFAllocatorRef alloc,
-							s_atariKernelPathUrl,			// const UInt8 *bytes,
-							strlen((const char *) s_atariKernelPathUrl),	// CFIndex numBytes,
-							kCFStringEncodingUTF8,			// CFStringEncoding encoding,
-							false							// Boolean isExternalRepresentation
-							);
+	if (s_atariKernelPathUrl[0])
+	{
+		// convert UTF8 encoded byte array containing URL to CFString
+		theString = CFStringCreateWithBytes(
+								NULL,							// CFAllocatorRef alloc,
+								s_atariKernelPathUrl,			// const UInt8 *bytes,
+								strlen((const char *) s_atariKernelPathUrl),	// CFIndex numBytes,
+								kCFStringEncodingUTF8,			// CFStringEncoding encoding,
+								false							// Boolean isExternalRepresentation
+								);
 
 
-	// convert CFString to CFURL
-	s_MagiCKernelUrl = CFURLCreateWithString(
-							NULL,		// CFAllocatorRef allocator,
-							theString,	// CFStringRef    filePath,
-							NULL
-							);
-	CFRelease(theString);
-	DebugInfo("CGlobals::Init() -- URLRef for kernel = 0x%08x", s_MagiCKernelUrl);
+		// convert CFString to CFURL
+		s_MagiCKernelUrl = CFURLCreateWithString(
+								NULL,		// CFAllocatorRef allocator,
+								theString,	// CFStringRef    filePath,
+								NULL
+								);
+		CFRelease(theString);
+		DebugInfo("CGlobals::Init() -- URLRef for kernel = 0x%08x", s_MagiCKernelUrl);
+	}
 //	const char *s = (const char *) s_atariRootfsPathUrl;
 
 	// convert UTF8 encoded byte array containing URL to CFString
