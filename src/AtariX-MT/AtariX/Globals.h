@@ -30,6 +30,7 @@
 #include <Carbon/Carbon.h>
 // Programm-Header
 #include "MyPreferences.h"
+#include <sys/param.h>
 
 // Schalter
 

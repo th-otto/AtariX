@@ -35,6 +35,7 @@
 //#include "DialogueSysHalt.h"
 #include "PascalStrings.h"
 #include "missing.h"
+#include "_fcntl.h"
 
 // Schalter
 
@@ -920,39 +921,41 @@ OSErr CMagiC::LoadReloc
 )
 {
 	OSErr err = 0;
-	FSIORefNum f = 0;
-	bool bf = false;
+	int fd = -1;
 	unsigned long len, codlen;
 	ExeHeader exehead;
 	BasePage *bp;
 	unsigned char *relp;
 	unsigned char relb;
-	unsigned long *tp;
+	uint32_t *tp;
 	unsigned char *tpaStart, *relBuf = NULL, *reloff, *tbase, *bbase;
-	unsigned long loff, tpaSize;
-	long Fpos;
-	SInt64 FileSize;
+	uint32_t loff;
+	unsigned long tpaSize;
+	unsigned long Fpos;
+	unsigned long FileSize = 0;
 	unsigned long RelocBufSize;
-	FSRef fs = { 0 };
-	HFSUniStr255 dataForkName;
-	ByteCount bytes_read;
+	char filename[MAXPATHLEN];
+	long bytes_read;
 
 
 	DebugInfo("CMagiC::LoadReloc()");
 
-	if (!CFURLGetFSRef(fileUrl, &fs))
+	if (!CFURLGetFileSystemRepresentation(fileUrl, true, (unsigned char *)filename, MAXPATHLEN))
 	{
 		err = openErr;
 	}
 
 	if (!err)
 	{
-		err = FSGetDataForkName(&dataForkName);
-	}
-
-	if (!err)
-	{
-		err = FSOpenFork(&fs, dataForkName.length, dataForkName.unicode, fsRdPerm, &f);
+		fd = open(filename, O_RDONLY|O_BINARY);
+		if (fd < 0)
+		{
+			err = openErr;
+		} else
+		{
+			FileSize = lseek(fd, 0l, SEEK_END);
+			lseek(fd, 0l, SEEK_SET);
+		}
 	}
 
 	if	(err)
@@ -972,21 +975,13 @@ Reinstall the application.
 		goto exitReloc;
 	}
 
-	bf = true;		// Datei geöffnet
-	err = FSGetForkSize(f, &FileSize);
-	assert(!err);
-
 	len = sizeof(ExeHeader);
 	// PRG-Header einlesen
-	err = FSReadFork(f, fsAtMark, 0, len, &exehead, &bytes_read);
-	if (err)
-	{
-		readerr:
-		DebugError("CMagiC::LoadReloc() - Lesefehler");
-		goto exitReloc;
-	}
+	bytes_read = read(fd, &exehead, len);
 	if (bytes_read != len)
 	{
+	readerr:
+		err = readErr;
 		DebugError("CMagiC::LoadReloc() - Datei zu kurz");
 		goto exitReloc;
 	}
@@ -1032,16 +1027,16 @@ Reinstall the application.
 	// Alle 68k-Adressen sind relativ zu <m_RAM68k>
 	bp = (BasePage *) tpaStart;
 	memset(bp, 0, sizeof(BasePage));
-	bp->p_lowtpa = (void *) CFSwapInt32HostToBig(tpaStart - m_RAM68k);
-	bp->p_hitpa = (void *) CFSwapInt32HostToBig(tpaStart - m_RAM68k + tpaSize);
-	bp->p_tbase = (void *) CFSwapInt32HostToBig(tbase - m_RAM68k);
+	bp->p_lowtpa = CFSwapInt32HostToBig(tpaStart - m_RAM68k);
+	bp->p_hitpa = CFSwapInt32HostToBig(tpaStart - m_RAM68k + tpaSize);
+	bp->p_tbase = CFSwapInt32HostToBig(tbase - m_RAM68k);
 	bp->p_tlen  = exehead.tlen;
-	bp->p_dbase = (void *) CFSwapInt32HostToBig(tbase - m_RAM68k + CFSwapInt32BigToHost(exehead.tlen));
+	bp->p_dbase = CFSwapInt32HostToBig(tbase - m_RAM68k + CFSwapInt32BigToHost(exehead.tlen));
 	bp->p_dlen  = exehead.dlen;
-	bp->p_bbase = (void *) CFSwapInt32HostToBig(bbase - m_RAM68k);
+	bp->p_bbase = CFSwapInt32HostToBig(bbase - m_RAM68k);
 	bp->p_blen  = exehead.blen;
-	bp->p_dta   = (void *) CFSwapInt32HostToBig(bp->p_cmdline - m_RAM68k);
-	bp->p_parent= NULL;
+	bp->p_dta   = CFSwapInt32HostToBig(bp->p_cmdline - m_RAM68k);
+	bp->p_parent= 0;
 
 	DebugInfo("CMagiC::LoadReloc() - Startadresse Atari = 0x%08lx (host)", m_RAM68k);
 	DebugInfo("CMagiC::LoadReloc() - Speichergröße Atari = 0x%08lx (= %lu kBytes)", m_RAM68ksize, m_RAM68ksize >> 10);
@@ -1060,9 +1055,7 @@ Reinstall the application.
 	#endif
 
 	// TEXT+DATA einlesen
-	err = FSReadFork(f, fsAtMark, 0, codlen, tbase, &bytes_read);
-	if	(err)
-		goto readerr;
+	bytes_read = read(fd, tbase, codlen);
 	if	(codlen != bytes_read)
 		goto readerr;
 
@@ -1070,13 +1063,10 @@ Reinstall the application.
 	{
 		// Seek zur Reloc-Tabelle
 		Fpos = (long) (CFSwapInt32BigToHost(exehead.slen) + codlen + sizeof(exehead));
-		err = FSSetForkPosition(f, fsFromStart, Fpos);
-		if	(err)
+		if (lseek(fd, Fpos, SEEK_SET) != Fpos)
 			goto readerr;
 		len = 4;
-		err = FSReadFork(f, fsAtMark, 0, len, &loff, &bytes_read);
-		if	(err)
-			goto readerr;
+		bytes_read = read(fd, &loff, len);
 		if	(len != bytes_read)
 			goto readerr;
 
@@ -1095,15 +1085,13 @@ Reinstall the application.
 			}
 
 			// 1. Longword relozieren
-			tp = (unsigned long *) (reloff + loff);
+			tp = (uint32_t *) (reloff + loff);
 
 			//*tp += (long) (reloff - m_RAM68k);
 			*tp = CFSwapInt32HostToBig((long) (reloff - m_RAM68k) + CFSwapInt32BigToHost(*tp));
 
 			// Reloc-Tabelle in einem Rutsch einlesen
-			err = FSReadFork(f, fsAtMark, 0, RelocBufSize, relBuf, &bytes_read);
-			if	(err)
-				goto readerr;
+			bytes_read = read(fd, relBuf, RelocBufSize);
 			if	(RelocBufSize != bytes_read)
 				goto readerr;
 			relBuf[RelocBufSize] = '\0';	// Sicherheitshalber Ende-Zeichen
@@ -1113,12 +1101,11 @@ Reinstall the application.
 			{
 				relb = *relp++;
 				if	(relb == 1)
-					tp = (unsigned long *) ((char *) tp + 254);
+					tp = (uint32_t *) ((char *) tp + 254);
 				else
 				{
-					tp = (unsigned long*) ((char *) tp + (unsigned char) relb);
+					tp = (uint32_t *) ((char *) tp + relb);
 
-					//*tp += (long) (reloff - m_RAM68k);
 					*tp = CFSwapInt32HostToBig((long) (reloff - m_RAM68k) + CFSwapInt32BigToHost(*tp));
 				}
 			}
@@ -1140,8 +1127,8 @@ exitReloc:
 	if	(relBuf)
 		free(relBuf);
 
-	if	(bf)
-		FSCloseFork(f);
+	if	(fd >= 0)
+		close(fd);
 
 	return(err);
 }

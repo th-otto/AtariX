@@ -185,35 +185,35 @@ struct XATTR
 
 struct BasePage
 {
-	void *p_lowtpa;				//   0 (0x00)
-	void *p_hitpa;				//   4 (0x04)
-	void *p_tbase;				//   8 (0x08)
-	unsigned long p_tlen;		//   12 (0x0c)
-	void *p_dbase;				//   16 (0x10)
-	unsigned long p_dlen;		//   20 (0x14)
-	void *p_bbase;				//   24 (0x18)
-	unsigned long p_blen;
-	void *p_dta;
-	void *p_parent;
-	long unused1;
-	void *p_env;
+	uint32_t p_lowtpa;				//   0 (0x00)
+	uint32_t p_hitpa;				//   4 (0x04)
+	uint32_t p_tbase;				//   8 (0x08)
+	uint32_t p_tlen;		//   12 (0x0c)
+	uint32_t p_dbase;				//   16 (0x10)
+	uint32_t p_dlen;		//   20 (0x14)
+	uint32_t p_bbase;				//   24 (0x18)
+	uint32_t p_blen;
+	uint32_t p_dta;
+	uint32_t p_parent;
+	uint32_t unused1;
+	uint32_t p_env;
 	char p_devx[6];
 	char unused2;
 	char p_defdrv;
-	long unused[2+16];
+	uint32_t unused[2+16];
 	unsigned char p_cmdline[128];
 };
 
 struct ExeHeader
 {
-	short	code;
-	unsigned long tlen;
-	unsigned long dlen;
-	unsigned long blen;
-	unsigned long slen;
-	long	dum1;
-	long	dum2;
-	short	relmod;
+	uint16_t code;
+	uint32_t tlen;
+	uint32_t dlen;
+	uint32_t blen;
+	uint32_t slen;
+	uint32_t dum1;
+	uint32_t dum2;
+	uint16_t relmod;
 };
 
 /* Systemvariable _sysbase (0x4F2L) zeigt auf: */
