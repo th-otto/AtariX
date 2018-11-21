@@ -31,7 +31,7 @@
 // Schalter
 
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(__cplusplus)
 class CDebug
 {
 	public:

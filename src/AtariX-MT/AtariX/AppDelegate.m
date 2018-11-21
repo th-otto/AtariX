@@ -1,6 +1,7 @@
 
 #import "AppDelegate.h"
 #include "EmulationMain.h"
+#include "Debug.h"
 
 
 static NSString *DMKRootfsPathUrlKey = @"rootfsPathUrl";
@@ -33,7 +34,7 @@ static NSString *DMKAtariScreenStretchYKey = @"atariScreenStretchY";
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 
 	BOOL bRootFsValid = [self checkRootfs];
 	if (!bRootFsValid)
@@ -76,10 +77,8 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	BOOL atariAutostart = [myDefaults boolForKey:DMKAtariAutostartKey];
 	if (bRootFsValid && atariAutostart)
 	{
-		printf("%s() -- Autostart\n", __func__);
-		[self configEmulation];		// is ignored, if already configured
-		EmulationOpenWindow();
-		EmulationRun();
+		DebugInfo("%s() -- Autostart", __func__);
+		[self performSelector:@selector(actionRun:)];
 	}
 
 	// Wir starten hier die "event loop" für SDL. Wir könnten das auch später machen.
@@ -98,19 +97,20 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 
 + (void)initialize
 {
-	printf("%s()\n", __func__);
+	DebugInfo("%s()", __func__);
     NSMutableDictionary *initialValues = [NSMutableDictionary dictionary];
 
 	// default Atari rootfs ("C:" Drive)
 	//NSString *home = NSHomeDirectory(); und dann verketten geht auch, aber das folgende ist eleganter:
 	NSString *defaultRootfs = [[NSString stringWithUTF8String:"~/MAGIC_C/"] stringByExpandingTildeInPath];
-	printf("default rootfs path = %s\n", [defaultRootfs UTF8String]);
+	DebugInfo("default rootfs path = %s", [defaultRootfs UTF8String]);
 	// wandle NSString in NSURL um, damit wir das "file://localhost/" vorne kriegen
+#ifdef _DEBUG
 	NSURL *pathUrl = [[NSURL alloc] initFileURLWithPath:defaultRootfs isDirectory:YES];
 	// und jetzt wandeln wir die Url wieder in eine Zeichenkette um, damit wir sie anschauen können
-	NSString *pathUrlString = [pathUrl absoluteString];
-	printf("current rootfs URL = %s\n", [pathUrlString UTF8String]);
-    [initialValues setObject:defaultRootfs forKey:DMKRootfsPathUrlKey];
+	DebugInfo("current rootfs URL = %s", [[pathUrl absoluteString] UTF8String]);
+#endif
+	[initialValues setObject:defaultRootfs forKey:DMKRootfsPathUrlKey];
 
 	// default Atari memory size: 16 MB
     [initialValues setObject:[NSNumber numberWithInteger:4] forKey:DMKAtariMemorySizeKey];
@@ -146,7 +146,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 {
 	if (m_configEmulationDone)
 	{
-		printf("%s() -- Guest already configured, reconfiguration not supported.\n", __func__);
+		DebugWarning("%s() -- Guest already configured, reconfiguration not supported.", __func__);
 	}
 
 	/*
@@ -206,7 +206,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 
 - (void)showPreferences:sender
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
     if (preferencesController == nil)
 	{
 #if 1
@@ -227,7 +227,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 
 - (void)dealloc
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
     [preferencesController release];
     [super dealloc];
 }
@@ -241,7 +241,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 
 - (IBAction)actionPreferences:(id)sender
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 	[self showPreferences:sender];
 }
 
@@ -254,7 +254,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 
 - (IBAction)actionQuit:(id)sender
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 //	[NSApp terminate: nil];
 	[NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
 }
@@ -262,7 +262,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 #if 0
 - (void)longCode
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 	EmulationRunSdl();
 /*
     NSAutoreleasePool *pool;
@@ -276,7 +276,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	
     [pool release];
 */
-	printf("%s() =>\n", __func__);
+	DebugTrace("%s() =>", __func__);
 }
 #endif
 
@@ -289,7 +289,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 
 - (IBAction)actionRun:(id)sender
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 
 #if 0
 	// Initialisierung
@@ -310,7 +310,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 								 toTarget:self withObject:nil];
 #endif
 	}
-	printf("%s() =>\n", __func__);
+	DebugTrace("%s() =>", __func__);
 }
 
 
@@ -351,11 +351,11 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	NSURL *pathUrl = [NSURL URLWithString:pathUrlString];
 	NSString *rootFsDir = [pathUrl path];
 	
-	printf("init rootfs pathURL = %s\n", [pathUrlString UTF8String]);
-	printf("init rootfs path = %s\n", [rootFsDir UTF8String]);
+	DebugInfo("init rootfs pathURL = %s", [pathUrlString UTF8String]);
+	DebugInfo("init rootfs path = %s", [rootFsDir UTF8String]);
 
 	NSString *magxInf = [rootFsDir stringByAppendingPathComponent:@"MAGX.INF"];
-	printf("changed path = %s\n", [magxInf UTF8String]);
+	DebugInfo("changed path = %s", [magxInf UTF8String]);
 	NSFileManager *fileManager = [NSFileManager defaultManager];
 
 	return [fileManager isReadableFileAtPath:magxInf];
@@ -371,9 +371,8 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 - (NSString *) getAtariKernelUrl:(NSInteger)atariLanguage;
 {
 	NSBundle *myBundle = [NSBundle mainBundle];
-	NSString *resourcePath = [myBundle resourcePath];
 //	NSURL *resourceUrl = [myBundle resourceURL];
-	printf("resource path = %s\n", [resourcePath UTF8String]);
+	DebugInfo("resource path = %s", [[myBundle resourcePath] UTF8String]);
 
 	NSURL *pathUrl;
 	if (atariLanguage == 0)
@@ -389,7 +388,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 		pathUrl = [myBundle URLForResource:@"MagicMacX" withExtension:@"OS" subdirectory:nil localization:@"fr"];
 	else
 	{
-		printf("invalid localisation code %d\n", (int) atariLanguage);
+		DebugWarning("invalid localisation code %d", (int) atariLanguage);
 		pathUrl = NULL;
 	}
 	NSString *pathUrlString;
@@ -397,7 +396,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 		pathUrlString = [pathUrl absoluteString];
 	else
 		pathUrlString = NULL;
-	printf("kernel localized path = %s\n", pathUrlString ? [pathUrlString UTF8String] : "(nil)");
+	DebugInfo("kernel localized path = %s", pathUrlString ? [pathUrlString UTF8String] : "(nil)");
 	return pathUrlString;
 }
 
@@ -410,7 +409,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 
 - (IBAction)actionChooseRootfs:(id)sender
 {
-	printf("%s() =>\n", __func__);
+	DebugTrace("%s() =>", __func__);
 	NSOpenPanel *chooser = [NSOpenPanel openPanel];
 	chooser.title = NSLocalizedString(@"Choose Atari Root-FS Directory (Boot Drive)", nil);
 	chooser.message = NSLocalizedString(@"The directory must be named MAGIC_C. It will appear as virtual drive C: inside the virtual machine.", nil);
@@ -421,16 +420,16 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	chooser.allowsMultipleSelection = NO;
 	NSInteger ret = [chooser runModal];
 
-	printf("%s() : runModal() -> %d\n", __FUNCTION__, ret);
+	DebugInfo("%s() : runModal() -> %d", __FUNCTION__, ret);
 
 	if (ret == NSFileHandlingPanelOKButton)
 	{
-		printf("%s() File Chooser exited with OK, change rootfs path\n", __FUNCTION__);
+		DebugInfo("%s() File Chooser exited with OK, change rootfs path", __FUNCTION__);
 		NSArray *urls = chooser.URLs;
 		// das geht nicht, und NSString bleibt eine URL?!?
 		NSURL *pathUrl = urls.lastObject;
 		NSString *pathUrlString = [pathUrl absoluteString];
-		printf("path = %s\n", [pathUrlString UTF8String]);
+		DebugInfo("path = %s", [pathUrlString UTF8String]);
 
 		// if path does not end with MAGIC_C, ask
 
@@ -457,19 +456,19 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 			if ((ret == 1) || (ret == NSAlertFirstButtonReturn))
 			{
 				// cancel
-				printf("cancelled\n");
+				DebugInfo("cancelled");
 				return;
 			}
 			else
 			if ((ret == 2) || (ret == NSAlertSecondButtonReturn))
 			{
-				printf("leave path unchanged (not recommended)\n");
+				DebugInfo("leave path unchanged (not recommended)");
 			}
 			else
 			if ((ret == 3) || (ret == NSAlertThirdButtonReturn))
 			{
 				pathUrlString = [pathUrlString stringByAppendingString:@"MAGIC_C/"];
-				printf("changed path = %s\n", [pathUrlString UTF8String]);
+				DebugInfo("changed path = %s", [pathUrlString UTF8String]);
 			}
 		}
 	//	[dirName release];	// crashes. why?
@@ -502,14 +501,14 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 		NSString *sourceItemPath      = [srcPath  stringByAppendingPathComponent:sourceItem];
 		NSString *destinationItemPath = [destPath stringByAppendingPathComponent:sourceItem];
 		[fileManager fileExistsAtPath:sourceItemPath isDirectory:&isDir];
-		//		printf("source item path = %s\n", [sourceItemPath UTF8String]);
-		//		printf("dest   item path = %s\n", [destinationItemPath UTF8String]);
+		//		DebugInfo("source item path = %s", [sourceItemPath UTF8String]);
+		//		DebugInfo("dest   item path = %s", [destinationItemPath UTF8String]);
 		
 		if (isDir)
 		{
 			// source item is a directory. Create destination directory.
 			// Note that with "withIntermediateDirectories:NO" there would be errors if the directory exists
-			printf("create dir \"%s\"\n", [destinationItemPath UTF8String]);
+			DebugInfo("create dir \"%s\"", [destinationItemPath UTF8String]);
 			result = [fileManager createDirectoryAtPath:destinationItemPath withIntermediateDirectories:YES attributes:nil error:&error];
 			if (result == NO)
 			{
@@ -523,7 +522,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 			if ([fileManager fileExistsAtPath:destinationItemPath])
 			{
 				// file exists. delete, then overwrite.
-				printf("remove file \"%s\"\n", [destinationItemPath UTF8String]);
+				DebugInfo("remove file \"%s\"", [destinationItemPath UTF8String]);
 				result = ([fileManager removeItemAtPath:destinationItemPath error:&error]);
 				if (result == NO)
 				{
@@ -532,7 +531,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 				}
 			}
 
-			printf("copy file \"%s\" to \"%s\"\n", [sourceItemPath UTF8String], [destinationItemPath UTF8String]);
+			DebugInfo("copy file \"%s\" to \"%s\"", [sourceItemPath UTF8String], [destinationItemPath UTF8String]);
 			result = [fileManager copyItemAtPath:sourceItemPath toPath:destinationItemPath error:&error];
 			if (result == NO)
 			{
@@ -554,7 +553,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 
 - (IBAction)actionRevertRootfs:(id)sender
 {
-	printf("%s() =>\n", __func__);
+	DebugTrace("%s() =>", __func__);
 	NSInteger ret;
 	NSAlert *alert;
 
@@ -573,7 +572,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 	if ((ret == 1) || (ret == NSAlertFirstButtonReturn))
 	{
 		// cancel
-		printf("cancelled\n");
+		DebugInfo("cancelled");
 		return;
 	}
 
@@ -587,14 +586,12 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 	NSURL *pathUrl = [NSURL URLWithString:pathUrlString];
 	NSString *rootFsDir = [pathUrl path];
 
-	printf("init rootfs pathURL = %s\n", [pathUrlString UTF8String]);
-	printf("init rootfs path = %s\n", [rootFsDir UTF8String]);
+	DebugInfo("init rootfs pathURL = %s", [pathUrlString UTF8String]);
+	DebugInfo("init rootfs path = %s", [rootFsDir UTF8String]);
 	NSFileManager *fileManager = [NSFileManager defaultManager];
 	NSBundle *myBundle = [NSBundle mainBundle];
 
-	NSString *resourcePath = [myBundle resourcePath];
-//	NSURL *resourceUrl = [myBundle resourceURL];
-	printf("resource path = %s\n", [resourcePath UTF8String]);
+	DebugInfo("resource path = %s", [[myBundle resourcePath] UTF8String]);
 	NSString *rootfsCommonPath = [myBundle pathForResource:@"rootfs-common" ofType:nil];
 	NSString *rootfsLocalizedPath;
 	if (atariLanguage == 0)
@@ -610,11 +607,11 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 		rootfsLocalizedPath = [myBundle pathForResource:@"rootfs" ofType:nil inDirectory:nil forLocalization:@"fr"];
 	else
 	{
-		printf("invalid localisation code %d\n", (int) atariLanguage);
+		DebugWarning("invalid localisation code %d", (int) atariLanguage);
 	}
 
-	printf("resource rootfs-common path = %s\n", [rootfsCommonPath UTF8String]);
-	printf("resource rootfs localized path = %s\n", [rootfsLocalizedPath UTF8String]);
+	DebugInfo("resource rootfs-common path = %s", [rootfsCommonPath UTF8String]);
+	DebugInfo("resource rootfs localized path = %s", [rootfsLocalizedPath UTF8String]);
 
 	BOOL finalResult;
 	finalResult = [fileManager createDirectoryAtPath:rootFsDir withIntermediateDirectories:YES attributes:nil error:nil];
@@ -629,7 +626,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 		// TODO: skip hiden files (starting with '.')
 		NSString *sourceItem      = [rootfsCommonPath stringByAppendingPathComponent:file];
 		NSString *destinationItem = [rootFsDir        stringByAppendingPathComponent:file];
-		printf("copy source item %s to destination item %s\n", [sourceItem UTF8String], [destinationItem UTF8String]);
+		DebugInfo("copy source item %s to destination item %s", [sourceItem UTF8String], [destinationItem UTF8String]);
         result = [fileManager copyItemAtPath:sourceItem toPath:destinationItem error:&error];
         if (result == NO)
         {
@@ -662,7 +659,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 	{
 		NSString *sourceItem      = [rootfsLocalizedPath stringByAppendingPathComponent:file];
 		NSString *destinationItem = [rootFsDir        stringByAppendingPathComponent:file];
-		printf("copy source item %s to destination item %s\n", [sourceItem UTF8String], [destinationItem UTF8String]);
+		DebugInfo("copy source item %s to destination item %s", [sourceItem UTF8String], [destinationItem UTF8String]);
         result = [fileManager copyItemAtPath:sourceItem toPath:destinationItem error:&error];
         if (result == NO)
         {
