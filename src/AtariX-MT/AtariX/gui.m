@@ -63,7 +63,7 @@ static int GuiMyMainThreadAlert(const char *msg_text, const char *info_text, int
 	[ninfo release];
 	[alert release];
 
-	/* [pool release]; crashes :( */
+	[pool release];
 	return (int) retcode;
 }
 

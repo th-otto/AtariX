@@ -49,6 +49,7 @@ extern "C" {
 #include "MyMoreFiles.h"
 #include "FullPath.h"
 }
+#include "s_endian.h"
 
 #if defined(_DEBUG)
 //#define DEBUG_VERBOSE
@@ -811,8 +812,6 @@ INT32 CMacXFS::resolve_symlink( FSSpec *fs, UINT16 buflen, char *buf )
 			// kommt nicht mehr an den <userType> dran.
 			AliasUserType = GetAliasUserType(myalias);
 			AliasSize = GetAliasSize(myalias);
-			#ifdef i386
-			#endif
 #else
 			AliasUserType = (*myalias)->userType;
 			AliasSize = (*myalias)->aliasSize;
@@ -827,7 +826,7 @@ INT32 CMacXFS::resolve_symlink( FSSpec *fs, UINT16 buflen, char *buf )
 					if (len & 1)
 						len++;
 					buflen = 256;
-					mx_symlink.len = CFSwapInt16HostToBig(len);
+					mx_symlink.len = cpu_to_be16(len);
 					buf = mx_symlink.data;
 				/*	doserr = ELINK;	*/
 					doserr = EFILNF;
@@ -1075,7 +1074,7 @@ INT32 CMacXFS::vRefNum2drv(short vRefNum, UINT16 *drv)
 	for	(i = 0; i < NDRVS; i++)
 		if (drv_fsspec[i].vRefNum == vRefNum)
 		{
-			*drv = CFSwapInt16HostToBig(i);
+			*drv = cpu_to_be16(i);
 			return(E_OK);
 		}
 	return(EDRIVE);
@@ -1293,7 +1292,7 @@ INT32 CMacXFS::xfs_path2DD
 	/* Wenn wir einen Alias verfolgen, kann sich das noch ändern	*/
 	/* -------------------------------------------------------------	*/
 
-	*dir_drive = CFSwapInt16HostToBig(drv);
+	*dir_drive = cpu_to_be16(drv);
 
 	/* Der relative DOS-Pfad wird umgewandelt in einen relativen	*/
 	/* Mac-Pfad. Eintraege "." und ".." werden beruecksichtigt.		*/
@@ -1722,13 +1721,13 @@ INT32 CMacXFS::_snext(UINT16 drv, MAC_DTA *dta)
 
 doit:
 	dta->mxdta.dta_attribute = (char) dosname[11];
-	dta->mxdta.dta_len = CFSwapInt32HostToBig((UINT32) ((dosname[11] & F_SUBDIR) ? 0L : pb.hFileInfo.ioFlLgLen));
+	dta->mxdta.dta_len = cpu_to_be32((UINT32) ((dosname[11] & F_SUBDIR) ? 0L : pb.hFileInfo.ioFlLgLen));
 	/* Datum ist ioFlMdDat bzw. ioDrMdDat */
 	date_mac2dos(pb.hFileInfo.ioFlMdDat,	(UINT16 *) &(dta->mxdta.dta_time),
 								(UINT16 *) &(dta->mxdta.dta_date));
 
-	dta->mxdta.dta_time = CFSwapInt16HostToBig(dta->mxdta.dta_time);
-	dta->mxdta.dta_date = CFSwapInt16HostToBig(dta->mxdta.dta_date);
+	dta->mxdta.dta_time = cpu_to_be16(dta->mxdta.dta_time);
+	dta->mxdta.dta_date = cpu_to_be16(dta->mxdta.dta_date);
 
 	nameto_8_3 (macname + 1, (unsigned char *) dta->mxdta.dta_name, 1, true);
 	return(E_OK);
@@ -2016,7 +2015,7 @@ INT32 CMacXFS::xfs_fopen(char *name, UINT16 drv, MXFSDD *dd,
 	}
 #endif
 
-	return CFSwapInt16HostToBig((unsigned short) (refnum));
+	return cpu_to_be16((unsigned short) (refnum));
 }
 
 
@@ -2228,40 +2227,40 @@ ende:
 void CMacXFS::cinfo_to_xattr(CInfoPBRec * pb, XATTR *xattr, UINT16 drv)
 {
 #pragma unused(drv)
-	xattr->attr = CFSwapInt16HostToBig(mac2DOSAttr(pb));
+	xattr->attr = cpu_to_be16(mac2DOSAttr(pb));
 
 	if (pb->hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias)
-		xattr->mode = CFSwapInt16HostToBig(_ATARI_S_IFLNK);		// symlink
+		xattr->mode = cpu_to_be16(_ATARI_S_IFLNK);		// symlink
 	else
-	if (xattr->attr & CFSwapInt16HostToBig(F_SUBDIR))
-		xattr->mode = CFSwapInt16HostToBig(_ATARI_S_IFDIR);		// subdir
+	if (xattr->attr & cpu_to_be16(F_SUBDIR))
+		xattr->mode = cpu_to_be16(_ATARI_S_IFDIR);		// subdir
 	else
-		xattr->mode = CFSwapInt16HostToBig(_ATARI_S_IFREG);		// regular file
+		xattr->mode = cpu_to_be16(_ATARI_S_IFREG);		// regular file
 
 		
 
-	xattr->mode |= CFSwapInt16HostToBig(0777);				// rwx fuer user/group/world
-	if (xattr->attr & CFSwapInt16HostToBig(F_RDONLY))
-		xattr->mode &= CFSwapInt16HostToBig(~(0222));		// Schreiben verboten
+	xattr->mode |= cpu_to_be16(0777);				// rwx fuer user/group/world
+	if (xattr->attr & cpu_to_be16(F_RDONLY))
+		xattr->mode &= cpu_to_be16(~(0222));		// Schreiben verboten
 
-	xattr->index = CFSwapInt32HostToBig((UINT32) pb->hFileInfo.ioDirID);
-	xattr->dev = CFSwapInt16HostToBig((UINT16) pb->hFileInfo.ioVRefNum);
+	xattr->index = cpu_to_be32((UINT32) pb->hFileInfo.ioDirID);
+	xattr->dev = cpu_to_be16((UINT16) pb->hFileInfo.ioVRefNum);
 	xattr->reserved1 = 0;
-	xattr->nlink = CFSwapInt16HostToBig(1);
+	xattr->nlink = cpu_to_be16(1);
 	xattr->uid = xattr->gid = 0;
 	// F_SUBDIR-Abfrage ist unbedingt nötig!
-	xattr->size = CFSwapInt32HostToBig((UINT32) ((CFSwapInt16BigToHost(xattr->attr) & F_SUBDIR) ?
+	xattr->size = cpu_to_be32((UINT32) ((be16_to_cpu(xattr->attr) & F_SUBDIR) ?
 								0 : pb->hFileInfo.ioFlLgLen));	// Log. Laenge Data Fork
-	xattr->blksize = CFSwapInt32HostToBig(512);			// ?????
-	xattr->nblocks = CFSwapInt32HostToBig((UINT32) (pb->hFileInfo.ioFlPyLen / 512));	// Phys. Länge / Blockgröße
+	xattr->blksize = cpu_to_be32(512);			// ?????
+	xattr->nblocks = cpu_to_be32((UINT32) (pb->hFileInfo.ioFlPyLen / 512));	// Phys. Länge / Blockgröße
 	date_mac2dos(pb->hFileInfo.ioFlMdDat, &(xattr->mtime), &(xattr->mdate));
-	xattr->mtime = CFSwapInt16HostToBig(xattr->mtime);
-	xattr->mdate = CFSwapInt16HostToBig(xattr->mdate);
+	xattr->mtime = cpu_to_be16(xattr->mtime);
+	xattr->mdate = cpu_to_be16(xattr->mdate);
 	xattr->atime = xattr->mtime;
 	xattr->adate = xattr->mdate;
 	date_mac2dos(pb->hFileInfo.ioFlCrDat, &(xattr->ctime), &(xattr->cdate));
-	xattr->ctime = CFSwapInt16HostToBig(xattr->ctime);
-	xattr->cdate = CFSwapInt16HostToBig(xattr->cdate);
+	xattr->ctime = cpu_to_be16(xattr->ctime);
+	xattr->cdate = cpu_to_be16(xattr->cdate);
 	xattr->reserved2 = 0;
 	xattr->reserved3[0] = xattr->reserved3[1] = 0;
 }
@@ -2320,24 +2319,24 @@ INT32 CMacXFS::xfs_xattr(UINT16 drv, MXFSDD *dd, char *name,
 			err = FSMakeFSSpec(0, 0, fname, &fs);	// abs. Pfad
 			if (err)
 				return(cnverr(err));
-			xattr->attr = CFSwapInt16HostToBig(F_SUBDIR);			// Volume-Root
-			xattr->mode = CFSwapInt16HostToBig(S_IFDIR + 0777);	// rwx fuer user/group/world
-			xattr->dev = CFSwapInt16HostToBig((UINT16) fs.vRefNum);
-			xattr->index = CFSwapInt32HostToBig(fsRtDirID);		// Volume-Root
+			xattr->attr = cpu_to_be16(F_SUBDIR);			// Volume-Root
+			xattr->mode = cpu_to_be16(S_IFDIR + 0777);	// rwx fuer user/group/world
+			xattr->dev = cpu_to_be16((UINT16) fs.vRefNum);
+			xattr->index = cpu_to_be32(fsRtDirID);		// Volume-Root
 		}
 		else
 		{
-			xattr->attr = CFSwapInt16HostToBig(F_SUBDIR + F_RDONLY);
-			xattr->mode = CFSwapInt16HostToBig(S_IFDIR + 0555);	// r-x fuer user/group/world
-			xattr->dev = CFSwapInt16HostToBig((UINT16) dd->vRefNum);
-			xattr->index = CFSwapInt32HostToBig(fsRtParID);		// Wurzel
+			xattr->attr = cpu_to_be16(F_SUBDIR + F_RDONLY);
+			xattr->mode = cpu_to_be16(S_IFDIR + 0555);	// r-x fuer user/group/world
+			xattr->dev = cpu_to_be16((UINT16) dd->vRefNum);
+			xattr->index = cpu_to_be32(fsRtParID);		// Wurzel
 		}
 
 		xattr->reserved1 = 0;
-		xattr->nlink = CFSwapInt16HostToBig(1);
+		xattr->nlink = cpu_to_be16(1);
 		xattr->uid = xattr->gid = 0;
 		xattr->size = 0;
-		xattr->blksize = CFSwapInt16HostToBig(512);
+		xattr->blksize = cpu_to_be16(512);
 		xattr->nblocks = 0;
 		xattr->mtime = 0;		// kein Datum/Uhrzeit
 		xattr->mdate = 0;
@@ -2814,28 +2813,28 @@ INT32 CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, UINT16 drv,
 			pstrcpy(macname, pbh.ioNamePtr);
 			if (xattr)
 			{
-				xattr->attr = CFSwapInt16HostToBig(F_SUBDIR);
-				xattr->mode = CFSwapInt16HostToBig(S_IFDIR);				// subdir
-				xattr->mode |= CFSwapInt16HostToBig(0777);				// rwx fuer user/group/world
+				xattr->attr = cpu_to_be16(F_SUBDIR);
+				xattr->mode = cpu_to_be16(S_IFDIR);				// subdir
+				xattr->mode |= cpu_to_be16(0777);				// rwx fuer user/group/world
 				xattr->index = 0;
-				xattr->dev = CFSwapInt16HostToBig((UINT16) pbh.ioVRefNum);
+				xattr->dev = cpu_to_be16((UINT16) pbh.ioVRefNum);
 				xattr->reserved1 = 0;
-				xattr->nlink = CFSwapInt16HostToBig(1);
+				xattr->nlink = cpu_to_be16(1);
 				xattr->uid = xattr->gid = 0;
 				xattr->size = 0;
-				xattr->blksize = CFSwapInt32HostToBig((UINT32) pbh.	ioVAlBlkSiz);
-				xattr->nblocks = CFSwapInt32HostToBig(pbh.ioVNmAlBlks);
+				xattr->blksize = cpu_to_be32((UINT32) pbh.	ioVAlBlkSiz);
+				xattr->nblocks = cpu_to_be32(pbh.ioVNmAlBlks);
 				date_mac2dos(pbh.ioVLsMod, &(xattr->mtime), &(xattr->mdate));
-				xattr->mtime = CFSwapInt16HostToBig(xattr->mtime);
-				xattr->mdate = CFSwapInt16HostToBig(xattr->mdate);
+				xattr->mtime = cpu_to_be16(xattr->mtime);
+				xattr->mdate = cpu_to_be16(xattr->mdate);
 				xattr->atime = xattr->mtime;
 				xattr->adate = xattr->mdate;
 				date_mac2dos(pbh.ioVCrDate, &(xattr->ctime), &(xattr->cdate));
-				xattr->ctime = CFSwapInt16HostToBig(xattr->ctime);
-				xattr->cdate = CFSwapInt16HostToBig(xattr->cdate);
+				xattr->ctime = cpu_to_be16(xattr->ctime);
+				xattr->cdate = cpu_to_be16(xattr->cdate);
 				xattr->reserved2 = 0;
 				xattr->reserved3[0] = xattr->reserved3[1] = 0;
-				*xr = CFSwapInt32HostToBig(E_OK);
+				*xr = cpu_to_be32(E_OK);
 				xattr = NULL;
 			}
 			dirh->index++;
@@ -2931,7 +2930,7 @@ INT32 CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, UINT16 drv,
 	if (xattr)
 	{
 		cinfo_to_xattr( &pb, xattr, drv);
-		*xr = CFSwapInt32HostToBig(E_OK);
+		*xr = cpu_to_be32(E_OK);
 	}
 
 	return(E_OK);
@@ -3057,10 +3056,10 @@ INT32 CMacXFS::xfs_dfree(UINT16 drv, INT32 dirID, UINT32 data[4])
 	if (drv_type[drv] == MacRoot)
 	{
 		// 2G frei, d.h. 4 M Blöcke à 512 Bytes
-		data[0] = CFSwapInt32HostToBig((2 * 1024) * 2 * 1024);	// # freie Blöcke
-		data[1] = CFSwapInt32HostToBig((2 * 1024) * 2 * 1024);	// # alle Blöcke
-		data[2] = CFSwapInt32HostToBig(512);					// Sektorgröße in Bytes
-		data[3] = CFSwapInt32HostToBig(1);						// Sektoren pro Cluster
+		data[0] = cpu_to_be32((2 * 1024) * 2 * 1024);	// # freie Blöcke
+		data[1] = cpu_to_be32((2 * 1024) * 2 * 1024);	// # alle Blöcke
+		data[2] = cpu_to_be32(512);					// Sektorgröße in Bytes
+		data[3] = cpu_to_be32(1);						// Sektoren pro Cluster
 		return(E_OK);
 	}
 
@@ -3079,13 +3078,13 @@ INT32 CMacXFS::xfs_dfree(UINT16 drv, INT32 dirID, UINT32 data[4])
 
 //		wbu.wbytes = xpb.ioVFreeBytes;		// CWPRO 3
 	wbu.bytes = xpb.ioVFreeBytes;		// CWPRO 5
-	data[0] = CFSwapInt32HostToBig((UINT32) (wbu.bytes / xpb.ioVAlBlkSiz));	// # freie Blöcke
+	data[0] = cpu_to_be32((UINT32) (wbu.bytes / xpb.ioVAlBlkSiz));	// # freie Blöcke
 
 //		wbu.wbytes = xpb.ioVTotalBytes;		// CWPRO 3
 	wbu.bytes = xpb.ioVTotalBytes;		// CWPRO 5
-	data[1] = CFSwapInt32HostToBig((UINT32) (wbu.bytes / xpb.ioVAlBlkSiz));	// # alle Blöcke
-	data[2] = CFSwapInt32HostToBig(xpb.ioVAlBlkSiz);				// Bytes pro Sektor
-	data[3] = CFSwapInt32HostToBig(1);								// Sektoren pro Cluster
+	data[1] = cpu_to_be32((UINT32) (wbu.bytes / xpb.ioVAlBlkSiz));	// # alle Blöcke
+	data[2] = cpu_to_be32(xpb.ioVAlBlkSiz);				// Bytes pro Sektor
+	data[3] = cpu_to_be32(1);								// Sektoren pro Cluster
 	return(E_OK);
 }
 
@@ -3365,7 +3364,7 @@ INT32 CMacXFS::xfs_symlink(UINT16 drv, MXFSDD *dd, char *name, char *to)
 	}
 #else
 	SetHandleSize((Handle) newalias, (long) ((*newalias)->aliasSize + strlen(to) + 1));
-	(*newalias)->userType = 'MgMc';
+	(*newalias)->userType = htonl('MgMc');
 	memcpy(((char *) (*newalias)) + (*newalias)->aliasSize, to, strlen(to) + 1);
 #endif
 
@@ -3584,8 +3583,8 @@ INT32 CMacXFS::xfs_dcntl
 		doserr = getCatInfo(drv, &pb, true);
 		if (doserr)
 			return doserr;
-		date_dos2mac(CFSwapInt16BigToHost(((mutimbuf *) pArg)->modtime),
-						CFSwapInt16BigToHost(((mutimbuf *) pArg)->moddate), &pb.hFileInfo.ioFlMdDat);
+		date_dos2mac(be16_to_cpu(((mutimbuf *) pArg)->modtime),
+						be16_to_cpu(((mutimbuf *) pArg)->moddate), &pb.hFileInfo.ioFlMdDat);
 		pb.hFileInfo.ioDirID = pb.hFileInfo.ioFlParID;
 		if ((err = PBSetCatInfoSync(&pb)) != noErr)
 		    return cnverr(err);
@@ -3641,15 +3640,15 @@ INT32 CMacXFS::xfs_dcntl
 	  case FMACMAGICEX:
 		{
 		MMEXRec *mmex = (MMEXRec *) pArg;
-		switch(CFSwapInt16BigToHost(mmex->funcNo))
+		switch(be16_to_cpu(mmex->funcNo))
 		{
 			case MMEX_INFO:
-				mmex->longVal = CFSwapInt32HostToBig(1);
+				mmex->longVal = cpu_to_be32(1);
 				mmex->destPtr = NULL;	// MM_VersionPtr;
 				return 0;
 
 			case MMEX_GETFSSPEC:
-				if (CFSwapInt32BigToHost((UINT32) (mmex->destPtr)) >= m_AtariMemSize)
+				if (be32_to_cpu((UINT32) (mmex->destPtr)) >= m_AtariMemSize)
 				{
 					DebugError("CMacXFS::xfs_dcntl(FMACMAGICEX, MMEX_GETFSSPEC) - invalid dest ptr");
 					return(ERROR);
@@ -3657,12 +3656,12 @@ INT32 CMacXFS::xfs_dcntl
 				doserr = getCatInfo (drv, &pb, true);
 				if (doserr)
 					return doserr;
-				mmex->longVal = CFSwapInt32HostToBig(FSMakeFSSpec(
+				mmex->longVal = cpu_to_be32(FSMakeFSSpec(
 									pb.hFileInfo.ioVRefNum,
 									pb.hFileInfo.ioFlParID,
 									pb.hFileInfo.ioNamePtr,
-									(FSSpec *) (AdrOffset68k + CFSwapInt32BigToHost((UINT32) (mmex->destPtr)))));
-				return cnverr ((OSErr) CFSwapInt32BigToHost(mmex->longVal));
+									(FSSpec *) (AdrOffset68k + be32_to_cpu((UINT32) (mmex->destPtr)))));
+				return cnverr ((OSErr) be32_to_cpu(mmex->longVal));
 
 			case MMEX_GETRSRCLEN:
 				// Mac-Rsrc-Länge liefern
@@ -3671,7 +3670,7 @@ INT32 CMacXFS::xfs_dcntl
 					return doserr;
 				if (pb.hFileInfo.ioFlAttrib & ioDirMask)
 					return EACCDN;
-				mmex->longVal = CFSwapInt32HostToBig((long) pb.hFileInfo.ioFlRLgLen);
+				mmex->longVal = cpu_to_be32((long) pb.hFileInfo.ioFlRLgLen);
 				return 0;
 
 			case FMACGETTYCR:
@@ -3744,7 +3743,7 @@ INT32 CMacXFS::dev_close( MAC_FD *f )
 	UInt16 refcnt;
 
 
-	refcnt = CFSwapInt16BigToHost(f->fd.fd_refcnt);
+	refcnt = be16_to_cpu(f->fd.fd_refcnt);
 	if (refcnt <= 0)
 		return(EINTRN);
 
@@ -3761,7 +3760,7 @@ INT32 CMacXFS::dev_close( MAC_FD *f )
 	}
 
 	refcnt--;
-	f->fd.fd_refcnt = CFSwapInt16HostToBig(refcnt);
+	f->fd.fd_refcnt = cpu_to_be16(refcnt);
 	if (!refcnt)
 	{
 
@@ -3998,8 +3997,8 @@ INT32 CMacXFS::dev_datime(MAC_FD *f, UINT16 d[2], UINT16 rwflag)
 	
 	if (rwflag)			/* schreiben */
 	{
-		f->mod_time[0] = CFSwapInt16BigToHost(d[0]);
-		f->mod_time[1] = CFSwapInt16BigToHost(d[1]);
+		f->mod_time[0] = be16_to_cpu(d[0]);
+		f->mod_time[1] = be16_to_cpu(d[1]);
 		f->mod_time_dirty = 1;		/* nur puffern */
 		err = E_OK;				/* natürlich kein Fehler */
 	}
@@ -4007,8 +4006,8 @@ INT32 CMacXFS::dev_datime(MAC_FD *f, UINT16 d[2], UINT16 rwflag)
 	{
 		if (f->mod_time_dirty)	/* war schon geaendert */
 		{
-			d[0] = CFSwapInt16HostToBig(f->mod_time[0]);
-			d[1] = CFSwapInt16HostToBig(f->mod_time[1]);
+			d[0] = cpu_to_be16(f->mod_time[0]);
+			d[1] = cpu_to_be16(f->mod_time[1]);
 			err = E_OK;				/* natuerlich kein Fehler */
 		}
 		else
@@ -4019,8 +4018,8 @@ INT32 CMacXFS::dev_datime(MAC_FD *f, UINT16 d[2], UINT16 rwflag)
 
           	/* Datum ist ioFlMdDat bzw. ioDrMdDat */
           	date_mac2dos(pb.hFileInfo.ioFlMdDat, &(d[0]), &(d[1]));
-			d[0] = CFSwapInt16HostToBig(d[0]);
-			d[1] = CFSwapInt16HostToBig(d[1]);
+			d[0] = cpu_to_be16(d[0]);
+			d[1] = cpu_to_be16(d[1]);
 		}
 	}
 
@@ -4056,14 +4055,14 @@ INT32 CMacXFS::dev_ioctl(MAC_FD *f, UINT16 cmd, void *buf)
 		if (err)
 			return(cnverr(err));
 		/*
-		struct _mx_dmd *fd_dmd = (struct _mx_dmd *) (CFSwapInt32BigToHost(f->fd.fd_dmd) + AdrOffset68k);
-		cinfo_to_xattr(&pb, (XATTR *) buf, CFSwapInt16BigToHost(fd_dmd->d_drive));
+		struct _mx_dmd *fd_dmd = (struct _mx_dmd *) (be32_to_cpu(f->fd.fd_dmd) + AdrOffset68k);
+		cinfo_to_xattr(&pb, (XATTR *) buf, be16_to_cpu(fd_dmd->d_drive));
 		*/
 		cinfo_to_xattr(&pb, (XATTR *) buf, 0 /*dummy*/);
 		return(E_OK);
 	  	break;
 	  case FTRUNCATE:
-	  	err = SetEOF(f->refnum, CFSwapInt32HostToBig(*((INT32 *) buf)));
+	  	err = SetEOF(f->refnum, cpu_to_be32(*((INT32 *) buf)));
 		return(cnverr(err));
 	  	break;
 
@@ -4109,7 +4108,7 @@ INT32 CMacXFS::dev_ioctl(MAC_FD *f, UINT16 cmd, void *buf)
 			if ((err = PBHOpenRFSync(&pb)) != noErr)
 			    return cnverr(err);
 			f->refnum = pb.ioParam.ioRefNum;
-			if (CFSwapInt16BigToHost(f->fd.fd_mode) & O_TRUNC)
+			if (be16_to_cpu(f->fd.fd_mode) & O_TRUNC)
 			{
 			    pb.ioParam.ioMisc = 0;
 			    if ((err = PBSetEOFSync((ParmBlkPtr)&pb)) != noErr)
@@ -4259,7 +4258,7 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 	INT32 doserr;
 	unsigned char *params = AdrOffset68k + param;
 
-	fncode = CFSwapInt16BigToHost(*((UINT16 *) params));
+	fncode = be16_to_cpu(*((UINT16 *) params));
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::XFSFunctions(%d)", (int) fncode);
 	if (fncode == 7)
@@ -4284,7 +4283,7 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 				UINT16 drv;
 			};
 			syncparm *psyncparm = (syncparm *) params;
-			doserr = xfs_sync(CFSwapInt16BigToHost(psyncparm->drv));
+			doserr = xfs_sync(be16_to_cpu(psyncparm->drv));
 			break;
 		}
 
@@ -4295,7 +4294,7 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 				UINT32 pd;		// PD *
 			};
 			ptermparm *pptermparm = (ptermparm *) params;
-			xfs_pterm((PD *) (AdrOffset68k + CFSwapInt32BigToHost(pptermparm->pd)));
+			xfs_pterm((PD *) (AdrOffset68k + be32_to_cpu(pptermparm->pd)));
 			doserr = E_OK;
 			break;
 		}
@@ -4310,9 +4309,9 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			drv_openparm *pdrv_openparm = (drv_openparm *) params;
 			doserr = xfs_drv_open(
-					CFSwapInt16BigToHost(pdrv_openparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pdrv_openparm->dd)),
-					CFSwapInt32BigToHost(pdrv_openparm->flg_ask_diskchange));
+					be16_to_cpu(pdrv_openparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdrv_openparm->dd)),
+					be32_to_cpu(pdrv_openparm->flg_ask_diskchange));
 			break;
 		}
             
@@ -4324,8 +4323,8 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 				UINT16 mode;
 			};
 			drv_closeparm *pdrv_closeparm = (drv_closeparm *) params;
-			doserr = xfs_drv_close(CFSwapInt16BigToHost(pdrv_closeparm->drv),
-										CFSwapInt16BigToHost(pdrv_closeparm->mode));
+			doserr = xfs_drv_close(be16_to_cpu(pdrv_closeparm->drv),
+										be16_to_cpu(pdrv_closeparm->mode));
 			break;
 		}
 
@@ -4351,19 +4350,19 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			__dump((const unsigned char *) ppath2DDparm, sizeof(*ppath2DDparm));
 #endif
 			doserr = xfs_path2DD(
-					CFSwapInt16BigToHost(ppath2DDparm->mode),
-					CFSwapInt16BigToHost(ppath2DDparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(ppath2DDparm->rel_dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(ppath2DDparm->pathname)),
+					be16_to_cpu(ppath2DDparm->mode),
+					be16_to_cpu(ppath2DDparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->rel_dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->pathname)),
 					&restpath,
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(ppath2DDparm->symlink_dd)),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->symlink_dd)),
 					&symlink,
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(ppath2DDparm->dd)),
-					(UINT16 *) (AdrOffset68k + CFSwapInt32BigToHost(ppath2DDparm->dir_drive))
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->dd)),
+					(UINT16 *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->dir_drive))
 					);
 
-			*((char **) (AdrOffset68k + CFSwapInt32BigToHost(ppath2DDparm->restpfad))) = (char *) CFSwapInt32HostToBig(((UINT32) restpath) - ((UINT32) AdrOffset68k));
-			*((char **) (AdrOffset68k + CFSwapInt32BigToHost(ppath2DDparm->symlink))) = (char *) CFSwapInt32HostToBig(((UINT32) symlink) - ((UINT32) AdrOffset68k));
+			*((char **) (AdrOffset68k + be32_to_cpu(ppath2DDparm->restpfad))) = (char *) cpu_to_be32(((UINT32) restpath) - ((UINT32) AdrOffset68k));
+			*((char **) (AdrOffset68k + be32_to_cpu(ppath2DDparm->symlink))) = (char *) cpu_to_be32(((UINT32) symlink) - ((UINT32) AdrOffset68k));
 #ifdef DEBUG_VERBOSE
 			__dump((const unsigned char *) ppath2DDparm, sizeof(*ppath2DDparm));
 			if (doserr >= 0)
@@ -4384,11 +4383,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			sfirstparm *psfirstparm = (sfirstparm *) params;
 			doserr = xfs_sfirst(
-					CFSwapInt16BigToHost(psfirstparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(psfirstparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(psfirstparm->name)),
-					(MAC_DTA *) (AdrOffset68k + CFSwapInt32BigToHost(psfirstparm->dta)),
-					CFSwapInt16BigToHost(psfirstparm->attrib)
+					be16_to_cpu(psfirstparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(psfirstparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(psfirstparm->name)),
+					(MAC_DTA *) (AdrOffset68k + be32_to_cpu(psfirstparm->dta)),
+					be16_to_cpu(psfirstparm->attrib)
 					);
 			break;
 		}
@@ -4402,8 +4401,8 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			snextparm *psnextparm = (snextparm *) params;
 			doserr = xfs_snext(
-					CFSwapInt16BigToHost(psnextparm->drv),
-					(MAC_DTA *) (AdrOffset68k + CFSwapInt32BigToHost(psnextparm->dta))
+					be16_to_cpu(psnextparm->drv),
+					(MAC_DTA *) (AdrOffset68k + be32_to_cpu(psnextparm->dta))
 					);
 			break;
 		}
@@ -4420,11 +4419,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			fopenparm *pfopenparm = (fopenparm *) params;
 			doserr = xfs_fopen(
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pfopenparm->name)),
-					CFSwapInt16BigToHost(pfopenparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pfopenparm->dd)),
-					CFSwapInt16BigToHost(pfopenparm->omode),
-					CFSwapInt16BigToHost(pfopenparm->attrib)
+					(char *) (AdrOffset68k + be32_to_cpu(pfopenparm->name)),
+					be16_to_cpu(pfopenparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pfopenparm->dd)),
+					be16_to_cpu(pfopenparm->omode),
+					be16_to_cpu(pfopenparm->attrib)
 					);
 			break;
 		}
@@ -4439,9 +4438,9 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			fdeleteparm *pfdeleteparm = (fdeleteparm *) params;
 			doserr = xfs_fdelete(
-					CFSwapInt16BigToHost(pfdeleteparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pfdeleteparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pfdeleteparm->name))
+					be16_to_cpu(pfdeleteparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pfdeleteparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(pfdeleteparm->name))
 					);
 			break;
 		}
@@ -4460,13 +4459,13 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			flinkparm *pflinkparm = (flinkparm *) params;
 			doserr = xfs_link(
-					CFSwapInt16BigToHost(pflinkparm->drv),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pflinkparm->nam1)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pflinkparm->nam2)),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pflinkparm->dd1)),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pflinkparm->dd2)),
-					CFSwapInt16BigToHost(pflinkparm->mode),
-					CFSwapInt16BigToHost(pflinkparm->dst_drv)
+					be16_to_cpu(pflinkparm->drv),
+					(char *) (AdrOffset68k + be32_to_cpu(pflinkparm->nam1)),
+					(char *) (AdrOffset68k + be32_to_cpu(pflinkparm->nam2)),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pflinkparm->dd1)),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pflinkparm->dd2)),
+					be16_to_cpu(pflinkparm->mode),
+					be16_to_cpu(pflinkparm->dst_drv)
 					);
 			break;
 		}
@@ -4483,11 +4482,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			xattrparm *pxattrparm = (xattrparm *) params;
 			doserr = xfs_xattr(
-					CFSwapInt16BigToHost(pxattrparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pxattrparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pxattrparm->name)),
-					(XATTR *) (AdrOffset68k + CFSwapInt32BigToHost(pxattrparm->xattr)),
-					CFSwapInt16BigToHost(pxattrparm->mode)
+					be16_to_cpu(pxattrparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pxattrparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(pxattrparm->name)),
+					(XATTR *) (AdrOffset68k + be32_to_cpu(pxattrparm->xattr)),
+					be16_to_cpu(pxattrparm->mode)
 					);
 			break;
 		}
@@ -4504,11 +4503,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			attribparm *pattribparm = (attribparm *) params;
 			doserr = xfs_attrib(
-					CFSwapInt16BigToHost(pattribparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pattribparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pattribparm->name)),
-					CFSwapInt16BigToHost(pattribparm->rwflag),
-					CFSwapInt16BigToHost(pattribparm->attr)
+					be16_to_cpu(pattribparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pattribparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(pattribparm->name)),
+					be16_to_cpu(pattribparm->rwflag),
+					be16_to_cpu(pattribparm->attr)
 					);
 			break;
 		}
@@ -4525,11 +4524,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			chownparm *pchownparm = (chownparm *) params;
 			doserr = xfs_fchown(
-					CFSwapInt16BigToHost(pchownparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pchownparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pchownparm->name)),
-					CFSwapInt16BigToHost(pchownparm->uid),
-					CFSwapInt16BigToHost(pchownparm->gid)
+					be16_to_cpu(pchownparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pchownparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(pchownparm->name)),
+					be16_to_cpu(pchownparm->uid),
+					be16_to_cpu(pchownparm->gid)
 					);
 			break;
 		}
@@ -4545,10 +4544,10 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			chmodparm *pchmodparm = (chmodparm *) params;
 			doserr = xfs_fchmod(
-					CFSwapInt16BigToHost(pchmodparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pchmodparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pchmodparm->name)),
-					CFSwapInt16BigToHost(pchmodparm->fmode)
+					be16_to_cpu(pchmodparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pchmodparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(pchmodparm->name)),
+					be16_to_cpu(pchmodparm->fmode)
 					);
 			break;
 		}
@@ -4562,16 +4561,16 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 				UINT32 name;	// char *
 			};
 			dcreateparm *pdcreateparm = (dcreateparm *) params;
-			if (CFSwapInt32BigToHost((UINT32) (pdcreateparm->name)) >= m_AtariMemSize)
+			if (be32_to_cpu((UINT32) (pdcreateparm->name)) >= m_AtariMemSize)
 			{
 				DebugError("CMacXFS::xfs_dcreate() - invalid name ptr");
 				return(ERROR);
 			}
 
 			doserr = xfs_dcreate(
-					CFSwapInt16BigToHost(pdcreateparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pdcreateparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pdcreateparm->name))
+					be16_to_cpu(pdcreateparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdcreateparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(pdcreateparm->name))
 					);
 			break;
 		}
@@ -4585,8 +4584,8 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			ddeleteparm *pddeleteparm = (ddeleteparm *) params;
 			doserr = xfs_ddelete(
-					CFSwapInt16BigToHost(pddeleteparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pddeleteparm->dd))
+					be16_to_cpu(pddeleteparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pddeleteparm->dd))
 					);
 			break;
 		}
@@ -4602,10 +4601,10 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			dd2nameparm *pdd2nameparm = (dd2nameparm *) params;
 			doserr = xfs_DD2name(
-					CFSwapInt16BigToHost(pdd2nameparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pdd2nameparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pdd2nameparm->buf)),
-					CFSwapInt16BigToHost(pdd2nameparm->bufsiz)
+					be16_to_cpu(pdd2nameparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdd2nameparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(pdd2nameparm->buf)),
+					be16_to_cpu(pdd2nameparm->bufsiz)
 					);
 			break;
 		}
@@ -4621,10 +4620,10 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			dopendirparm *pdopendirparm = (dopendirparm *) params;
 			doserr = xfs_dopendir(
-					(MAC_DIRHANDLE *) (AdrOffset68k + CFSwapInt32BigToHost(pdopendirparm->dirh)),
-					CFSwapInt16BigToHost(pdopendirparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pdopendirparm->dd)),
-					CFSwapInt16BigToHost(pdopendirparm->tosflag)
+					(MAC_DIRHANDLE *) (AdrOffset68k + be32_to_cpu(pdopendirparm->dirh)),
+					be16_to_cpu(pdopendirparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdopendirparm->dd)),
+					be16_to_cpu(pdopendirparm->tosflag)
 					);
 			break;
 		}
@@ -4642,12 +4641,12 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			dreaddirparm *pdreaddirparm = (dreaddirparm *) params;
 			doserr = xfs_dreaddir(
-					(MAC_DIRHANDLE *) (AdrOffset68k + CFSwapInt32BigToHost(pdreaddirparm->dirh)),
-					CFSwapInt16BigToHost(pdreaddirparm->drv),
-					CFSwapInt16BigToHost(pdreaddirparm->size),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pdreaddirparm->buf)),
-					(XATTR *) ((pdreaddirparm->xattr) ? AdrOffset68k + CFSwapInt32BigToHost(pdreaddirparm->xattr) : NULL),
-					(INT32 *) ((pdreaddirparm->xr) ? (AdrOffset68k + CFSwapInt32BigToHost(pdreaddirparm->xr)) : NULL)
+					(MAC_DIRHANDLE *) (AdrOffset68k + be32_to_cpu(pdreaddirparm->dirh)),
+					be16_to_cpu(pdreaddirparm->drv),
+					be16_to_cpu(pdreaddirparm->size),
+					(char *) (AdrOffset68k + be32_to_cpu(pdreaddirparm->buf)),
+					(XATTR *) ((pdreaddirparm->xattr) ? AdrOffset68k + be32_to_cpu(pdreaddirparm->xattr) : NULL),
+					(INT32 *) ((pdreaddirparm->xr) ? (AdrOffset68k + be32_to_cpu(pdreaddirparm->xr)) : NULL)
 					);
 			break;
 		}
@@ -4661,8 +4660,8 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			drewinddirparm *pdrewinddirparm = (drewinddirparm *) params;
 			doserr = xfs_drewinddir(
-					(MAC_DIRHANDLE *) (AdrOffset68k + CFSwapInt32BigToHost(pdrewinddirparm->dirh)),
-					CFSwapInt16BigToHost(pdrewinddirparm->drv)
+					(MAC_DIRHANDLE *) (AdrOffset68k + be32_to_cpu(pdrewinddirparm->dirh)),
+					be16_to_cpu(pdrewinddirparm->drv)
 					);
 			break;
 		}
@@ -4676,8 +4675,8 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			dclosedirparm *pdclosedirparm = (dclosedirparm *) params;
 			doserr = xfs_dclosedir(
-					(MAC_DIRHANDLE *) (AdrOffset68k + CFSwapInt32BigToHost(pdclosedirparm->dirh)),
-					CFSwapInt16BigToHost(pdclosedirparm->drv)
+					(MAC_DIRHANDLE *) (AdrOffset68k + be32_to_cpu(pdclosedirparm->dirh)),
+					be16_to_cpu(pdclosedirparm->drv)
 					);
 			break;
 		}
@@ -4692,9 +4691,9 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			dpathconfparm *pdpathconfparm = (dpathconfparm *) params;
 			doserr = xfs_dpathconf(
-					CFSwapInt16BigToHost(pdpathconfparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pdpathconfparm->dd)),
-					CFSwapInt16BigToHost(pdpathconfparm->which)
+					be16_to_cpu(pdpathconfparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdpathconfparm->dd)),
+					be16_to_cpu(pdpathconfparm->which)
 					);
 			break;
 		}
@@ -4709,12 +4708,12 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			dfreeparm *pdfreeparm = (dfreeparm *) params;
 			doserr = xfs_dfree(
-					CFSwapInt16BigToHost(pdfreeparm->drv),
+					be16_to_cpu(pdfreeparm->drv),
 					pdfreeparm->dirID,
-					(UINT32 *) (AdrOffset68k + CFSwapInt32BigToHost(pdfreeparm->data))
+					(UINT32 *) (AdrOffset68k + be32_to_cpu(pdfreeparm->data))
 					);
 #ifdef DEBUG_VERBOSE
-			__dump((const unsigned char *) (AdrOffset68k + CFSwapInt32BigToHost(pdfreeparm->data)), 16);
+			__dump((const unsigned char *) (AdrOffset68k + be32_to_cpu(pdfreeparm->data)), 16);
 #endif
 			break;
 		}
@@ -4729,9 +4728,9 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			wlabelparm *pwlabelparm = (wlabelparm *) params;
 			doserr = xfs_wlabel(
-					CFSwapInt16BigToHost(pwlabelparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pwlabelparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pwlabelparm->name))
+					be16_to_cpu(pwlabelparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pwlabelparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(pwlabelparm->name))
 					);
 			break;
 		}
@@ -4747,10 +4746,10 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			rlabelparm *prlabelparm = (rlabelparm *) params;
 			doserr = xfs_rlabel(
-					CFSwapInt16BigToHost(prlabelparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(prlabelparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(prlabelparm->name)),
-					CFSwapInt16BigToHost(prlabelparm->bufsiz)
+					be16_to_cpu(prlabelparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(prlabelparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(prlabelparm->name)),
+					be16_to_cpu(prlabelparm->bufsiz)
 					);
 			break;
 		}
@@ -4766,10 +4765,10 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			symlinkparm *psymlinkparm = (symlinkparm *) params;
 			doserr = xfs_symlink(
-					CFSwapInt16BigToHost(psymlinkparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(psymlinkparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(psymlinkparm->name)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(psymlinkparm->to))
+					be16_to_cpu(psymlinkparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(psymlinkparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(psymlinkparm->name)),
+					(char *) (AdrOffset68k + be32_to_cpu(psymlinkparm->to))
 					);
 			break;
 		}
@@ -4786,11 +4785,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			readlinkparm *preadlinkparm = (readlinkparm *) params;
 			doserr = xfs_readlink(
-					CFSwapInt16BigToHost(preadlinkparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(preadlinkparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(preadlinkparm->name)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(preadlinkparm->buf)),
-					CFSwapInt16BigToHost(preadlinkparm->bufsiz)
+					be16_to_cpu(preadlinkparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(preadlinkparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(preadlinkparm->name)),
+					(char *) (AdrOffset68k + be32_to_cpu(preadlinkparm->buf)),
+					be16_to_cpu(preadlinkparm->bufsiz)
 					);
 			break;
 		}
@@ -4807,11 +4806,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			};
 			dcntlparm *pdcntlparm = (dcntlparm *) params;
 			doserr = xfs_dcntl(
-					CFSwapInt16BigToHost(pdcntlparm->drv),
-					(MXFSDD *) (AdrOffset68k + CFSwapInt32BigToHost(pdcntlparm->dd)),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pdcntlparm->name)),
-					CFSwapInt16BigToHost(pdcntlparm->cmd),
-					AdrOffset68k + CFSwapInt32BigToHost(pdcntlparm->arg),
+					be16_to_cpu(pdcntlparm->drv),
+					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdcntlparm->dd)),
+					(char *) (AdrOffset68k + be32_to_cpu(pdcntlparm->name)),
+					be16_to_cpu(pdcntlparm->cmd),
+					AdrOffset68k + be32_to_cpu(pdcntlparm->arg),
 					AdrOffset68k
 					);
 			break;
@@ -4845,12 +4844,12 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 
 
 	// first 2 bytes: function code
-	fncode = CFSwapInt16BigToHost(*((UINT16 *) params));
+	fncode = be16_to_cpu(*((UINT16 *) params));
 	params += 2;
 	// next 4 bytes: pointer to MAC_FD
 	ifd = *((UINT32 *) params);
 	params += 4;
-	MAC_FD *f = (MAC_FD *) (AdrOffset68k + CFSwapInt32BigToHost(ifd));
+	MAC_FD *f = (MAC_FD *) (AdrOffset68k + be32_to_cpu(ifd));
 
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::XFSDevFunctions(%d)", (int) fncode);
@@ -4875,8 +4874,8 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			devreadparm *pdevreadparm = (devreadparm *) params;
 			doserr = dev_read(
 					f,
-					CFSwapInt32BigToHost(pdevreadparm->count),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pdevreadparm->buf))
+					be32_to_cpu(pdevreadparm->count),
+					(char *) (AdrOffset68k + be32_to_cpu(pdevreadparm->buf))
 					);
 			break;
 		}
@@ -4892,8 +4891,8 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			devwriteparm *pdevwriteparm = (devwriteparm *) params;
 			doserr = dev_write(
 					f,
-					CFSwapInt32BigToHost(pdevwriteparm->count),
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pdevwriteparm->buf))
+					be32_to_cpu(pdevwriteparm->count),
+					(char *) (AdrOffset68k + be32_to_cpu(pdevwriteparm->buf))
 					);
 			break;
 		}
@@ -4911,8 +4910,8 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			doserr = dev_stat(
 					f,
 					(void *) (AdrOffset68k + pdevstatparm->unsel),
-					CFSwapInt16BigToHost(pdevstatparm->rwflag),
-					CFSwapInt32BigToHost(pdevstatparm->apcode)
+					be16_to_cpu(pdevstatparm->rwflag),
+					be32_to_cpu(pdevstatparm->apcode)
 					);
 			break;
 		}
@@ -4928,8 +4927,8 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			devseekparm *pdevseekparm = (devseekparm *) params;
 			doserr = dev_seek(
 					f,
-					CFSwapInt32BigToHost(pdevseekparm->pos),
-					CFSwapInt16BigToHost(pdevseekparm->mode)
+					be32_to_cpu(pdevseekparm->pos),
+					be16_to_cpu(pdevseekparm->mode)
 					);
 			break;
 		}
@@ -4945,8 +4944,8 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			devdatimeparm *pdevdatimeparm = (devdatimeparm *) params;
 			doserr = dev_datime(
 					f,
-					(UINT16 *) (AdrOffset68k + CFSwapInt32BigToHost(pdevdatimeparm->d)),
-					CFSwapInt16BigToHost(pdevdatimeparm->rwflag)
+					(UINT16 *) (AdrOffset68k + be32_to_cpu(pdevdatimeparm->d)),
+					be16_to_cpu(pdevdatimeparm->rwflag)
 					);
 			break;
 		}
@@ -4962,8 +4961,8 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			devioctlparm *pdevioctlparm = (devioctlparm *) params;
 			doserr = dev_ioctl(
 					f,
-					CFSwapInt16BigToHost(pdevioctlparm->cmd),
-					(void *) (AdrOffset68k + CFSwapInt32BigToHost(pdevioctlparm->buf))
+					be16_to_cpu(pdevioctlparm->cmd),
+					(void *) (AdrOffset68k + be32_to_cpu(pdevioctlparm->buf))
 					);
 			break;
 		}
@@ -4978,7 +4977,7 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			devgetcparm *pdevgetcparm = (devgetcparm *) params;
 			doserr = dev_getc(
 					f,
-					CFSwapInt16BigToHost(pdevgetcparm->mode)
+					be16_to_cpu(pdevgetcparm->mode)
 					);
 			break;
 		}
@@ -4995,9 +4994,9 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			devgetlineparm *pdevgetlineparm = (devgetlineparm *) params;
 			doserr = dev_getline(
 					f,
-					(char *) (AdrOffset68k + CFSwapInt32BigToHost(pdevgetlineparm->buf)),
-					CFSwapInt32BigToHost(pdevgetlineparm->size),
-					CFSwapInt16BigToHost(pdevgetlineparm->mode)
+					(char *) (AdrOffset68k + be32_to_cpu(pdevgetlineparm->buf)),
+					be32_to_cpu(pdevgetlineparm->size),
+					be16_to_cpu(pdevgetlineparm->mode)
 					);
 			break;
 		}
@@ -5013,8 +5012,8 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 			devputcparm *pdevputcparm = (devputcparm *) params;
 			doserr = dev_putc(
 					f,
-					CFSwapInt16BigToHost(pdevputcparm->mode),
-					CFSwapInt32BigToHost(pdevputcparm->val)
+					be16_to_cpu(pdevputcparm->mode),
+					be32_to_cpu(pdevputcparm->val)
 					);
 			break;
 		}
@@ -5042,11 +5041,11 @@ void CMacXFS::setDrivebits(long newbits, unsigned char *AdrOffset68k)
 {
 	long val;
 
-	val = CFSwapInt32BigToHost(*(long*)(&AdrOffset68k[_drvbits]));
+	val = be32_to_cpu(*(long*)(&AdrOffset68k[_drvbits]));
 	newbits |= (1L << ('m'-'a'));	// virtuelles Laufwerk M: immer präsent
 	val &= -1L-xfs_drvbits;		// alte löschen
 	val |= newbits;			// neue setzen
-	*(long*)(&AdrOffset68k[_drvbits]) = CFSwapInt32HostToBig(val);
+	*(long*)(&AdrOffset68k[_drvbits]) = cpu_to_be32(val);
 	xfs_drvbits = newbits;
 }
 
@@ -5187,7 +5186,7 @@ void CMacXFS::XFSVolUnmounted (ParmBlkPtr pb0)
 INT32 CMacXFS::Drv2DevCode(UINT32 params, unsigned char *AdrOffset68k)
 {
 	short vol;
-	UINT16 drv = CFSwapInt16BigToHost(*((UINT16*) (AdrOffset68k + params)));
+	UINT16 drv = be16_to_cpu(*((UINT16*) (AdrOffset68k + params)));
 
 
 	if (drv <= 1)

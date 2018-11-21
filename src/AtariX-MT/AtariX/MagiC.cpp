@@ -36,6 +36,7 @@
 #include "PascalStrings.h"
 #include "missing.h"
 #include "_fcntl.h"
+#include "s_endian.h"
 
 // Schalter
 
@@ -264,7 +265,7 @@ m68k_addr_type m68k_read_memory_16(m68k_addr_type address)
 	if	(address < Adr68kVideo)
 	{
 		val = *((UINT16 *) (OpcodeROM + address));
-		return(CFSwapInt16BigToHost(val));
+		return(be16_to_cpu(val));
 	}
 	else
 #endif
@@ -274,7 +275,7 @@ m68k_addr_type m68k_read_memory_16(m68k_addr_type address)
 		if (bAtariVideoRamHostEndian)
 			return val;		// x86 has bgr instead of rgb
 		else
-			return(CFSwapInt16BigToHost(val));
+			return(be16_to_cpu(val));
 	}
 	else
 	{
@@ -305,7 +306,7 @@ m68k_addr_type m68k_read_memory_32(m68k_addr_type address)
 	if	(address < Adr68kVideo)
 	{
 		val = *((UINT32*) (OpcodeROM + address));
-		return(CFSwapInt32BigToHost(val));
+		return(be32_to_cpu(val));
 	}
 	else
 #endif
@@ -315,7 +316,7 @@ m68k_addr_type m68k_read_memory_32(m68k_addr_type address)
 		if (bAtariVideoRamHostEndian)
 			return val;		// x86 has bgr instead of rgb
 		else
-			return(CFSwapInt32BigToHost(val));
+			return(be32_to_cpu(val));
 	}
 	else
 	{
@@ -417,7 +418,7 @@ void m68k_write_memory_16(m68k_addr_type address, m68k_data_type value)
 #endif
 #if !COUNT_CYCLES
 	if	(address < Adr68kVideo)
-		*((UINT16 *) (OpcodeROM + address)) = (UINT16) CFSwapInt16HostToBig(value);
+		*((UINT16 *) (OpcodeROM + address)) = (UINT16) cpu_to_be16(value);
 	else
 #endif
 	if	(address < Adr68kVideoEnd)
@@ -426,9 +427,9 @@ void m68k_write_memory_16(m68k_addr_type address, m68k_data_type value)
 		if (bAtariVideoRamHostEndian)
 			*((UINT16 *) (HostVideoAddr + address)) = (UINT16) value;		// x86 has bgr instead of rgb
 		else
-			*((UINT16 *) (HostVideoAddr + address)) = (UINT16) CFSwapInt16HostToBig(value);
+			*((UINT16 *) (HostVideoAddr + address)) = (UINT16) cpu_to_be16(value);
 
-// //		*((UINT16*) (HostVideo2Addr + address)) = (UINT16) CFSwapInt16HostToBig(value);
+// //		*((UINT16*) (HostVideo2Addr + address)) = (UINT16) cpu_to_be16(value);
 //		*((UINT16 *) (HostVideo2Addr + address)) = (UINT16) value;	// x86 has bgr instead of rgb
 		(void) atomic_exchange(p_bVideoBufChanged, 1);
 		//DebugInfo("vchg");
@@ -471,7 +472,7 @@ void m68k_write_memory_32(m68k_addr_type address, m68k_data_type value)
 #endif
 #if !COUNT_CYCLES
 	if	(address < Adr68kVideo)
-		*((UINT32 *) (OpcodeROM + address)) = (UINT32) CFSwapInt32HostToBig(value);
+		*((UINT32 *) (OpcodeROM + address)) = (UINT32) cpu_to_be32(value);
 	else
 #endif
 	if	(address < Adr68kVideoEnd)
@@ -796,10 +797,10 @@ void m68k_write_memory_32(m68k_addr_type address, m68k_data_type value)
 		if (bAtariVideoRamHostEndian)
 			*((UINT32 *) (HostVideoAddr + address)) = value;		// x86 has brg instead of rgb
 		else
-			*((UINT32 *) (HostVideoAddr + address)) = CFSwapInt32HostToBig(value);
+			*((UINT32 *) (HostVideoAddr + address)) = cpu_to_be32(value);
 
 // //		*((UINT32*) (HostVideo2Addr + address)) = value;		// x86 has brg instead of rgb
-//		*((UINT32 *) (HostVideo2Addr + address)) = CFSwapInt32HostToBig(value);
+//		*((UINT32 *) (HostVideo2Addr + address)) = cpu_to_be32(value);
 		(void) atomic_exchange(p_bVideoBufChanged, 1);
 		//DebugInfo("vchg");
 	}
@@ -986,17 +987,17 @@ Reinstall the application.
 		goto exitReloc;
 	}
 
-	DebugInfo("CMagiC::LoadReloc() - Length TEXT = %ld", CFSwapInt32BigToHost(exehead.tlen));
-	DebugInfo("CMagiC::LoadReloc() - Length DATA = %ld", CFSwapInt32BigToHost(exehead.dlen));
-	DebugInfo("CMagiC::LoadReloc() - Length BSS = %ld", CFSwapInt32BigToHost(exehead.blen));
+	DebugInfo("CMagiC::LoadReloc() - Length TEXT = %ld", be32_to_cpu(exehead.tlen));
+	DebugInfo("CMagiC::LoadReloc() - Length DATA = %ld", be32_to_cpu(exehead.dlen));
+	DebugInfo("CMagiC::LoadReloc() - Length BSS = %ld", be32_to_cpu(exehead.blen));
 
-	codlen = CFSwapInt32BigToHost(exehead.tlen) + CFSwapInt32BigToHost(exehead.dlen);
-	if	(CFSwapInt32BigToHost(exehead.blen) & 1)
+	codlen = be32_to_cpu(exehead.tlen) + be32_to_cpu(exehead.dlen);
+	if	(be32_to_cpu(exehead.blen) & 1)
 	{
 		// BSS-Segment auf gerade Länge
-		exehead.blen = CFSwapInt32HostToBig(CFSwapInt32BigToHost(exehead.blen) + 1);
+		exehead.blen = cpu_to_be32(be32_to_cpu(exehead.blen) + 1);
 	}
-	tpaSize = sizeof(BasePage) + codlen + CFSwapInt32BigToHost(exehead.blen) + stackSize;
+	tpaSize = sizeof(BasePage) + codlen + be32_to_cpu(exehead.blen) + stackSize;
 
 	DebugInfo("CMagiC::LoadReloc() - total length incl. basepage and stack = 0x%08x (%ld)", tpaSize, tpaSize);
 
@@ -1027,20 +1028,20 @@ Reinstall the application.
 	// Alle 68k-Adressen sind relativ zu <m_RAM68k>
 	bp = (BasePage *) tpaStart;
 	memset(bp, 0, sizeof(BasePage));
-	bp->p_lowtpa = CFSwapInt32HostToBig(tpaStart - m_RAM68k);
-	bp->p_hitpa = CFSwapInt32HostToBig(tpaStart - m_RAM68k + tpaSize);
-	bp->p_tbase = CFSwapInt32HostToBig(tbase - m_RAM68k);
+	bp->p_lowtpa = cpu_to_be32(tpaStart - m_RAM68k);
+	bp->p_hitpa = cpu_to_be32(tpaStart - m_RAM68k + tpaSize);
+	bp->p_tbase = cpu_to_be32(tbase - m_RAM68k);
 	bp->p_tlen  = exehead.tlen;
-	bp->p_dbase = CFSwapInt32HostToBig(tbase - m_RAM68k + CFSwapInt32BigToHost(exehead.tlen));
+	bp->p_dbase = cpu_to_be32(tbase - m_RAM68k + be32_to_cpu(exehead.tlen));
 	bp->p_dlen  = exehead.dlen;
-	bp->p_bbase = CFSwapInt32HostToBig(bbase - m_RAM68k);
+	bp->p_bbase = cpu_to_be32(bbase - m_RAM68k);
 	bp->p_blen  = exehead.blen;
-	bp->p_dta   = CFSwapInt32HostToBig(bp->p_cmdline - m_RAM68k);
+	bp->p_dta   = cpu_to_be32(bp->p_cmdline - m_RAM68k);
 	bp->p_parent= 0;
 
 	DebugInfo("CMagiC::LoadReloc() - Startadresse Atari = 0x%08lx (host)", m_RAM68k);
 	DebugInfo("CMagiC::LoadReloc() - Speichergröße Atari = 0x%08lx (= %lu kBytes)", m_RAM68ksize, m_RAM68ksize >> 10);
-	DebugInfo("CMagiC::LoadReloc() - Ladeadresse des Systems (TEXT) = 0x%08lx (68k)", CFSwapInt32BigToHost((uint32_t) (bp->p_tbase)));
+	DebugInfo("CMagiC::LoadReloc() - Ladeadresse des Systems (TEXT) = 0x%08lx (68k)", be32_to_cpu((uint32_t) (bp->p_tbase)));
 
 	#if defined(_DEBUG_BASEPAGE)
 	{
@@ -1059,10 +1060,10 @@ Reinstall the application.
 	if	(codlen != bytes_read)
 		goto readerr;
 
-	if	(!CFSwapInt16BigToHost(exehead.relmod))	// müssen relozieren
+	if	(!be16_to_cpu(exehead.relmod))	// müssen relozieren
 	{
 		// Seek zur Reloc-Tabelle
-		Fpos = (long) (CFSwapInt32BigToHost(exehead.slen) + codlen + sizeof(exehead));
+		Fpos = (long) (be32_to_cpu(exehead.slen) + codlen + sizeof(exehead));
 		if (lseek(fd, Fpos, SEEK_SET) != Fpos)
 			goto readerr;
 		len = 4;
@@ -1070,7 +1071,7 @@ Reinstall the application.
 		if	(len != bytes_read)
 			goto readerr;
 
-		loff = CFSwapInt32BigToHost(loff);
+		loff = be32_to_cpu(loff);
 
 		if	(loff)	// müssen relozieren
 		{
@@ -1088,7 +1089,7 @@ Reinstall the application.
 			tp = (uint32_t *) (reloff + loff);
 
 			//*tp += (long) (reloff - m_RAM68k);
-			*tp = CFSwapInt32HostToBig((long) (reloff - m_RAM68k) + CFSwapInt32BigToHost(*tp));
+			*tp = cpu_to_be32((long) (reloff - m_RAM68k) + be32_to_cpu(*tp));
 
 			// Reloc-Tabelle in einem Rutsch einlesen
 			bytes_read = read(fd, relBuf, RelocBufSize);
@@ -1106,7 +1107,7 @@ Reinstall the application.
 				{
 					tp = (uint32_t *) ((char *) tp + relb);
 
-					*tp = CFSwapInt32HostToBig((long) (reloff - m_RAM68k) + CFSwapInt32BigToHost(*tp));
+					*tp = cpu_to_be32((long) (reloff - m_RAM68k) + be32_to_cpu(*tp));
 				}
 			}
 		}
@@ -1116,7 +1117,7 @@ Reinstall the application.
 		}
 	}
 
-	memset (bbase, 0, CFSwapInt32BigToHost(exehead.blen));	// BSS löschen
+	memset (bbase, 0, be32_to_cpu(exehead.blen));	// BSS löschen
 
 exitReloc:
 	if	(err)
@@ -1142,13 +1143,13 @@ exitReloc:
 
 void CMagiC::Init_CookieData(MgMxCookieData *pCookieData)
 {
-	pCookieData->mgmx_magic     = CFSwapInt32HostToBig('MgMx');
-	pCookieData->mgmx_version   = CFSwapInt32HostToBig(CGlobals::s_ProgramVersion.majorRev);
-	pCookieData->mgmx_len       = CFSwapInt32HostToBig(sizeof(MgMxCookieData));
-	pCookieData->mgmx_xcmd      = CFSwapInt32HostToBig(0);		// wird vom Kernel gesetzt
-	pCookieData->mgmx_xcmd_exec = CFSwapInt32HostToBig(0);		// wird vom Kernel gesetzt
-	pCookieData->mgmx_internal  = CFSwapInt32HostToBig(0);		// wird vom Kernel gesetzt
-	pCookieData->mgmx_daemon    = CFSwapInt32HostToBig(0);		// wird vom Kernel gesetzt
+	pCookieData->mgmx_magic     = cpu_to_be32('MgMx');
+	pCookieData->mgmx_version   = cpu_to_be32(CGlobals::s_ProgramVersion.majorRev);
+	pCookieData->mgmx_len       = cpu_to_be32(sizeof(MgMxCookieData));
+	pCookieData->mgmx_xcmd      = cpu_to_be32(0);		// wird vom Kernel gesetzt
+	pCookieData->mgmx_xcmd_exec = cpu_to_be32(0);		// wird vom Kernel gesetzt
+	pCookieData->mgmx_internal  = cpu_to_be32(0);		// wird vom Kernel gesetzt
+	pCookieData->mgmx_daemon    = cpu_to_be32(0);		// wird vom Kernel gesetzt
 }
 
 
@@ -1169,27 +1170,27 @@ static void PixmapToBigEndian(MXVDI_PIXMAP *thePixMap)
 		bAtariVideoRamHostEndian = false;
 	}
 
-	thePixMap->baseAddr      = (UINT8 *) CFSwapInt32HostToBig((UInt32) thePixMap->baseAddr);
-	thePixMap->rowBytes      = CFSwapInt16HostToBig(thePixMap->rowBytes);
-	thePixMap->bounds_top    = CFSwapInt16HostToBig(thePixMap->bounds_top);
-	thePixMap->bounds_left   = CFSwapInt16HostToBig(thePixMap->bounds_left);
-	thePixMap->bounds_bottom = CFSwapInt16HostToBig(thePixMap->bounds_bottom);
-	thePixMap->bounds_right  = CFSwapInt16HostToBig(thePixMap->bounds_right);
-	thePixMap->pmVersion     = CFSwapInt16HostToBig(thePixMap->pmVersion);
-	thePixMap->packType      = CFSwapInt16HostToBig(thePixMap->packType);
-	thePixMap->packSize      = CFSwapInt32HostToBig(thePixMap->packSize);
-	thePixMap->hRes          = CFSwapInt32HostToBig(thePixMap->hRes);
-	thePixMap->vRes          = CFSwapInt32HostToBig(thePixMap->vRes);
-	thePixMap->pixelType     = CFSwapInt16HostToBig(thePixMap->pixelType);
-	thePixMap->pixelSize     = CFSwapInt16HostToBig(thePixMap->pixelSize);
-	thePixMap->cmpCount      = CFSwapInt16HostToBig(thePixMap->cmpCount);
-	thePixMap->cmpSize       = CFSwapInt16HostToBig(thePixMap->cmpSize);
-	thePixMap->planeBytes    = CFSwapInt32HostToBig(thePixMap->planeBytes);
+	thePixMap->baseAddr      = (UINT8 *) cpu_to_be32((UInt32) thePixMap->baseAddr);
+	thePixMap->rowBytes      = cpu_to_be16(thePixMap->rowBytes);
+	thePixMap->bounds_top    = cpu_to_be16(thePixMap->bounds_top);
+	thePixMap->bounds_left   = cpu_to_be16(thePixMap->bounds_left);
+	thePixMap->bounds_bottom = cpu_to_be16(thePixMap->bounds_bottom);
+	thePixMap->bounds_right  = cpu_to_be16(thePixMap->bounds_right);
+	thePixMap->pmVersion     = cpu_to_be16(thePixMap->pmVersion);
+	thePixMap->packType      = cpu_to_be16(thePixMap->packType);
+	thePixMap->packSize      = cpu_to_be32(thePixMap->packSize);
+	thePixMap->hRes          = cpu_to_be32(thePixMap->hRes);
+	thePixMap->vRes          = cpu_to_be32(thePixMap->vRes);
+	thePixMap->pixelType     = cpu_to_be16(thePixMap->pixelType);
+	thePixMap->pixelSize     = cpu_to_be16(thePixMap->pixelSize);
+	thePixMap->cmpCount      = cpu_to_be16(thePixMap->cmpCount);
+	thePixMap->cmpSize       = cpu_to_be16(thePixMap->cmpSize);
+	thePixMap->planeBytes    = cpu_to_be32(thePixMap->planeBytes);
 #if 0
 	if (thePixMap->pixelFormat == k32BGRAPixelFormat)
 	{
 		DebugInfo("PixmapToBigEndian() -- k32BGRAPixelFormat => k32ARGBPixelFormat");
-		thePixMap->pixelFormat = CFSwapInt32HostToBig(k32ARGBPixelFormat);
+		thePixMap->pixelFormat = cpu_to_be32(k32ARGBPixelFormat);
 	}
 #endif
 }
@@ -1335,13 +1336,13 @@ Assign more memory to the application using the Finder dialogue "Information"!
 
 	// Atari-Systemvariablen setzen
 
-	*((UINT32 *)(m_RAM68k+phystop)) = CFSwapInt32HostToBig(Adr68kVideoEnd);
-	*((UINT32 *)(m_RAM68k+_v_bas_ad)) = CFSwapInt32HostToBig(m_RAM68ksize);
+	*((UINT32 *)(m_RAM68k+phystop)) = cpu_to_be32(Adr68kVideoEnd);
+	*((UINT32 *)(m_RAM68k+_v_bas_ad)) = cpu_to_be32(m_RAM68ksize);
 	AtariMemtop = ((UINT32) ((unsigned char *) m_BasePage - m_RAM68k)) - sizeof(Atari68kData);
-	*((UINT32 *)(m_RAM68k+_memtop)) = CFSwapInt32HostToBig(AtariMemtop);
-	*((UINT16 *)(m_RAM68k+sshiftmd)) = CFSwapInt16HostToBig(2);		// ST high (640*400*2)
-	*((UINT16 *)(m_RAM68k+_cmdload)) = CFSwapInt16HostToBig(0);		// AES booten
-	*((UINT16 *)(m_RAM68k+_nflops)) = CFSwapInt16HostToBig(0);		// keine Floppies
+	*((UINT32 *)(m_RAM68k+_memtop)) = cpu_to_be32(AtariMemtop);
+	*((UINT16 *)(m_RAM68k+sshiftmd)) = cpu_to_be16(2);		// ST high (640*400*2)
+	*((UINT16 *)(m_RAM68k+_cmdload)) = cpu_to_be16(0);		// AES booten
+	*((UINT16 *)(m_RAM68k+_nflops)) = cpu_to_be16(0);		// keine Floppies
 
 	// Atari-68k-Daten setzen
 
@@ -1365,7 +1366,7 @@ Assign more memory to the application using the Finder dialogue "Information"!
 
 	pMacXSysHdr = (MacXSysHdr *) (m_BasePage + 1);		// Zeiger hinter Basepage
 
-	if	(CFSwapInt32BigToHost(pMacXSysHdr->MacSys_magic) != 'MagC')
+	if	(be32_to_cpu(pMacXSysHdr->MacSys_magic) != 'MagC')
 	{
 		DebugError("CMagiC::Init() - Falsches magic");
 		goto err_inv_os;
@@ -1373,7 +1374,7 @@ Assign more memory to the application using the Finder dialogue "Information"!
 
 	assert(sizeof(CMagiC_CPPCCallback) == 16);
 
-	if	(CFSwapInt32BigToHost(pMacXSysHdr->MacSys_len) != sizeof(*pMacXSysHdr))
+	if	(be32_to_cpu(pMacXSysHdr->MacSys_len) != sizeof(*pMacXSysHdr))
 	{
 		DebugError("CMagiC::Init() - Strukturlänge stimmt nicht (Header: %u Bytes, Soll: %u Bytes)", pMacXSysHdr->MacSys_len, sizeof(*pMacXSysHdr));
 		err_inv_os:
@@ -1391,9 +1392,9 @@ Reinstall the application.
 		return(1);
 	}
 
-	pMacXSysHdr->MacSys_verMac = CFSwapInt32HostToBig(10);
-	pMacXSysHdr->MacSys_cpu = CFSwapInt16HostToBig(20);		// 68020
-	pMacXSysHdr->MacSys_fpu = CFSwapInt16HostToBig(0);		// keine FPU
+	pMacXSysHdr->MacSys_verMac = cpu_to_be32(10);
+	pMacXSysHdr->MacSys_cpu = cpu_to_be16(20);		// 68020
+	pMacXSysHdr->MacSys_fpu = cpu_to_be16(0);		// keine FPU
 	pMacXSysHdr->MacSys_init.m_Callback = &CMagiC::AtariInit;
 	pMacXSysHdr->MacSys_init.m_thisptr = this;
 	pMacXSysHdr->MacSys_biosinit.m_Callback = &CMagiC::AtariBIOSInit;
@@ -1402,12 +1403,12 @@ Reinstall the application.
 	pMacXSysHdr->MacSys_VdiInit.m_thisptr = this;
 	pMacXSysHdr->MacSys_Exec68k.m_Callback = &CMagiC::AtariExec68k;
 	pMacXSysHdr->MacSys_Exec68k.m_thisptr = this;
-	pMacXSysHdr->MacSys_pixmap = CFSwapInt32HostToBig(((UINT32) &pAtari68kData->m_PixMap) - (UINT32) m_RAM68k);
-	pMacXSysHdr->MacSys_pMMXCookie = CFSwapInt32HostToBig(((UINT32) &pAtari68kData->m_CookieData) - (UINT32) m_RAM68k);
+	pMacXSysHdr->MacSys_pixmap = cpu_to_be32(((UINT32) &pAtari68kData->m_PixMap) - (UINT32) m_RAM68k);
+	pMacXSysHdr->MacSys_pMMXCookie = cpu_to_be32(((UINT32) &pAtari68kData->m_CookieData) - (UINT32) m_RAM68k);
 	pMacXSysHdr->MacSys_Xcmd.m_Callback = &CXCmd::Command;
 	pMacXSysHdr->MacSys_Xcmd.m_thisptr = pXCmd;
-	pMacXSysHdr->MacSys_PPCAddr = (void *) CFSwapInt32HostToBig((UInt32) m_RAM68k);
-	pMacXSysHdr->MacSys_VideoAddr = (void *) CFSwapInt32HostToBig((UInt32) m_pMagiCScreen->m_PixMap.baseAddr);
+	pMacXSysHdr->MacSys_PPCAddr = (void *) cpu_to_be32((UInt32) m_RAM68k);
+	pMacXSysHdr->MacSys_VideoAddr = (void *) cpu_to_be32((UInt32) m_pMagiCScreen->m_PixMap.baseAddr);
 	pMacXSysHdr->MacSys_gettime = (void *) AtariGettime;
 	pMacXSysHdr->MacSys_settime = (void *) AtariSettime;
 	pMacXSysHdr->MacSys_Setpalette = (void *) AtariSetpalette;
@@ -1451,40 +1452,40 @@ Reinstall the application.
 	pMacXSysHdr->MacSys_Yield = (void *) AtariYield;
 
 	// ssp nach Reset
-	*((UINT32 *)(m_RAM68k + 0)) = CFSwapInt32HostToBig(512*1024);		// Stack auf 512k
+	*((UINT32 *)(m_RAM68k + 0)) = cpu_to_be32(512*1024);		// Stack auf 512k
 	// pc nach Reset
 	*((UINT32 *)(m_RAM68k + 4)) = pMacXSysHdr->MacSys_syshdr;
 
 	// TOS-SYSHDR bestimmen
 
-	pSysHdr = (SYSHDR *) (m_RAM68k + CFSwapInt32BigToHost(pMacXSysHdr->MacSys_syshdr));
+	pSysHdr = (SYSHDR *) (m_RAM68k + be32_to_cpu(pMacXSysHdr->MacSys_syshdr));
 
 	// Adresse für kbshift, kbrepeat und act_pd berechnen
 
-	m_AtariKbData = m_RAM68k + CFSwapInt32BigToHost(pSysHdr->kbshift);
-	m_pAtariActPd = (UINT32 *) (m_RAM68k + CFSwapInt32BigToHost(pSysHdr->_run));
+	m_AtariKbData = m_RAM68k + be32_to_cpu(pSysHdr->kbshift);
+	m_pAtariActPd = (UINT32 *) (m_RAM68k + be32_to_cpu(pSysHdr->_run));
 
 	// Andere Atari-Strukturen
 
-	m_pAtariActAppl = (UINT32 *) (m_RAM68k + CFSwapInt32BigToHost(pMacXSysHdr->MacSys_act_appl));
+	m_pAtariActAppl = (UINT32 *) (m_RAM68k + be32_to_cpu(pMacXSysHdr->MacSys_act_appl));
 
 	// Prüfsumme für das System berechnen
 
 	chksum = 0;
-	UINT32 *fromptr = (UINT32 *) (m_RAM68k + CFSwapInt32BigToHost(pMacXSysHdr->MacSys_syshdr));
-	UINT32 *toptr = (UINT32 *) (m_RAM68k + CFSwapInt32BigToHost((UINT32) m_BasePage->p_tbase) + CFSwapInt32BigToHost(m_BasePage->p_tlen) + CFSwapInt32BigToHost(m_BasePage->p_dlen));
+	UINT32 *fromptr = (UINT32 *) (m_RAM68k + be32_to_cpu(pMacXSysHdr->MacSys_syshdr));
+	UINT32 *toptr = (UINT32 *) (m_RAM68k + be32_to_cpu((UINT32) m_BasePage->p_tbase) + be32_to_cpu(m_BasePage->p_tlen) + be32_to_cpu(m_BasePage->p_dlen));
 #ifdef _DEBUG
-//	AdrOsRomStart = CFSwapInt32BigToHost(pMacXSysHdr->MacSys_syshdr);			// Beginn schreibgeschützter Bereich
-	AdrOsRomStart = CFSwapInt32BigToHost((UINT32) m_BasePage->p_tbase);		// Beginn schreibgeschützter Bereich
-	AdrOsRomEnd = CFSwapInt32BigToHost((UINT32) m_BasePage->p_tbase) + CFSwapInt32BigToHost(m_BasePage->p_tlen) + CFSwapInt32BigToHost(m_BasePage->p_dlen);	// Ende schreibgeschützter Bereich
+//	AdrOsRomStart = be32_to_cpu(pMacXSysHdr->MacSys_syshdr);			// Beginn schreibgeschützter Bereich
+	AdrOsRomStart = be32_to_cpu((UINT32) m_BasePage->p_tbase);		// Beginn schreibgeschützter Bereich
+	AdrOsRomEnd = be32_to_cpu((UINT32) m_BasePage->p_tbase) + be32_to_cpu(m_BasePage->p_tlen) + be32_to_cpu(m_BasePage->p_dlen);	// Ende schreibgeschützter Bereich
 #endif
 	do
 	{
-		chksum += CFSwapInt32HostToBig(*fromptr++);
+		chksum += cpu_to_be32(*fromptr++);
 	}
 	while(fromptr < toptr);
 
-	*((UINT32 *)(m_RAM68k + os_chksum)) = CFSwapInt32HostToBig(chksum);
+	*((UINT32 *)(m_RAM68k + os_chksum)) = cpu_to_be32(chksum);
 
 	// dump Atari
 
@@ -1496,7 +1497,7 @@ Reinstall the application.
 
 	// Laufwerk C: machen
 
-	*((UINT32 *)(m_RAM68k + _drvbits)) = CFSwapInt32HostToBig(0);		// noch keine Laufwerke
+	*((UINT32 *)(m_RAM68k + _drvbits)) = cpu_to_be32(0);		// noch keine Laufwerke
 	m_MacXFS.SetXFSDrive(
 					'C'-'A',							// drvnum
 					CMacXFS::MacDir,					// drvType
@@ -1504,7 +1505,7 @@ Reinstall the application.
 					(Globals.s_Preferences.m_drvFlags['C'-'A'] & 2) ? false : true,	// lange Dateinamen
 					(Globals.s_Preferences.m_drvFlags['C'-'A'] & 1) ? true : false,	// umgekehrte Verzeichnis-Reihenfolge (Problem bei OS X 10.2!)
 					m_RAM68k);
-	*((UINT16 *)(m_RAM68k + _bootdev)) = CFSwapInt16HostToBig('C'-'A');	// Boot-Laufwerk C:
+	*((UINT16 *)(m_RAM68k + _bootdev)) = cpu_to_be16('C'-'A');	// Boot-Laufwerk C:
 
 	// Andere Laufwerke außer C: machen
 
@@ -1583,7 +1584,7 @@ void CMagiC::UpdateAtariDoubleBuffer(void)
 /*
 UInt32 CMagiC::GetAtariDrvBits(void)
 {
-	*((UINT32 *)(pTheMagiC->m_RAM68k + _drvbits)) = CFSwapInt32HostToBig(0);		// noch keine Laufwerke
+	*((UINT32 *)(pTheMagiC->m_RAM68k + _drvbits)) = cpu_to_be32(0);		// noch keine Laufwerke
 
 	newbits |= (1L << ('m'-'a'));	// virtuelles Laufwerk M: immer präsent
 	*(long*)(&AdrOffset68k[_drvbits]) &= -1L-xfs_drvbits;		// alte löschen
@@ -1607,11 +1608,11 @@ void CMagiC::GetActAtariPrg(const char **pName, UINT32 *pact_pd)
 	MagiC_APP *pMagiCApp;
 
 
-	*pact_pd = CFSwapInt32BigToHost(*pTheMagiC->m_pAtariActPd);
+	*pact_pd = be32_to_cpu(*pTheMagiC->m_pAtariActPd);
 	if	((*pact_pd != 0) && (*pact_pd < pTheMagiC->m_RAM68ksize))
 	{
 		pMagiCPd = (MagiC_PD *) (OpcodeROM + *pact_pd);
-		pprocdata = CFSwapInt32BigToHost(pMagiCPd->p_procdata);
+		pprocdata = be32_to_cpu(pMagiCPd->p_procdata);
 		if	((pprocdata != 0) && (pprocdata < pTheMagiC->m_RAM68ksize))
 		{
 			pMagiCProcInfo = (MagiC_ProcInfo *) (OpcodeROM + pprocdata);
@@ -1623,7 +1624,7 @@ void CMagiC::GetActAtariPrg(const char **pName, UINT32 *pact_pd)
 	else
 		*pName = NULL;
 
-	pact_appl = CFSwapInt32BigToHost(*pTheMagiC->m_pAtariActAppl);
+	pact_appl = be32_to_cpu(*pTheMagiC->m_pAtariActAppl);
 	if	((pact_appl != 0) && (pact_appl < pTheMagiC->m_RAM68ksize))
 	{
 		pMagiCApp = (MagiC_APP *) (OpcodeROM + pact_appl);
@@ -2737,7 +2738,7 @@ UINT32 CMagiC::AtariVdiInit(UINT32 params, unsigned char *AdrOffset68k)
 //		DebugInfo("CMagiC::AtariVdiInit() --- (LINEA-2) = %u", *((UInt16 *) (m_LineAVars - 2)));
 // Hier die Atari-Bildschirmbreite in Bytes eintragen, Behnes VDI kriegt hie ab 2034 Pixel Bildbreite
 // immer Null raus, das führt zu Schrott.
-//		*((UInt16 *) (m_LineAVars - 2)) = CFSwapInt16HostToBig(8136);	// 2034 * 4
+//		*((UInt16 *) (m_LineAVars - 2)) = cpu_to_be16(8136);	// 2034 * 4
 		patchppc(AdrOffset68k);
 	}
 #endif
@@ -2818,9 +2819,9 @@ UINT32 CMagiC::AtariExec68k(UINT32 params, unsigned char *AdrOffset68k)
 	(void) Asgard68000SetContext(Old68kContext);
 #else
 	m68k_pulse_reset();
-	m68k_set_reg(M68K_REG_PC, CFSwapInt32BigToHost(pNew68Context->regPC));
-	m68k_set_reg(M68K_REG_SP, CFSwapInt32BigToHost(pNew68Context->regSP));
-	m68k_set_reg(M68K_REG_A0, CFSwapInt32BigToHost(pNew68Context->arg));
+	m68k_set_reg(M68K_REG_PC, be32_to_cpu(pNew68Context->regPC));
+	m68k_set_reg(M68K_REG_SP, be32_to_cpu(pNew68Context->regSP));
+	m68k_set_reg(M68K_REG_A0, be32_to_cpu(pNew68Context->arg));
 	m68k_set_reg(M68K_REG_SR, 0x2700);
 
 	// 68k im PPC im 68k ausführen
@@ -2854,7 +2855,7 @@ UINT32 CMagiC::AtariDOSFn(UINT32 params, unsigned char *AdrOffset68k)
 #ifdef _DEBUG
 	AtariDOSFnParm *theAtariDOSFnParm = (AtariDOSFnParm *) (AdrOffset68k + params);
 #endif
-	DebugInfo("CMagiC::AtariDOSFn(fn = 0x%x)", CFSwapInt16BigToHost(theAtariDOSFnParm->dos_fnr));
+	DebugInfo("CMagiC::AtariDOSFn(fn = 0x%x)", be16_to_cpu(theAtariDOSFnParm->dos_fnr));
 	return((UINT32) EINVFN);
 }
 
@@ -2903,7 +2904,7 @@ UINT32 CMagiC::AtariSettime(UINT32 params, unsigned char *AdrOffset68k)
 	DateTimeRec dtr;
 
 
-	time = CFSwapInt32BigToHost(*((UINT32 *) params));
+	time = be32_to_cpu(*((UINT32 *) params));
 	dtr.second = (short) ((time&31)<<1);
 	dtr.minute = (short) ((time>>5)&63);
 	dtr.hour = (short) ((time>>11)&31);
@@ -2964,9 +2965,9 @@ UINT32 CMagiC::AtariVsetRGB(UINT32 params, unsigned char *AdrOffset68k)
    	#pragma options align=reset
 
 	VsetRGBParm *theVsetRGBParm = (VsetRGBParm *) (AdrOffset68k + params);
-	const UInt8 *pValues = (const UInt8 *) (AdrOffset68k + CFSwapInt32BigToHost(theVsetRGBParm->pValues));
-	UInt16 index = CFSwapInt16BigToHost(theVsetRGBParm->index);
-	UInt16 cnt = CFSwapInt16BigToHost(theVsetRGBParm->cnt);
+	const UInt8 *pValues = (const UInt8 *) (AdrOffset68k + be32_to_cpu(theVsetRGBParm->pValues));
+	UInt16 index = be16_to_cpu(theVsetRGBParm->index);
+	UInt16 cnt = be16_to_cpu(theVsetRGBParm->cnt);
 	DebugInfo("CMagiC::AtariVsetRGB(index=%u, cnt=%u, 0x%02x%02x%02x%02x)",
 			  (unsigned) index, (unsigned) cnt,
 			  (unsigned) pValues[0], (unsigned) pValues[1], (unsigned) pValues[2], (unsigned) pValues[3]);
@@ -3013,9 +3014,9 @@ UINT32 CMagiC::AtariVgetRGB(UINT32 params, unsigned char *AdrOffset68k)
     	#pragma options align=reset
 
  	VgetRGBParm *theVgetRGBParm = (VgetRGBParm *) (AdrOffset68k + params);
- 	UInt8 *pValues = (UInt8 *) (AdrOffset68k + CFSwapInt32BigToHost(theVgetRGBParm->pValues));
-	UInt16 index = CFSwapInt16BigToHost(theVgetRGBParm->index);
-	UInt16 cnt = CFSwapInt16BigToHost(theVgetRGBParm->cnt);
+ 	UInt8 *pValues = (UInt8 *) (AdrOffset68k + be32_to_cpu(theVgetRGBParm->pValues));
+	UInt16 index = be16_to_cpu(theVgetRGBParm->index);
+	UInt16 cnt = be16_to_cpu(theVgetRGBParm->cnt);
 	DebugInfo("CMagiC::AtariVgetRGB(index=%d, cnt=%d)", index, cnt);
 
 	// durchlaufe alle zu ändernden Farben
@@ -3142,16 +3143,16 @@ UINT32 CMagiC::AtariSysErr(UINT32 params, unsigned char *AdrOffset68k)
 	#endif
 
 	GetActAtariPrg(&AtariPrgFname, &act_pd);
-	m68k_pc = CFSwapInt32BigToHost(*((UInt32 *) (AdrOffset68k + proc_stk + 2)));
+	m68k_pc = be32_to_cpu(*((UInt32 *) (AdrOffset68k + proc_stk + 2)));
 
 	DebugInfo("CMagiC::AtariSysErr() -- act_pd = 0x%08lx", act_pd);
 	DebugInfo("CMagiC::AtariSysErr() -- Prozeßpfad = %s", (AtariPrgFname) ? AtariPrgFname : "<unknown>");
 #if defined(_DEBUG)
 	if (m68k_pc < pTheMagiC->m_RAM68ksize - 8)
 	{
-		UInt16 opcode1 = CFSwapInt16BigToHost(*((UInt16 *) (AdrOffset68k + m68k_pc)));
-		UInt16 opcode2 = CFSwapInt16BigToHost(*((UInt16 *) (AdrOffset68k + m68k_pc + 2)));
-		UInt16 opcode3 = CFSwapInt16BigToHost(*((UInt16 *) (AdrOffset68k + m68k_pc + 4)));
+		UInt16 opcode1 = be16_to_cpu(*((UInt16 *) (AdrOffset68k + m68k_pc)));
+		UInt16 opcode2 = be16_to_cpu(*((UInt16 *) (AdrOffset68k + m68k_pc + 2)));
+		UInt16 opcode3 = be16_to_cpu(*((UInt16 *) (AdrOffset68k + m68k_pc + 4)));
 		DebugInfo("CMagiC::AtariSysErr() -- opcode = 0x%04x 0x%04x 0x%04x", (unsigned) opcode1, (unsigned) opcode2, (unsigned) opcode3);
 	}
 #endif
@@ -3161,8 +3162,8 @@ UINT32 CMagiC::AtariSysErr(UINT32 params, unsigned char *AdrOffset68k)
 				pTheMagiC->m_BusErrorAddress,
 				pTheMagiC->m_BusErrorAccessMode,
 				m68k_pc,															// pc
-				CFSwapInt16BigToHost(*((UInt16 *) (AdrOffset68k + proc_stk))),		// sr
-				CFSwapInt32BigToHost(*((UInt32 *) (AdrOffset68k + proc_usp))),		// usp
+				be16_to_cpu(*((UInt16 *) (AdrOffset68k + proc_stk))),		// sr
+				be32_to_cpu(*((UInt32 *) (AdrOffset68k + proc_usp))),		// usp
 				(UInt32 *) (AdrOffset68k + proc_regs /*0x384*/),					// Dx (big endian)
 				(UInt32 *) (AdrOffset68k + proc_regs + 32),							// Ax (big endian)
 				AtariPrgFname,
@@ -3256,7 +3257,7 @@ UINT32 CMagiC::AtariDebugOut(UINT32 params, unsigned char *AdrOffset68k)
 
 UINT32 CMagiC::AtariError(UINT32 params, unsigned char *AdrOffset68k)
 {
-	UInt16 errorCode = CFSwapInt16BigToHost(*((UInt16 *) (AdrOffset68k + params)));
+	UInt16 errorCode = be16_to_cpu(*((UInt16 *) (AdrOffset68k + params)));
 
 	DebugInfo("CMagiC::AtariError(%hd)", errorCode);
 	/*
@@ -3328,7 +3329,7 @@ UINT32 CMagiC::AtariPrtOut(UINT32 params, unsigned char *AdrOffset68k)
 	DebugInfo("CMagiC::AtariPrtOut()");
 	ret = pThePrint->Write(AdrOffset68k + params + 1, 1);
 	// Zeitpunkt (200Hz) des letzten Druckerzugriffs merken
-	s_LastPrinterAccess = CFSwapInt32BigToHost(*((UInt32 *) (AdrOffset68k + _hz_200)));
+	s_LastPrinterAccess = be32_to_cpu(*((UInt32 *) (AdrOffset68k + _hz_200)));
 	if	(ret == 1)
 		return(0xffffffff);		// OK
 	else
@@ -3355,9 +3356,9 @@ UINT32 CMagiC::AtariPrtOutS(UINT32 params, unsigned char *AdrOffset68k)
 
 
 //	CDebug::DebugInfo("CMagiC::AtariPrtOutS()");
-	ret = pThePrint->Write(AdrOffset68k + CFSwapInt32BigToHost(thePrtOutParm->buf), CFSwapInt32BigToHost(thePrtOutParm->cnt));
+	ret = pThePrint->Write(AdrOffset68k + be32_to_cpu(thePrtOutParm->buf), be32_to_cpu(thePrtOutParm->cnt));
 	// Zeitpunkt (200Hz) des letzten Druckerzugriffs merken
-	s_LastPrinterAccess = CFSwapInt32BigToHost(*((UInt32 *) (AdrOffset68k + _hz_200)));
+	s_LastPrinterAccess = be32_to_cpu(*((UInt32 *) (AdrOffset68k + _hz_200)));
 	return(ret);
 }
 
@@ -3477,13 +3478,13 @@ UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
 
 	// Rsconf(-2,-2,-1,-1,-1,-1, 'iocl', dev, cmd, parm) macht Fcntl
 
-	if	((CFSwapInt16BigToHost(theSerConfParm->baud) == 0xfffe) &&
-		 (CFSwapInt16BigToHost(theSerConfParm->ctrl) == 0xfffe) &&
-		 (CFSwapInt16BigToHost(theSerConfParm->ucr) == 0xffff) &&
-		 (CFSwapInt16BigToHost(theSerConfParm->rsr) == 0xffff) &&
-		 (CFSwapInt16BigToHost(theSerConfParm->tsr) == 0xffff) &&
-		 (CFSwapInt16BigToHost(theSerConfParm->scr) == 0xffff) &&
-		 (CFSwapInt32BigToHost(theSerConfParm->xtend_magic) == 'iocl'))
+	if	((be16_to_cpu(theSerConfParm->baud) == 0xfffe) &&
+		 (be16_to_cpu(theSerConfParm->ctrl) == 0xfffe) &&
+		 (be16_to_cpu(theSerConfParm->ucr) == 0xffff) &&
+		 (be16_to_cpu(theSerConfParm->rsr) == 0xffff) &&
+		 (be16_to_cpu(theSerConfParm->tsr) == 0xffff) &&
+		 (be16_to_cpu(theSerConfParm->scr) == 0xffff) &&
+		 (be32_to_cpu(theSerConfParm->xtend_magic) == 'iocl'))
 	{
 		UInt32 grp;
 		UInt32 mode;
@@ -3500,9 +3501,9 @@ UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
 		unsigned int nStopBits;
 
 
-		DebugInfo("CMagiC::AtariSerConf() -- Fcntl(dev=%d, cmd=0x%04x, parm=0x%08x)", CFSwapInt16BigToHost(theSerConfParm->biosdev), CFSwapInt16BigToHost(theSerConfParm->cmd), CFSwapInt32BigToHost(theSerConfParm->parm));
-		*((UInt32 *) (AdrOffset68k + CFSwapInt32BigToHost(theSerConfParm->ptr2zero))) = CFSwapInt32HostToBig(0xffffffff);	// wir kennen Fcntl
-		switch(CFSwapInt16BigToHost(theSerConfParm->cmd))
+		DebugInfo("CMagiC::AtariSerConf() -- Fcntl(dev=%d, cmd=0x%04x, parm=0x%08x)", be16_to_cpu(theSerConfParm->biosdev), be16_to_cpu(theSerConfParm->cmd), be32_to_cpu(theSerConfParm->parm));
+		*((UInt32 *) (AdrOffset68k + be32_to_cpu(theSerConfParm->ptr2zero))) = cpu_to_be32(0xffffffff);	// wir kennen Fcntl
+		switch(be16_to_cpu(theSerConfParm->cmd))
 		{
 			case TIOCBUFFER:
 				// Inquire/Set buffer settings
@@ -3536,14 +3537,14 @@ UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
 
 			case TIOCSPGRP:
 				//set terminal process group
-				grp = CFSwapInt32BigToHost(*((UInt32 *) (AdrOffset68k + CFSwapInt32BigToHost(theSerConfParm->parm))));
+				grp = be32_to_cpu(*((UInt32 *) (AdrOffset68k + be32_to_cpu(theSerConfParm->parm))));
 				DebugInfo("CMagiC::AtariSerConf() -- Fcntl(TIOCSPGRP, %d)", (UInt32) grp);
 				ret = (UInt32) EINVFN;
 				break;
 
 			case TIOCFLUSH:
 				// Leeren der seriellen Puffer
-				mode = CFSwapInt32BigToHost(theSerConfParm->parm);
+				mode = be32_to_cpu(theSerConfParm->parm);
 				DebugInfo("CMagiC::AtariSerConf() -- Fcntl(TIOCFLUSH, %d)", mode);
 				switch(mode)
 				{
@@ -3579,11 +3580,11 @@ UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
 			case TIOCIBAUD:
 			case TIOCOBAUD:
 				// Eingabegeschwindigkeit festlegen
-				NewBaudrate = CFSwapInt32BigToHost(*((UInt32 *) (AdrOffset68k + CFSwapInt32BigToHost(theSerConfParm->parm))));
+				NewBaudrate = be32_to_cpu(*((UInt32 *) (AdrOffset68k + be32_to_cpu(theSerConfParm->parm))));
 				bSet = ((int) NewBaudrate != -1) && (NewBaudrate != 0);
-				DebugInfo("CMagiC::AtariSerConf() -- Fcntl(%s, %d)", (CFSwapInt16BigToHost(theSerConfParm->cmd) == TIOCIBAUD) ? "TIOCIBAUD" : "TIOCOBAUD", NewBaudrate);
+				DebugInfo("CMagiC::AtariSerConf() -- Fcntl(%s, %d)", (be16_to_cpu(theSerConfParm->cmd) == TIOCIBAUD) ? "TIOCIBAUD" : "TIOCOBAUD", NewBaudrate);
 
-				if	(CFSwapInt16BigToHost(theSerConfParm->cmd) == TIOCIBAUD)
+				if	(be16_to_cpu(theSerConfParm->cmd) == TIOCIBAUD)
 					ret = pTheSerial->Config(
 						bSet,						// Input-Rate ggf. ändern
 						NewBaudrate,				// neue Input-Rate
@@ -3636,7 +3637,7 @@ UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
 						0,
 						NULL);
 
-				*((UInt32 *) (AdrOffset68k + CFSwapInt32BigToHost(theSerConfParm->parm))) = CFSwapInt32HostToBig(OldBaudrate);
+				*((UInt32 *) (AdrOffset68k + be32_to_cpu(theSerConfParm->parm))) = cpu_to_be32(OldBaudrate);
 				if	((int) ret == -1)
 					ret = (UInt32) ATARIERR_ERANGE;
 				break;
@@ -3644,7 +3645,7 @@ UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
 			case TIOCGFLAGS:
 				// Übertragungsprotokolleinstellungen erfragen
 
-				DebugInfo("CMagiC::AtariSerConf() -- Fcntl(TIOCGFLAGS, %d)", CFSwapInt32BigToHost(theSerConfParm->parm));
+				DebugInfo("CMagiC::AtariSerConf() -- Fcntl(TIOCGFLAGS, %d)", be32_to_cpu(theSerConfParm->parm));
 				(void) pTheSerial->Config(
 							false,						// Input-Rate nicht ändern
 							0,						// neue Input-Rate
@@ -3691,13 +3692,13 @@ UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
 				else
 				if	(nBits == 7)
 					flags |= 0x4;
-				*((UInt16 *) (AdrOffset68k + CFSwapInt32BigToHost(theSerConfParm->parm))) = CFSwapInt16HostToBig(flags);
+				*((UInt16 *) (AdrOffset68k + be32_to_cpu(theSerConfParm->parm))) = cpu_to_be16(flags);
 				ret = (UInt32) E_OK;
 				break;
 
 			case TIOCSFLAGS:
 				// Übertragungsprotokolleinstellungen setzen
-				flags = CFSwapInt16BigToHost(*((UInt16 *) (AdrOffset68k + CFSwapInt32BigToHost(theSerConfParm->parm))));
+				flags = be16_to_cpu(*((UInt16 *) (AdrOffset68k + be32_to_cpu(theSerConfParm->parm))));
 				DebugInfo("CMagiC::AtariSerConf() -- Fcntl(TIOCSFLAGS, 0x%04x)", (UInt32) flags);
 				bXonXoff = (flags & 0x1000) != 0;
 				DebugInfo("CMagiC::AtariSerConf() -- XON/XOFF %s", (bXonXoff) ? "ein" : "aus");
@@ -3745,7 +3746,7 @@ UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
 				break;
 
 			default:
-				DebugError("CMagiC::AtariSerConf() -- Fcntl(0x%04x -- unbekannt", CFSwapInt16BigToHost(theSerConfParm->cmd) & 0xffff);
+				DebugError("CMagiC::AtariSerConf() -- Fcntl(0x%04x -- unbekannt", be16_to_cpu(theSerConfParm->cmd) & 0xffff);
 				ret = (UInt32) EINVFN;
 				break;
 		}
@@ -3754,44 +3755,44 @@ UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
 
 	// Rsconf(-2,-1,-1,-1,-1,-1) gibt aktuelle Baudrate zurück
 
-	if	((CFSwapInt16BigToHost(theSerConfParm->baud) == 0xfffe) &&
-		 (CFSwapInt16BigToHost(theSerConfParm->ctrl) == 0xffff) &&
-		 (CFSwapInt16BigToHost(theSerConfParm->ucr) == 0xffff) &&
-		 (CFSwapInt16BigToHost(theSerConfParm->rsr) == 0xffff) &&
-		 (CFSwapInt16BigToHost(theSerConfParm->tsr) == 0xffff) &&
-		 (CFSwapInt16BigToHost(theSerConfParm->scr) == 0xffff))
+	if	((be16_to_cpu(theSerConfParm->baud) == 0xfffe) &&
+		 (be16_to_cpu(theSerConfParm->ctrl) == 0xffff) &&
+		 (be16_to_cpu(theSerConfParm->ucr) == 0xffff) &&
+		 (be16_to_cpu(theSerConfParm->rsr) == 0xffff) &&
+		 (be16_to_cpu(theSerConfParm->tsr) == 0xffff) &&
+		 (be16_to_cpu(theSerConfParm->scr) == 0xffff))
 	{
 //		unsigned long OldInputBaudrate;
 //		return((UINT32) pTheSerial->GetBaudRate());
 	}
 
-	if	(CFSwapInt16BigToHost(theSerConfParm->baud) >= sizeof(baudtable)/sizeof(baudtable[0]))
+	if	(be16_to_cpu(theSerConfParm->baud) >= sizeof(baudtable)/sizeof(baudtable[0]))
 	{
 		DebugError("CMagiC::AtariSerConf() -- ungültige Baudrate von Rsconf()");
 		return((UINT32) ATARIERR_ERANGE);
 	}
 
-	nBits = nBitsTable[(CFSwapInt16BigToHost(theSerConfParm->ucr) >> 5) & 3];
-	nStopBits = (unsigned int) (((CFSwapInt16BigToHost(theSerConfParm->ucr) >> 3) == 3) ? 2 : 1);
+	nBits = nBitsTable[(be16_to_cpu(theSerConfParm->ucr) >> 5) & 3];
+	nStopBits = (unsigned int) (((be16_to_cpu(theSerConfParm->ucr) >> 3) == 3) ? 2 : 1);
 
 	return(pTheSerial->Config(
 					true,						// Input-Rate ändern
-					baudtable[CFSwapInt16BigToHost(theSerConfParm->baud)],	// neue Input-Rate
+					baudtable[be16_to_cpu(theSerConfParm->baud)],	// neue Input-Rate
 					NULL,						// alte Input-Rate egal
 					true,						// Output-Rate ändern
-					baudtable[CFSwapInt16BigToHost(theSerConfParm->baud)],	// neue Output-Rate
+					baudtable[be16_to_cpu(theSerConfParm->baud)],	// neue Output-Rate
 					NULL,						// alte Output-Rate egal
 					true,						// Xon/Xoff ändern
-					(CFSwapInt16BigToHost(theSerConfParm->ctrl) & 1) != 0,	// neuer Wert
+					(be16_to_cpu(theSerConfParm->ctrl) & 1) != 0,	// neuer Wert
 					NULL,						// alter Wert egal
 					true,						// Rts/Cts ändern
-					(CFSwapInt16BigToHost(theSerConfParm->ctrl) & 2) != 0,
+					(be16_to_cpu(theSerConfParm->ctrl) & 2) != 0,
 					NULL,
 					true,						// parity enable ändern
-					(CFSwapInt16BigToHost(theSerConfParm->ucr) & 4) != 0,
+					(be16_to_cpu(theSerConfParm->ucr) & 4) != 0,
 					NULL,
 					true,						// parity even ändern
-					(CFSwapInt16BigToHost(theSerConfParm->ucr) & 2) != 0,
+					(be16_to_cpu(theSerConfParm->ucr) & 2) != 0,
 					NULL,
 					true,						// n Bits ändern
 					nBits,
@@ -4013,8 +4014,8 @@ UINT32 CMagiC::AtariSerRead(UINT32 params, unsigned char *AdrOffset68k)
 	SerReadParm *theSerReadParm = (SerReadParm *) (AdrOffset68k + params);
 //	DebugInfo("CMagiC::AtariSerRead(buflen = %d)", theSerReadParm->len);
 
-	ret = pTheSerial->Read(CFSwapInt32BigToHost(theSerReadParm->len),
-						(char *) (AdrOffset68k +  CFSwapInt32BigToHost(theSerReadParm->buf)));
+	ret = pTheSerial->Read(be32_to_cpu(theSerReadParm->len),
+						(char *) (AdrOffset68k +  be32_to_cpu(theSerReadParm->buf)));
 	return(ret);
 }
 
@@ -4044,8 +4045,8 @@ UINT32 CMagiC::AtariSerWrite(UINT32 params, unsigned char *AdrOffset68k)
 	SerWriteParm *theSerWriteParm = (SerWriteParm *) (AdrOffset68k + params);
 //	DebugInfo("CMagiC::AtariSerWrite(buflen = %d)", theSerWriteParm->len);
 
-	ret = pTheSerial->Write(CFSwapInt32BigToHost(theSerWriteParm->len),
-							(char *) (AdrOffset68k +  CFSwapInt32BigToHost(theSerWriteParm->buf)));
+	ret = pTheSerial->Write(be32_to_cpu(theSerWriteParm->len),
+							(char *) (AdrOffset68k +  be32_to_cpu(theSerWriteParm->buf)));
 	return(ret);
 }
 
@@ -4073,7 +4074,7 @@ UINT32 CMagiC::AtariSerStat(UINT32 params, unsigned char *AdrOffset68k)
 //	DebugInfo("CMagiC::AtariSerWrite()");
 	SerStatParm *theSerStatParm = (SerStatParm *) (AdrOffset68k + params);
 
-	return((CFSwapInt16BigToHost(theSerStatParm->rwflag)) ?
+	return((be16_to_cpu(theSerStatParm->rwflag)) ?
 				(pTheSerial->WriteStatus() ? 0xffffffff : 0) :
 				(pTheSerial->ReadStatus() ? 0xffffffff : 0));
 }
@@ -4118,8 +4119,8 @@ UINT32 CMagiC::AtariSerIoctl(UINT32 params, unsigned char *AdrOffset68k)
 	unsigned int nStopBits;
 
 
-	DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(cmd=0x%04x, parm=0x%08x)", CFSwapInt16BigToHost(theSerIoctlParm->cmd), CFSwapInt32BigToHost(theSerIoctlParm->parm));
-	switch(CFSwapInt16BigToHost(theSerIoctlParm->cmd))
+	DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(cmd=0x%04x, parm=0x%08x)", be16_to_cpu(theSerIoctlParm->cmd), be32_to_cpu(theSerIoctlParm->parm));
+	switch(be16_to_cpu(theSerIoctlParm->cmd))
 	{
 		case TIOCBUFFER:
 			// Inquire/Set buffer settings
@@ -4153,14 +4154,14 @@ UINT32 CMagiC::AtariSerIoctl(UINT32 params, unsigned char *AdrOffset68k)
 
 		case TIOCSPGRP:
 			//set terminal process group
-			grp = CFSwapInt32BigToHost(*((UInt32 *) (AdrOffset68k + CFSwapInt32BigToHost(theSerIoctlParm->parm))));
+			grp = be32_to_cpu(*((UInt32 *) (AdrOffset68k + be32_to_cpu(theSerIoctlParm->parm))));
 			DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(TIOCSPGRP, %d)", (UInt32) grp);
 			ret = (UInt32) EINVFN;
 			break;
 
 		case TIOCFLUSH:
 			// Leeren der seriellen Puffer
-			mode = CFSwapInt32BigToHost(theSerIoctlParm->parm);
+			mode = be32_to_cpu(theSerIoctlParm->parm);
 			DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(TIOCFLUSH, %d)", mode);
 			switch(mode)
 			{
@@ -4196,11 +4197,11 @@ UINT32 CMagiC::AtariSerIoctl(UINT32 params, unsigned char *AdrOffset68k)
 		case TIOCIBAUD:
 		case TIOCOBAUD:
 			// Eingabegeschwindigkeit festlegen
-			NewBaudrate = CFSwapInt32BigToHost(*((UInt32 *) (AdrOffset68k + CFSwapInt32BigToHost(theSerIoctlParm->parm))));
+			NewBaudrate = be32_to_cpu(*((UInt32 *) (AdrOffset68k + be32_to_cpu(theSerIoctlParm->parm))));
 			bSet = ((int) NewBaudrate != -1) && (NewBaudrate != 0);
-			DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(%s, %d)", (CFSwapInt16BigToHost(theSerIoctlParm->cmd) == TIOCIBAUD) ? "TIOCIBAUD" : "TIOCOBAUD", NewBaudrate);
+			DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(%s, %d)", (be16_to_cpu(theSerIoctlParm->cmd) == TIOCIBAUD) ? "TIOCIBAUD" : "TIOCOBAUD", NewBaudrate);
 
-			if	(CFSwapInt16BigToHost(theSerIoctlParm->cmd) == TIOCIBAUD)
+			if	(be16_to_cpu(theSerIoctlParm->cmd) == TIOCIBAUD)
 				ret = pTheSerial->Config(
 					bSet,						// Input-Rate ggf. ändern
 					NewBaudrate,				// neue Input-Rate
@@ -4253,7 +4254,7 @@ UINT32 CMagiC::AtariSerIoctl(UINT32 params, unsigned char *AdrOffset68k)
 					0,
 					NULL);
 
-			*((UInt32 *) (AdrOffset68k + CFSwapInt32BigToHost(theSerIoctlParm->parm))) = CFSwapInt32HostToBig(OldBaudrate);
+			*((UInt32 *) (AdrOffset68k + be32_to_cpu(theSerIoctlParm->parm))) = cpu_to_be32(OldBaudrate);
 			if	((int) ret == -1)
 				ret = (UInt32) ATARIERR_ERANGE;
 			break;
@@ -4261,7 +4262,7 @@ UINT32 CMagiC::AtariSerIoctl(UINT32 params, unsigned char *AdrOffset68k)
 		case TIOCGFLAGS:
 			// Übertragungsprotokolleinstellungen erfragen
 
-			DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(TIOCGFLAGS, %d)", CFSwapInt32BigToHost(theSerIoctlParm->parm));
+			DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(TIOCGFLAGS, %d)", be32_to_cpu(theSerIoctlParm->parm));
 			(void) pTheSerial->Config(
 						false,						// Input-Rate nicht ändern
 						0,						// neue Input-Rate
@@ -4308,13 +4309,13 @@ UINT32 CMagiC::AtariSerIoctl(UINT32 params, unsigned char *AdrOffset68k)
 			else
 			if	(nBits == 7)
 				flags |= 0x4;
-			*((UInt16 *) (AdrOffset68k + CFSwapInt32BigToHost(theSerIoctlParm->parm))) = CFSwapInt16HostToBig(flags);
+			*((UInt16 *) (AdrOffset68k + be32_to_cpu(theSerIoctlParm->parm))) = cpu_to_be16(flags);
 			ret = (UInt32) E_OK;
 			break;
 
 		case TIOCSFLAGS:
 			// Übertragungsprotokolleinstellungen setzen
-			flags = CFSwapInt16BigToHost(*((UInt16 *) (AdrOffset68k + CFSwapInt32BigToHost(theSerIoctlParm->parm))));
+			flags = be16_to_cpu(*((UInt16 *) (AdrOffset68k + be32_to_cpu(theSerIoctlParm->parm))));
 			DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(TIOCSFLAGS, 0x%04x)", (UInt32) flags);
 			bXonXoff = (flags & 0x1000) != 0;
 			DebugInfo("CMagiC::AtariSerIoctl() -- XON/XOFF %s", (bXonXoff) ? "ein" : "aus");
@@ -4362,7 +4363,7 @@ UINT32 CMagiC::AtariSerIoctl(UINT32 params, unsigned char *AdrOffset68k)
 			break;
 
 		default:
-			DebugError("CMagiC::AtariSerIoctl() -- Fcntl(0x%04x -- unbekannt", CFSwapInt16BigToHost(theSerIoctlParm->cmd) & 0xffff);
+			DebugError("CMagiC::AtariSerIoctl() -- Fcntl(0x%04x -- unbekannt", be16_to_cpu(theSerIoctlParm->cmd) & 0xffff);
 			ret = (UInt32) EINVFN;
 			break;
 	}
@@ -4396,7 +4397,7 @@ UINT32 CMagiC::AtariYield(UINT32 params, unsigned char *AdrOffset68k)
 	// sind. Wenn ja, hier nicht warten, sondern gleich weitermachen.
 
 	YieldParm *theYieldParm = (YieldParm *) (AdrOffset68k + params);
-	if	(CFSwapInt32BigToHost(theYieldParm->num))
+	if	(be32_to_cpu(theYieldParm->num))
 		return(0);
 
 //	MPYield();
@@ -4513,7 +4514,7 @@ UINT32 CMagiC::MmxDaemon(UINT32 params, unsigned char *AdrOffset68k)
 //	CDebug::DebugInfo("CMagiC::MmxDaemon()");
 	MmxDaemonParm *theMmxDaemonParm = (MmxDaemonParm *) (AdrOffset68k + params);
 
-	switch(CFSwapInt16BigToHost(theMmxDaemonParm->cmd))
+	switch(be16_to_cpu(theMmxDaemonParm->cmd))
 	{
 		// ermittle zu startende Programme/Dateien aus AppleEvent 'odoc'
 		case 1:
@@ -4522,7 +4523,7 @@ UINT32 CMagiC::MmxDaemon(UINT32 params, unsigned char *AdrOffset68k)
 			{
 				// Es liegen Anforderungen vor.
 				// Zieladresse:
-				pBuf = AdrOffset68k + CFSwapInt32BigToHost(theMmxDaemonParm->parm);
+				pBuf = AdrOffset68k + be32_to_cpu(theMmxDaemonParm->parm);
 				// von Quelladresse kopieren
 				strcpy((char *) pBuf, m_szStartAtariFiles[m_iOldestAtariFile]);
 				ret = E_OK;
