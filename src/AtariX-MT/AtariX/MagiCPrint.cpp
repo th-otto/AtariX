@@ -47,7 +47,7 @@ bool CMagiCPrint::bTempFileCreated = false;
 
 CMagiCPrint::CMagiCPrint()
 {
-	m_PrintFileRefNum = 0;
+	m_PrintFile = 0;
 	m_PrintFileCounter = 0;
 }
 
@@ -72,19 +72,19 @@ CMagiCPrint::~CMagiCPrint()
 		// erst ein "cd" zum Wechsel in das Verzeichnis, in dem MagicMacX liegt,
 		// dann ein rm auf alle Druckdateien im Verzeichnis "PrintQueue".
 
-		sprintf(command, "cd \"%s\";rm PrintQueue/MagiCPrintFile????????",
+		sprintf(command, "cd \"%s\";rm .PrintQueue.MagiCPrintFile????????",
 							CGlobals::s_ThisPathNameUnix);
 		// Ausgabe-Umlenkung (stdout und stderr)
 		strcat(command, " >&\"");
 		strcat(command, CGlobals::s_ThisPathNameUnix);
-		strcat(command, "PrintQueue/PrintCommand_rm.txt\"");
+		strcat(command, ".PrintQueue.PrintCommand_rm.txt\"");
 
-		DebugInfo("CMagiCPrint::~CMagiCPrint() --- Setze Kommando ab: %s", command);
+		DebugInfo("CMagiCPrint::~CMagiCPrint() --- executing command: %s", command);
 		// Lösch-Kommando absetzen
 		ierr = system(command);
 		if	(ierr)
 		{
-			DebugError("CMagiCPrint::~CMagiCPrint() --- Fehler %d beim Löschen", ierr);
+			DebugError("CMagiCPrint::~CMagiCPrint() --- error %d while deleting print files", ierr);
 		}
 	}
 }
@@ -127,48 +127,29 @@ UInt32 CMagiCPrint::Read(unsigned char *pBuf, UInt32 NumOfBytes)
 
 UInt32 CMagiCPrint::Write(const unsigned char *pBuf, UInt32 cnt)
 {
-	FSSpec spec;
-	OSErr err;
-	unsigned char PrintFileName[256];
+	char PrintFileName[256];
 	long OutCnt;
 
 
-	if	(!m_PrintFileRefNum)
+	if	(!m_PrintFile)
 	{
 		// Druckdatei nicht mehr geöffnet => Neu anlegen
 
-		sprintf((char *) PrintFileName+1, ":PrintQueue:MagiCPrintFile%08d", m_PrintFileCounter++);
-		C2P(PrintFileName);
-		DebugInfo("CMagiCPrint::Write() --- Lege Druckdatei \"%s\" an", PrintFileName+1);
-		err = FSMakeFSSpec(0, 0, PrintFileName, &spec);
-		if	((err != 0) && (err != fnfErr))
+		sprintf(PrintFileName, ".PrintQueue.MagiCPrintFile%08d", m_PrintFileCounter++);
+		DebugInfo("CMagiCPrint::Write() --- creating print file \"%s\" an", PrintFileName);
+		m_PrintFile = creat(PrintFileName, 0644);
+		if	(m_PrintFile <= 0)
 		{
-			DebugError("CMagiCPrint::Write() --- Fehler %d bei FSMakeFSSpec", (int) err);
+			m_PrintFile = 0;
+			DebugError("CMagiCPrint::Write() --- error creating file", strerror(errno));
 			return(0);		// Fehler
 		}
 		bTempFileCreated = true;
-
-		// Bestehende Datei löschen
-		FSpDelete(&spec);
-		// Neue Datei anlegen
-		err = FSpCreate(&spec, 'CWIE', 'TEXT', smSystemScript);
-		if	(err)
-		{
-			DebugError("CMagiCPrint::Write() --- Fehler %d bei FSpCreate", (int) err);
-			return(0);
-		}
-		err = FSpOpenDF(&spec, fsWrPerm, &m_PrintFileRefNum);
-		if	(err)
-		{
-			DebugError("CMagiCPrint::Write() --- Fehler %d bei FSpOpenDF", (int) err);
-			return(0);
-		}
 	}
 
 	// Zeichen in Druckdatei schreiben
 
-	OutCnt = (long) cnt;
-	err = FSWrite(m_PrintFileRefNum, &OutCnt, pBuf);
+	OutCnt = write(m_PrintFile, pBuf, cnt);
 
 //	DebugInfo("CMagiCPrint::Write() --- s_LastPrinterAccess = %u", s_LastPrinterAccess);
 
@@ -187,27 +168,27 @@ UInt32 CMagiCPrint::Write(const unsigned char *pBuf, UInt32 cnt)
 
 UInt32 CMagiCPrint::ClosePrinterFile(void)
 {
-	char szPrintFileNameUnix[256];
-	char command2[512];
-	char command[512];
+	char szPrintFileNameUnix[1024];
+	char command2[4096];
+	char command[4096];
 	int ierr;
 	char *src,*dst;
 
 
-	if	((!m_PrintFileRefNum) || (!m_PrintFileCounter))
+	if	(m_PrintFile == 0 || m_PrintFileCounter == 0)
 		return(0);
 
 	// Datei schließen
 
-	FSClose(m_PrintFileRefNum);
-	m_PrintFileRefNum = 0;
+	close(m_PrintFile);
+	m_PrintFile = 0;
 
 	// Datei drucken
 
 	// Dateinamen generieren. Dabei muß blöderweise der absolute Pfad eingesetzt
 	// werden, da system() immer im Wurzelverzeichnis läuft.
 	// Dateinamen in Anführungszeichen setzen, da der Pfadname Leerzeichen enthalten kann.
-	sprintf(szPrintFileNameUnix, "\"%sPrintQueue/MagiCPrintFile%08d\"",
+	sprintf(szPrintFileNameUnix, "\"%s.PrintQueue.MagiCPrintFile%08d\"",
 						CGlobals::s_ThisPathNameUnix,
 						m_PrintFileCounter - 1);
 
@@ -235,14 +216,16 @@ UInt32 CMagiCPrint::ClosePrinterFile(void)
 	// Ausgabe-Umlenkung (stdout und stderr)
 	strcat(command, " >&\"");
 	strcat(command, CGlobals::s_ThisPathNameUnix);
-	strcat(command, "PrintQueue/PrintCommand_stdout.txt\"");
+	strcat(command, ".PrintQueue.PrintCommand_stdout.txt\"");
 
-	DebugInfo("CMagiCPrint::ClosePrinterFile() --- Setze Kommando ab: %s", command);
+	DebugInfo("CMagiCPrint::ClosePrinterFile() --- executing command: %s", command);
 	// Test. ob MacOS-Fehler noch drin ist.
-	(void) system("pwd >/tmp/hallo.txt");
+	// (void) system("pwd >/tmp/hallo.txt");
 	// Druck-Kommando absetzen
 	ierr = system(command);
 	if	(ierr)
-		DebugError("CMagiCPrint::ClosePrinterFile() --- Fehler %d beim Drucken", ierr);
+	{
+		DebugError("CMagiCPrint::ClosePrinterFile() --- error %d while printing", ierr);
+	}
 	return(0);
 }

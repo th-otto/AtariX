@@ -50,7 +50,7 @@ class CMagiCPrint
 	UInt32 ClosePrinterFile(void);
 
    private:
-	short m_PrintFileRefNum;
+	int m_PrintFile;
 	int m_PrintFileCounter;
 	static bool bTempFileCreated;
 };
