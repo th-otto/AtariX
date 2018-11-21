@@ -75,11 +75,11 @@ void TellDebugCurrentPC(UInt32 pc)
 
 static CMagiC *pTheMagiC = 0;
 unsigned char *OpcodeROM;		// Zeiger auf den 68k-Speicher
-static UINT32 Adr68kVideo;			// Beginn Bildschirmspeicher 68k
-static UINT32 Adr68kVideoEnd;			// Ende Bildschirmspeicher 68k
+static uint32_t Adr68kVideo;			// Beginn Bildschirmspeicher 68k
+static uint32_t Adr68kVideoEnd;			// Ende Bildschirmspeicher 68k
 #ifdef _DEBUG
-static UINT32 AdrOsRomStart;			// Beginn schreibgeschützter Bereich
-static UINT32 AdrOsRomEnd;			// Ende schreibgeschützter Bereich
+static uint32_t AdrOsRomStart;			// Beginn schreibgeschützter Bereich
+static uint32_t AdrOsRomEnd;			// Ende schreibgeschützter Bereich
 #endif
 static unsigned char *HostVideoAddr;		// Beginn Bildschirmspeicher Host
 //static unsigned char *HostVideo2Addr;		// Beginn Bildschirmspeicher Host (Hintergrundpuffer)
@@ -221,17 +221,17 @@ m68k_addr_type m68k_read_memory_8(m68k_addr_type address)
 {
 #if !COUNT_CYCLES
 	if	(address < Adr68kVideo)
-		return(*((UINT8*) (OpcodeROM + address)));
+		return(*((uint8_t*) (OpcodeROM + address)));
 	else
 #endif
 	if	(address < Adr68kVideoEnd)
 	{
-		return(*((UINT8*) (HostVideoAddr + (address - Adr68kVideo))));
+		return(*((uint8_t*) (HostVideoAddr + (address - Adr68kVideo))));
 	}
 	else
 	{
 		const char *Name;
-		UINT32 act_pd;
+		uint32_t act_pd;
 		CMagiC::GetActAtariPrg(&Name, &act_pd);
 		if	(!Name)
 			Name = "<unknown>";
@@ -264,14 +264,14 @@ m68k_addr_type m68k_read_memory_16(m68k_addr_type address)
 #if !COUNT_CYCLES
 	if	(address < Adr68kVideo)
 	{
-		val = *((UINT16 *) (OpcodeROM + address));
+		val = *((uint16_t *) (OpcodeROM + address));
 		return(be16_to_cpu(val));
 	}
 	else
 #endif
 	if	(address < Adr68kVideoEnd)
 	{
-		val = *((UINT16 *) (HostVideoAddr + (address - Adr68kVideo)));
+		val = *((uint16_t *) (HostVideoAddr + (address - Adr68kVideo)));
 		if (bAtariVideoRamHostEndian)
 			return val;		// x86 has bgr instead of rgb
 		else
@@ -280,7 +280,7 @@ m68k_addr_type m68k_read_memory_16(m68k_addr_type address)
 	else
 	{
 		const char *Name;
-		UINT32 act_pd;
+		uint32_t act_pd;
 		CMagiC::GetActAtariPrg(&Name, &act_pd);
 		if	(!Name)
 			Name = "<unknown>";
@@ -305,14 +305,14 @@ m68k_addr_type m68k_read_memory_32(m68k_addr_type address)
 #if !COUNT_CYCLES
 	if	(address < Adr68kVideo)
 	{
-		val = *((UINT32*) (OpcodeROM + address));
+		val = *((uint32_t*) (OpcodeROM + address));
 		return(be32_to_cpu(val));
 	}
 	else
 #endif
 	if	(address < Adr68kVideoEnd)
 	{
-		val = *((UINT32 *) (HostVideoAddr + (address - Adr68kVideo)));
+		val = *((uint32_t *) (HostVideoAddr + (address - Adr68kVideo)));
 		if (bAtariVideoRamHostEndian)
 			return val;		// x86 has bgr instead of rgb
 		else
@@ -321,7 +321,7 @@ m68k_addr_type m68k_read_memory_32(m68k_addr_type address)
 	else
 	{
 		const char *Name;
-		UINT32 act_pd;
+		uint32_t act_pd;
 		CMagiC::GetActAtariPrg(&Name, &act_pd);
 		if	(!Name)
 			Name = "<unknown>";
@@ -343,7 +343,7 @@ void m68k_write_memory_8(m68k_addr_type address, m68k_data_type value)
 	if	((address >= AdrOsRomStart) && (address < AdrOsRomEnd))
 	{
 		const char *Name;
-		UINT32 act_pd;
+		uint32_t act_pd;
 		CMagiC::GetActAtariPrg(&Name, &act_pd);
 		if	(!Name)
 			Name = "<unknown>";
@@ -356,15 +356,15 @@ void m68k_write_memory_8(m68k_addr_type address, m68k_data_type value)
 #if !COUNT_CYCLES
 	if	(address < Adr68kVideo)
 	{
-		*((UINT8 *) (OpcodeROM + address)) = (UINT8) value;
+		*((uint8_t *) (OpcodeROM + address)) = (uint8_t) value;
 	}
 	else
 #endif
 	if	(address < Adr68kVideoEnd)
 	{
 		address -= Adr68kVideo;
-		*((UINT8 *) (HostVideoAddr + address)) = (UINT8) value;
-		//*((UINT8*) (HostVideo2Addr + address)) = (UINT8) value;
+		*((uint8_t *) (HostVideoAddr + address)) = (uint8_t) value;
+		//*((uint8_t*) (HostVideo2Addr + address)) = (uint8_t) value;
 		(void) atomic_exchange(p_bVideoBufChanged, 1);
 		//DebugInfo("vchg");
 		//usleep(100000);
@@ -372,7 +372,7 @@ void m68k_write_memory_8(m68k_addr_type address, m68k_data_type value)
 	else
 	{
 		const char *Name;
-		UINT32 act_pd;
+		uint32_t act_pd;
 		CMagiC::GetActAtariPrg(&Name, &act_pd);
 		if	(!Name)
 			Name = "<unknown>";
@@ -406,7 +406,7 @@ void m68k_write_memory_16(m68k_addr_type address, m68k_data_type value)
 	if	((address >= AdrOsRomStart-1) && (address < AdrOsRomEnd))
 	{
 		const char *Name;
-		UINT32 act_pd;
+		uint32_t act_pd;
 		CMagiC::GetActAtariPrg(&Name, &act_pd);
 		if	(!Name)
 			Name = "<unknown>";
@@ -418,26 +418,26 @@ void m68k_write_memory_16(m68k_addr_type address, m68k_data_type value)
 #endif
 #if !COUNT_CYCLES
 	if	(address < Adr68kVideo)
-		*((UINT16 *) (OpcodeROM + address)) = (UINT16) cpu_to_be16(value);
+		*((uint16_t *) (OpcodeROM + address)) = (uint16_t) cpu_to_be16(value);
 	else
 #endif
 	if	(address < Adr68kVideoEnd)
 	{
 		address -= Adr68kVideo;
 		if (bAtariVideoRamHostEndian)
-			*((UINT16 *) (HostVideoAddr + address)) = (UINT16) value;		// x86 has bgr instead of rgb
+			*((uint16_t *) (HostVideoAddr + address)) = (uint16_t) value;		// x86 has bgr instead of rgb
 		else
-			*((UINT16 *) (HostVideoAddr + address)) = (UINT16) cpu_to_be16(value);
+			*((uint16_t *) (HostVideoAddr + address)) = (uint16_t) cpu_to_be16(value);
 
-// //		*((UINT16*) (HostVideo2Addr + address)) = (UINT16) cpu_to_be16(value);
-//		*((UINT16 *) (HostVideo2Addr + address)) = (UINT16) value;	// x86 has bgr instead of rgb
+// //		*((uint16_t*) (HostVideo2Addr + address)) = (uint16_t) cpu_to_be16(value);
+//		*((uint16_t *) (HostVideo2Addr + address)) = (uint16_t) value;	// x86 has bgr instead of rgb
 		(void) atomic_exchange(p_bVideoBufChanged, 1);
 		//DebugInfo("vchg");
 	}
 	else
 	{
 		const char *Name;
-		UINT32 act_pd;
+		uint32_t act_pd;
 		CMagiC::GetActAtariPrg(&Name, &act_pd);
 		if	(!Name)
 			Name = "<unknown>";
@@ -460,7 +460,7 @@ void m68k_write_memory_32(m68k_addr_type address, m68k_data_type value)
 	if	((address >= AdrOsRomStart - 3) && (address < AdrOsRomEnd))
 	{
 		const char *Name;
-		UINT32 act_pd;
+		uint32_t act_pd;
 		CMagiC::GetActAtariPrg(&Name, &act_pd);
 		if	(!Name)
 			Name = "<unknown>";
@@ -472,7 +472,7 @@ void m68k_write_memory_32(m68k_addr_type address, m68k_data_type value)
 #endif
 #if !COUNT_CYCLES
 	if	(address < Adr68kVideo)
-		*((UINT32 *) (OpcodeROM + address)) = (UINT32) cpu_to_be32(value);
+		*((uint32_t *) (OpcodeROM + address)) = (uint32_t) cpu_to_be32(value);
 	else
 #endif
 	if	(address < Adr68kVideoEnd)
@@ -795,19 +795,19 @@ void m68k_write_memory_32(m68k_addr_type address, m68k_data_type value)
 #endif
 		address -= Adr68kVideo;
 		if (bAtariVideoRamHostEndian)
-			*((UINT32 *) (HostVideoAddr + address)) = value;		// x86 has brg instead of rgb
+			*((uint32_t *) (HostVideoAddr + address)) = value;		// x86 has brg instead of rgb
 		else
-			*((UINT32 *) (HostVideoAddr + address)) = cpu_to_be32(value);
+			*((uint32_t *) (HostVideoAddr + address)) = cpu_to_be32(value);
 
-// //		*((UINT32*) (HostVideo2Addr + address)) = value;		// x86 has brg instead of rgb
-//		*((UINT32 *) (HostVideo2Addr + address)) = cpu_to_be32(value);
+// //		*((uint32_t*) (HostVideo2Addr + address)) = value;		// x86 has brg instead of rgb
+//		*((uint32_t *) (HostVideo2Addr + address)) = cpu_to_be32(value);
 		(void) atomic_exchange(p_bVideoBufChanged, 1);
 		//DebugInfo("vchg");
 	}
 	else
 	{
 		const char *Name;
-		UINT32 act_pd;
+		uint32_t act_pd;
 		CMagiC::GetActAtariPrg(&Name, &act_pd);
 		if	(!Name)
 			Name = "<unknown>";
@@ -1170,7 +1170,7 @@ static void PixmapToBigEndian(MXVDI_PIXMAP *thePixMap)
 		bAtariVideoRamHostEndian = false;
 	}
 
-	thePixMap->baseAddr      = (UINT8 *) cpu_to_be32((UInt32) thePixMap->baseAddr);
+	thePixMap->baseAddr      = (uint8_t *) cpu_to_be32((UInt32) thePixMap->baseAddr);
 	thePixMap->rowBytes      = cpu_to_be16(thePixMap->rowBytes);
 	thePixMap->bounds_top    = cpu_to_be16(thePixMap->bounds_top);
 	thePixMap->bounds_left   = cpu_to_be16(thePixMap->bounds_left);
@@ -1263,8 +1263,8 @@ int CMagiC::Init(CMagiCScreen *pMagiCScreen, CXCmd *pXCmd)
 	Atari68kData *pAtari68kData;
 	struct MacXSysHdr *pMacXSysHdr;
 	struct SYSHDR *pSysHdr;
-	UINT32 AtariMemtop;		// Ende Atari-Benutzerspeicher
-	UINT32 chksum;
+	uint32_t AtariMemtop;		// Ende Atari-Benutzerspeicher
+	uint32_t chksum;
 	unsigned numVideoLines;
 
 
@@ -1336,20 +1336,20 @@ Assign more memory to the application using the Finder dialogue "Information"!
 
 	// Atari-Systemvariablen setzen
 
-	*((UINT32 *)(m_RAM68k+phystop)) = cpu_to_be32(Adr68kVideoEnd);
-	*((UINT32 *)(m_RAM68k+_v_bas_ad)) = cpu_to_be32(m_RAM68ksize);
-	AtariMemtop = ((UINT32) ((unsigned char *) m_BasePage - m_RAM68k)) - sizeof(Atari68kData);
-	*((UINT32 *)(m_RAM68k+_memtop)) = cpu_to_be32(AtariMemtop);
-	*((UINT16 *)(m_RAM68k+sshiftmd)) = cpu_to_be16(2);		// ST high (640*400*2)
-	*((UINT16 *)(m_RAM68k+_cmdload)) = cpu_to_be16(0);		// AES booten
-	*((UINT16 *)(m_RAM68k+_nflops)) = cpu_to_be16(0);		// keine Floppies
+	*((uint32_t *)(m_RAM68k+phystop)) = cpu_to_be32(Adr68kVideoEnd);
+	*((uint32_t *)(m_RAM68k+_v_bas_ad)) = cpu_to_be32(m_RAM68ksize);
+	AtariMemtop = ((uint32_t) ((unsigned char *) m_BasePage - m_RAM68k)) - sizeof(Atari68kData);
+	*((uint32_t *)(m_RAM68k+_memtop)) = cpu_to_be32(AtariMemtop);
+	*((uint16_t *)(m_RAM68k+sshiftmd)) = cpu_to_be16(2);		// ST high (640*400*2)
+	*((uint16_t *)(m_RAM68k+_cmdload)) = cpu_to_be16(0);		// AES booten
+	*((uint16_t *)(m_RAM68k+_nflops)) = cpu_to_be16(0);		// keine Floppies
 
 	// Atari-68k-Daten setzen
 
 	pAtari68kData = (Atari68kData *) (m_RAM68k + AtariMemtop);
 	pAtari68kData->m_PixMap = m_pMagiCScreen->m_PixMap;
 	// left und top scheinen nicht abgefragt zu werden, nur right und bottom
-	pAtari68kData->m_PixMap.baseAddr = (UINT8 *) Adr68kVideo;		// virtuelle 68k-Adresse
+	pAtari68kData->m_PixMap.baseAddr = (uint8_t *) Adr68kVideo;		// virtuelle 68k-Adresse
 
 	#if !defined(__BIG_ENDIAN__)
 	PixmapToBigEndian(&pAtari68kData->m_PixMap);
@@ -1403,8 +1403,8 @@ Reinstall the application.
 	pMacXSysHdr->MacSys_VdiInit.m_thisptr = this;
 	pMacXSysHdr->MacSys_Exec68k.m_Callback = &CMagiC::AtariExec68k;
 	pMacXSysHdr->MacSys_Exec68k.m_thisptr = this;
-	pMacXSysHdr->MacSys_pixmap = cpu_to_be32(((UINT32) &pAtari68kData->m_PixMap) - (UINT32) m_RAM68k);
-	pMacXSysHdr->MacSys_pMMXCookie = cpu_to_be32(((UINT32) &pAtari68kData->m_CookieData) - (UINT32) m_RAM68k);
+	pMacXSysHdr->MacSys_pixmap = cpu_to_be32(((uint32_t) &pAtari68kData->m_PixMap) - (uint32_t) m_RAM68k);
+	pMacXSysHdr->MacSys_pMMXCookie = cpu_to_be32(((uint32_t) &pAtari68kData->m_CookieData) - (uint32_t) m_RAM68k);
 	pMacXSysHdr->MacSys_Xcmd.m_Callback = &CXCmd::Command;
 	pMacXSysHdr->MacSys_Xcmd.m_thisptr = pXCmd;
 	pMacXSysHdr->MacSys_PPCAddr = (void *) cpu_to_be32((UInt32) m_RAM68k);
@@ -1452,9 +1452,9 @@ Reinstall the application.
 	pMacXSysHdr->MacSys_Yield = (void *) AtariYield;
 
 	// ssp nach Reset
-	*((UINT32 *)(m_RAM68k + 0)) = cpu_to_be32(512*1024);		// Stack auf 512k
+	*((uint32_t *)(m_RAM68k + 0)) = cpu_to_be32(512*1024);		// Stack auf 512k
 	// pc nach Reset
-	*((UINT32 *)(m_RAM68k + 4)) = pMacXSysHdr->MacSys_syshdr;
+	*((uint32_t *)(m_RAM68k + 4)) = pMacXSysHdr->MacSys_syshdr;
 
 	// TOS-SYSHDR bestimmen
 
@@ -1463,21 +1463,21 @@ Reinstall the application.
 	// Adresse für kbshift, kbrepeat und act_pd berechnen
 
 	m_AtariKbData = m_RAM68k + be32_to_cpu(pSysHdr->kbshift);
-	m_pAtariActPd = (UINT32 *) (m_RAM68k + be32_to_cpu(pSysHdr->_run));
+	m_pAtariActPd = (uint32_t *) (m_RAM68k + be32_to_cpu(pSysHdr->_run));
 
 	// Andere Atari-Strukturen
 
-	m_pAtariActAppl = (UINT32 *) (m_RAM68k + be32_to_cpu(pMacXSysHdr->MacSys_act_appl));
+	m_pAtariActAppl = (uint32_t *) (m_RAM68k + be32_to_cpu(pMacXSysHdr->MacSys_act_appl));
 
 	// Prüfsumme für das System berechnen
 
 	chksum = 0;
-	UINT32 *fromptr = (UINT32 *) (m_RAM68k + be32_to_cpu(pMacXSysHdr->MacSys_syshdr));
-	UINT32 *toptr = (UINT32 *) (m_RAM68k + be32_to_cpu((UINT32) m_BasePage->p_tbase) + be32_to_cpu(m_BasePage->p_tlen) + be32_to_cpu(m_BasePage->p_dlen));
+	uint32_t *fromptr = (uint32_t *) (m_RAM68k + be32_to_cpu(pMacXSysHdr->MacSys_syshdr));
+	uint32_t *toptr = (uint32_t *) (m_RAM68k + be32_to_cpu((uint32_t) m_BasePage->p_tbase) + be32_to_cpu(m_BasePage->p_tlen) + be32_to_cpu(m_BasePage->p_dlen));
 #ifdef _DEBUG
 //	AdrOsRomStart = be32_to_cpu(pMacXSysHdr->MacSys_syshdr);			// Beginn schreibgeschützter Bereich
-	AdrOsRomStart = be32_to_cpu((UINT32) m_BasePage->p_tbase);		// Beginn schreibgeschützter Bereich
-	AdrOsRomEnd = be32_to_cpu((UINT32) m_BasePage->p_tbase) + be32_to_cpu(m_BasePage->p_tlen) + be32_to_cpu(m_BasePage->p_dlen);	// Ende schreibgeschützter Bereich
+	AdrOsRomStart = be32_to_cpu((uint32_t) m_BasePage->p_tbase);		// Beginn schreibgeschützter Bereich
+	AdrOsRomEnd = be32_to_cpu((uint32_t) m_BasePage->p_tbase) + be32_to_cpu(m_BasePage->p_tlen) + be32_to_cpu(m_BasePage->p_dlen);	// Ende schreibgeschützter Bereich
 #endif
 	do
 	{
@@ -1485,7 +1485,7 @@ Reinstall the application.
 	}
 	while(fromptr < toptr);
 
-	*((UINT32 *)(m_RAM68k + os_chksum)) = cpu_to_be32(chksum);
+	*((uint32_t *)(m_RAM68k + os_chksum)) = cpu_to_be32(chksum);
 
 	// dump Atari
 
@@ -1497,7 +1497,7 @@ Reinstall the application.
 
 	// Laufwerk C: machen
 
-	*((UINT32 *)(m_RAM68k + _drvbits)) = cpu_to_be32(0);		// noch keine Laufwerke
+	*((uint32_t *)(m_RAM68k + _drvbits)) = cpu_to_be32(0);		// noch keine Laufwerke
 	m_MacXFS.SetXFSDrive(
 					'C'-'A',							// drvnum
 					CMacXFS::MacDir,					// drvType
@@ -1505,7 +1505,7 @@ Reinstall the application.
 					(Globals.s_Preferences.m_drvFlags['C'-'A'] & 2) ? false : true,	// lange Dateinamen
 					(Globals.s_Preferences.m_drvFlags['C'-'A'] & 1) ? true : false,	// umgekehrte Verzeichnis-Reihenfolge (Problem bei OS X 10.2!)
 					m_RAM68k);
-	*((UINT16 *)(m_RAM68k + _bootdev)) = cpu_to_be16('C'-'A');	// Boot-Laufwerk C:
+	*((uint16_t *)(m_RAM68k + _bootdev)) = cpu_to_be16('C'-'A');	// Boot-Laufwerk C:
 
 	// Andere Laufwerke außer C: machen
 
@@ -1584,7 +1584,7 @@ void CMagiC::UpdateAtariDoubleBuffer(void)
 /*
 UInt32 CMagiC::GetAtariDrvBits(void)
 {
-	*((UINT32 *)(pTheMagiC->m_RAM68k + _drvbits)) = cpu_to_be32(0);		// noch keine Laufwerke
+	*((uint32_t *)(pTheMagiC->m_RAM68k + _drvbits)) = cpu_to_be32(0);		// noch keine Laufwerke
 
 	newbits |= (1L << ('m'-'a'));	// virtuelles Laufwerk M: immer präsent
 	*(long*)(&AdrOffset68k[_drvbits]) &= -1L-xfs_drvbits;		// alte löschen
@@ -1599,10 +1599,10 @@ UInt32 CMagiC::GetAtariDrvBits(void)
 *
 **********************************************************************/
 
-void CMagiC::GetActAtariPrg(const char **pName, UINT32 *pact_pd)
+void CMagiC::GetActAtariPrg(const char **pName, uint32_t *pact_pd)
 {
-	UINT32 pact_appl;
-	UINT32 pprocdata;
+	uint32_t pact_appl;
+	uint32_t pprocdata;
 	MagiC_PD *pMagiCPd;
 	MagiC_ProcInfo *pMagiCProcInfo;
 	MagiC_APP *pMagiCApp;
@@ -2680,7 +2680,7 @@ int CMagiC::SendVBL( void )
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariInit(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariInit(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -2694,7 +2694,7 @@ UINT32 CMagiC::AtariInit(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariBIOSInit(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariBIOSInit(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -2708,7 +2708,7 @@ UINT32 CMagiC::AtariBIOSInit(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariVdiInit(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariVdiInit(uint32_t params, unsigned char *AdrOffset68k)
 {
 //#pragma unused(params)
 //#pragma unused(AdrOffset68k)
@@ -2754,17 +2754,17 @@ UINT32 CMagiC::AtariVdiInit(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariExec68k(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariExec68k(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(AdrOffset68k)
 	char Old68kContext[128];
-	UINT32 ret;
+	uint32_t ret;
    	#pragma options align=packed
 	struct New68Context
 	{
-		UINT32 regPC;
-		UINT32 regSP;
-		UINT32 arg;
+		uint32_t regPC;
+		uint32_t regSP;
+		uint32_t arg;
 	};
    	#pragma options align=reset
 	New68Context *pNew68Context = (New68Context *) params;
@@ -2842,7 +2842,7 @@ UINT32 CMagiC::AtariExec68k(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariDOSFn(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariDOSFn(uint32_t params, unsigned char *AdrOffset68k)
 {
   	#pragma options align=packed
 	struct AtariDOSFnParm
@@ -2856,7 +2856,7 @@ UINT32 CMagiC::AtariDOSFn(UINT32 params, unsigned char *AdrOffset68k)
 	AtariDOSFnParm *theAtariDOSFnParm = (AtariDOSFnParm *) (AdrOffset68k + params);
 #endif
 	DebugInfo("CMagiC::AtariDOSFn(fn = 0x%x)", be16_to_cpu(theAtariDOSFnParm->dos_fnr));
-	return((UINT32) EINVFN);
+	return((uint32_t) EINVFN);
 }
 
 
@@ -2866,7 +2866,7 @@ UINT32 CMagiC::AtariDOSFn(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariGettime(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariGettime(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -2874,7 +2874,7 @@ UINT32 CMagiC::AtariGettime(UINT32 params, unsigned char *AdrOffset68k)
 	DateTimeRec dtr;
 
 	GetTime (&dtr);
-	return (dtr.second>>1) + (dtr.minute<<5) + ((unsigned short)dtr.hour<<11) + (((UINT32)dtr.day)<<16) + (((UINT32)dtr.month)<<21) + ((((UINT32)dtr.year)-1980)<<25);
+	return (dtr.second>>1) + (dtr.minute<<5) + ((unsigned short)dtr.hour<<11) + (((uint32_t)dtr.day)<<16) + (((uint32_t)dtr.month)<<21) + ((((uint32_t)dtr.year)-1980)<<25);
 #endif
 
 	CFAbsoluteTime at = CFAbsoluteTimeGetCurrent();
@@ -2884,9 +2884,9 @@ UINT32 CMagiC::AtariGettime(UINT32 params, unsigned char *AdrOffset68k)
 	return (((unsigned) d.second) >> 1) +
 		   (d.minute << 5) +
 		   ((unsigned short) d.hour << 11) +
-		   (((UINT32) d.day) << 16) +
-		   (((UINT32) d.month) << 21) +
-		   ((((UINT32) d.year) - 1980) << 25);
+		   (((uint32_t) d.day) << 16) +
+		   (((uint32_t) d.month) << 21) +
+		   ((((uint32_t) d.year) - 1980) << 25);
 }
 
 
@@ -2896,15 +2896,15 @@ UINT32 CMagiC::AtariGettime(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSettime(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSettime(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
-	UINT32 time;
+	uint32_t time;
 	DateTimeRec dtr;
 
 
-	time = be32_to_cpu(*((UINT32 *) params));
+	time = be32_to_cpu(*((uint32_t *) params));
 	dtr.second = (short) ((time&31)<<1);
 	dtr.minute = (short) ((time>>5)&63);
 	dtr.hour = (short) ((time>>11)&31);
@@ -2922,7 +2922,7 @@ UINT32 CMagiC::AtariSettime(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSetpalette(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSetpalette(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params,AdrOffset68k)
 	DebugWarning("CMagiC::AtariSetpalette() -- nicht unterstützt");
@@ -2936,7 +2936,7 @@ UINT32 CMagiC::AtariSetpalette(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSetcolor(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSetcolor(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params,AdrOffset68k)
 	DebugWarning("CMagiC::AtariSetcolor() -- nicht unterstützt");
@@ -2950,7 +2950,7 @@ UINT32 CMagiC::AtariSetcolor(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariVsetRGB(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariVsetRGB(uint32_t params, unsigned char *AdrOffset68k)
 {
 	int i,j;
 	UInt32 c;
@@ -3000,7 +3000,7 @@ UINT32 CMagiC::AtariVsetRGB(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariVgetRGB(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariVgetRGB(uint32_t params, unsigned char *AdrOffset68k)
 {
 	int i,j;
 	UInt32 *pColourTable;
@@ -3096,7 +3096,7 @@ void CMagiC::SendMessageToMainThread( bool bAsync, UInt32 command )
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSysHalt(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSysHalt(uint32_t params, unsigned char *AdrOffset68k)
 {
 	char *ErrMsg = (char *) (AdrOffset68k + params);
 
@@ -3117,10 +3117,10 @@ UINT32 CMagiC::AtariSysHalt(UINT32 params, unsigned char *AdrOffset68k)
 **********************************************************************/
 
 
-UINT32 CMagiC::AtariSysErr(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSysErr(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
-	UINT32 act_pd;
+	uint32_t act_pd;
 	UInt32 m68k_pc;
 	const char *AtariPrgFname;
 
@@ -3181,7 +3181,7 @@ UINT32 CMagiC::AtariSysErr(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariColdBoot(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariColdBoot(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -3196,7 +3196,7 @@ UINT32 CMagiC::AtariColdBoot(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariExit(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariExit(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -3238,7 +3238,7 @@ UINT32 CMagiC::AtariExit(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariDebugOut(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariDebugOut(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -3255,7 +3255,7 @@ UINT32 CMagiC::AtariDebugOut(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariError(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariError(uint32_t params, unsigned char *AdrOffset68k)
 {
 	UInt16 errorCode = be16_to_cpu(*((UInt16 *) (AdrOffset68k + params)));
 
@@ -3284,7 +3284,7 @@ UINT32 CMagiC::AtariError(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariPrtOs(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariPrtOs(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -3299,10 +3299,10 @@ UINT32 CMagiC::AtariPrtOs(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariPrtIn(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariPrtIn(uint32_t params, unsigned char *AdrOffset68k)
 {
 	unsigned char c;
-	UINT32 n;
+	uint32_t n;
 
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -3322,7 +3322,7 @@ UINT32 CMagiC::AtariPrtIn(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariPrtOut(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariPrtOut(uint32_t params, unsigned char *AdrOffset68k)
 {
 	UInt32 ret;
 
@@ -3344,7 +3344,7 @@ UINT32 CMagiC::AtariPrtOut(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariPrtOutS(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariPrtOutS(uint32_t params, unsigned char *AdrOffset68k)
 {
 	struct PrtOutParm
 	{
@@ -3381,7 +3381,7 @@ UINT32 CMagiC::AtariPrtOutS(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::OpenSerialBIOS(void)
+uint32_t CMagiC::OpenSerialBIOS(void)
 {
 	// schon geöffnet => OK
 	if	(m_bBIOSSerialUsed)
@@ -3421,7 +3421,7 @@ UINT32 CMagiC::OpenSerialBIOS(void)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
 	struct SerConfParm
@@ -3763,13 +3763,13 @@ UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
 		 (be16_to_cpu(theSerConfParm->scr) == 0xffff))
 	{
 //		unsigned long OldInputBaudrate;
-//		return((UINT32) pTheSerial->GetBaudRate());
+//		return((uint32_t) pTheSerial->GetBaudRate());
 	}
 
 	if	(be16_to_cpu(theSerConfParm->baud) >= sizeof(baudtable)/sizeof(baudtable[0]))
 	{
 		DebugError("CMagiC::AtariSerConf() -- ungültige Baudrate von Rsconf()");
-		return((UINT32) ATARIERR_ERANGE);
+		return((uint32_t) ATARIERR_ERANGE);
 	}
 
 	nBits = nBitsTable[(be16_to_cpu(theSerConfParm->ucr) >> 5) & 3];
@@ -3813,7 +3813,7 @@ UINT32 CMagiC::AtariSerConf(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSerIs(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSerIs(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -3839,7 +3839,7 @@ UINT32 CMagiC::AtariSerIs(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSerOs(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSerOs(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -3865,7 +3865,7 @@ UINT32 CMagiC::AtariSerOs(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSerIn(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSerIn(uint32_t params, unsigned char *AdrOffset68k)
 {
 	char c;
 	UInt32 ret;
@@ -3883,7 +3883,7 @@ UINT32 CMagiC::AtariSerIn(UINT32 params, unsigned char *AdrOffset68k)
 	ret = pTheSerial->Read(1, &c);
 	if	(ret > 0)
 	{
-		return((UINT32) c & 0x000000ff);
+		return((uint32_t) c & 0x000000ff);
 	}
 	else
 		return(0xffffffff);
@@ -3901,7 +3901,7 @@ UINT32 CMagiC::AtariSerIn(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSerOut(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSerOut(uint32_t params, unsigned char *AdrOffset68k)
 {
 //	DebugInfo("CMagiC::AtariSerOut()");
 
@@ -3924,7 +3924,7 @@ UINT32 CMagiC::AtariSerOut(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSerOpen(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSerOpen(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -3942,7 +3942,7 @@ UINT32 CMagiC::AtariSerOpen(UINT32 params, unsigned char *AdrOffset68k)
 	if	(pTheMagiC->m_MagiCSerial.IsOpen())
 	{
 		DebugInfo("CMagiC::AtariSerOpen() -- schon vom DOS geöffnet => Fehler");
-		return((UINT32) EACCDN);
+		return((uint32_t) EACCDN);
 	}
 
 	if	(-1 == (int) pTheMagiC->m_MagiCSerial.Open(CGlobals::s_Preferences.m_szAuxPath))
@@ -3964,7 +3964,7 @@ UINT32 CMagiC::AtariSerOpen(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSerClose(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSerClose(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
@@ -3978,7 +3978,7 @@ UINT32 CMagiC::AtariSerClose(UINT32 params, unsigned char *AdrOffset68k)
 	// nicht vom DOS geöffnet => Fehler
 	if	(!pTheMagiC->m_MagiCSerial.IsOpen())
 	{
-		return((UINT32) EACCDN);
+		return((uint32_t) EACCDN);
 	}
 
 	if	(pTheMagiC->m_MagiCSerial.Close())
@@ -4000,7 +4000,7 @@ UINT32 CMagiC::AtariSerClose(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSerRead(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSerRead(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
 	struct SerReadParm
@@ -4031,7 +4031,7 @@ UINT32 CMagiC::AtariSerRead(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSerWrite(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSerWrite(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
 	struct SerWriteParm
@@ -4062,7 +4062,7 @@ UINT32 CMagiC::AtariSerWrite(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariSerStat(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSerStat(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
 	struct SerStatParm
@@ -4091,7 +4091,7 @@ UINT32 CMagiC::AtariSerStat(UINT32 params, unsigned char *AdrOffset68k)
 *.
 **********************************************************************/
 
-UINT32 CMagiC::AtariSerIoctl(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
 	struct SerIoctlParm
@@ -4375,12 +4375,12 @@ UINT32 CMagiC::AtariSerIoctl(UINT32 params, unsigned char *AdrOffset68k)
 /**********************************************************************
 *
 * Callback des Emulators: Idle Task
-* params		Zeiger auf UINT32
+* params		Zeiger auf uint32_t
 * Rückgabe:
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariYield(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariYield(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
 	struct YieldParm
@@ -4429,9 +4429,9 @@ UINT32 CMagiC::AtariYield(UINT32 params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-UINT32 CMagiC::AtariGetKeyboardOrMouseData(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::AtariGetKeyboardOrMouseData(uint32_t params, unsigned char *AdrOffset68k)
 {
-	UINT32 ret;
+	uint32_t ret;
 	char buf[3];
 #pragma unused(AdrOffset68k)
 
@@ -4498,9 +4498,9 @@ UINT32 CMagiC::AtariGetKeyboardOrMouseData(UINT32 params, unsigned char *AdrOffs
 *
 **********************************************************************/
 
-UINT32 CMagiC::MmxDaemon(UINT32 params, unsigned char *AdrOffset68k)
+uint32_t CMagiC::MmxDaemon(uint32_t params, unsigned char *AdrOffset68k)
 {
-	UINT32 ret;
+	uint32_t ret;
    	#pragma options align=packed
 	struct MmxDaemonParm
 	{
@@ -4530,17 +4530,17 @@ UINT32 CMagiC::MmxDaemon(UINT32 params, unsigned char *AdrOffset68k)
 				m_iNoOfAtariFiles--;
 			}
 			else
-				ret = (UINT32) EFILNF;
+				ret = (uint32_t) EFILNF;
 			OS_ExitCriticalRegion(m_AECriticalRegionId);
 			break;
 
 		// ermittle shutdown-Status
 		case 2:
-			ret = (UINT32) m_bShutdown;
+			ret = m_bShutdown;
 			break;
 
 		default:
-			ret = (UINT32) EUNCMD;
+			ret = EUNCMD;
 	}
 
 	return(ret);

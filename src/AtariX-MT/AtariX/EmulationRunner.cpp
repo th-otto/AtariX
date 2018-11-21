@@ -907,7 +907,7 @@ void EmulationRunner::_OpenWindow(void)
 	
 	MXVDI_PIXMAP *pixmap = &m_EmulatorScreen.m_PixMap;
 	
-	pixmap->baseAddr      = (UINT8 *) m_sdl_atari_surface->pixels;		// target address, filled in by emulator
+	pixmap->baseAddr      = (uint8_t *) m_sdl_atari_surface->pixels;		// target address, filled in by emulator
 	pixmap->rowBytes      = m_sdl_atari_surface->pitch | 0x8000;	// 0x4000 and 0x8000 are flags
 	pixmap->bounds_top    = 0;
 	pixmap->bounds_left   = 0;

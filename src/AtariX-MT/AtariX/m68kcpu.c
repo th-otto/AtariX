@@ -1401,7 +1401,7 @@ void m68k_set_context(void* src)
 #include "state.h"
 
 static struct {
-	UINT16 sr;
+	uint16_t sr;
 	int stopped;
 	int halted;
 } m68k_substate;

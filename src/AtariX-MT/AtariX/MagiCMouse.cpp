@@ -26,7 +26,6 @@
 // System-Header
 #include <machine/endian.h>
 // Programm-Header
-#include "osd_cpu.h"
 #include "Debug.h"
 #include "Globals.h"
 #include "MagiCMouse.h"
@@ -93,8 +92,8 @@ bool CMagiCMouse::SetNewPosition(Point PtPos)
 	{
 		m_PtActMacPos = PtPos;
 		// get current Atari mouse position from Atari memory (big endian)
-		m_PtActAtariPos.v = be16_to_cpu(*((INT16 *) (m_pLineAVars + CURY)));
-		m_PtActAtariPos.h = be16_to_cpu(*((INT16 *) (m_pLineAVars + CURX)));
+		m_PtActAtariPos.v = be16_to_cpu(*((int16_t *) (m_pLineAVars + CURY)));
+		m_PtActAtariPos.h = be16_to_cpu(*((int16_t *) (m_pLineAVars + CURX)));
 		return((m_PtActMacPos.h != m_PtActAtariPos.h) || (m_PtActMacPos.v != m_PtActAtariPos.v));
 	}
 	else	return(false);

@@ -63,10 +63,10 @@ typedef struct
    	#pragma options align=packed
 typedef struct
 {
-	UINT16	funcNo;
-	UINT32	longVal;
-	UINT32	srcPtr;			// 68k pointer
-	UINT32	destPtr;			// 68k pointer
+	uint16_t	funcNo;
+	uint32_t	longVal;
+	uint32_t	srcPtr;			// 68k pointer
+	uint32_t	destPtr;			// 68k pointer
 } MMEXRec;
    	#pragma options align=reset
 

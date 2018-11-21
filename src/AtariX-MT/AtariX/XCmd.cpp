@@ -653,14 +653,14 @@ OSErr CXCmd::OnCommandLoadLibrary
 (
 	const char *szLibName,		// name oder Pfad
 	bool bIsPath,			// true: Pfad / false: Name
-	UINT32 *pXCmdDescriptor,
-	INT32 *pNumOfSymbols
+	uint32_t *pXCmdDescriptor,
+	int32_t *pNumOfSymbols
 )
 {
 	Str255 str;
 	OSErr err;
 	FSSpec Spec;
-	UINT32 i;
+	uint32_t i;
 	enRunTimeFormat type;
 	long NumOfSymbols;
 	MagicMacXPluginInterfaceStruct *pInterface;
@@ -796,7 +796,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 			DebugPrintSymbolsInCFPlugIn(pInterface, ulNumOfSym);
 		}
 
-		*pNumOfSymbols = (INT32) NumOfSymbols;
+		*pNumOfSymbols = (int32_t) NumOfSymbols;
 	}
 
 	return(err);
@@ -925,7 +925,7 @@ OSErr CXCmd::OnCommandFindSymbol
 		{
 			*pSymClass = (unsigned char) symClass;
 #if TARGET_RT_MAC_MACHO
-			*pSymbolAddress = (UINT32) NewGlue(ptr, XCmdDescriptor, symClass);
+			*pSymbolAddress = (uint32_t) NewGlue(ptr, XCmdDescriptor, symClass);
 #else
 			*pSymbolAddress = (UInt32) ptr;
 #endif
@@ -983,10 +983,10 @@ OSErr CXCmd::OnCommandFindSymbol
 *
 **********************************************************************/
 
-INT32 CXCmd::Command(UINT32 params, unsigned char *AdrOffset68k)
+int32_t CXCmd::Command(uint32_t params, unsigned char *AdrOffset68k)
 {
 	strXCMD *pCmd = (strXCMD *) (params + AdrOffset68k);
-	INT32 ret;
+	int32_t ret;
 	OSErr err;
 
 

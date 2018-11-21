@@ -251,15 +251,15 @@ static void GetTypeAndCreator(const char *name, OSType *pType, OSType *pCreator)
 *
 ******************************************************************/
 
-void CMacXFS::date_mac2dos( unsigned long macdate, UINT16 *time, UINT16 *date)
+void CMacXFS::date_mac2dos( unsigned long macdate, uint16_t *time, uint16_t *date)
 {
 	DateTimeRec dt;
 
 	SecondsToDate(macdate, &dt);
 	if (time)
-		*time = (UINT16) ((dt.second >> 1) + (dt.minute << 5) + (dt.hour << 11));
+		*time = (uint16_t) ((dt.second >> 1) + (dt.minute << 5) + (dt.hour << 11));
 	if (date)
-		*date = (UINT16) ((dt.day) + (dt.month  << 5) + ((dt.year - 1980) << 9));
+		*date = (uint16_t) ((dt.day) + (dt.month  << 5) + ((dt.year - 1980) << 9));
 }
 
 /*****************************************************************
@@ -268,7 +268,7 @@ void CMacXFS::date_mac2dos( unsigned long macdate, UINT16 *time, UINT16 *date)
 *
 ******************************************************************/
 
-void CMacXFS::date_dos2mac(UINT16 time, UINT16 date, unsigned long *macdate)
+void CMacXFS::date_dos2mac(uint16_t time, uint16_t date, unsigned long *macdate)
 {
 	DateTimeRec dt;
 	dt.second	= (short) ((time & 0x1f) << 1);
@@ -302,7 +302,7 @@ int CMacXFS::fname_is_invalid( char *name)
 *
 ******************************************************************/
 
-INT32 CMacXFS::cnverr(OSErr err)
+int32_t CMacXFS::cnverr(OSErr err)
 {
 	switch(err)
 	{
@@ -761,7 +761,7 @@ OSErr CMacXFS::cpath2DirID( int drv, char *cpath )
 *
 *************************************************************/
 
-INT32 CMacXFS::resolve_symlink( FSSpec *fs, UINT16 buflen, char *buf )
+int32_t CMacXFS::resolve_symlink( FSSpec *fs, uint16_t buflen, char *buf )
 {
 	short refnum;
 	Handle myhandle;
@@ -770,9 +770,9 @@ INT32 CMacXFS::resolve_symlink( FSSpec *fs, UINT16 buflen, char *buf )
 	OSType AliasUserType;
 	Size AliasSize;
 	char *s;
-	UINT16 len;
+	uint16_t len;
 	OSErr err;
-	INT32 doserr;
+	int32_t doserr;
 
 	short saveRefNum = CurResFile();
 
@@ -878,7 +878,7 @@ INT32 CMacXFS::resolve_symlink( FSSpec *fs, UINT16 buflen, char *buf )
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_sync(UINT16 drv)
+int32_t CMacXFS::xfs_sync(uint16_t drv)
 {
 	OSErr err;
 	ParamBlockRec pb;
@@ -976,7 +976,7 @@ OSErr CMacXFS::resAlias(AliasHandle alias, 	FSSpec *gSpec, bool gOnlyMountedVols
 }
 
 
-INT32 CMacXFS::drv_open (UINT16 drv, bool onlyMountedVols)
+int32_t CMacXFS::drv_open (uint16_t drv, bool onlyMountedVols)
 {
 	HVolumeParam pbh;
 	OSErr err;
@@ -1020,10 +1020,10 @@ INT32 CMacXFS::drv_open (UINT16 drv, bool onlyMountedVols)
 	return E_OK;
 }
 
-INT32 CMacXFS::xfs_drv_open (UINT16 drv, MXFSDD *dd, INT32 flg_ask_diskchange)
+int32_t CMacXFS::xfs_drv_open (uint16_t drv, MXFSDD *dd, int32_t flg_ask_diskchange)
 {
 	//static void *oldsp;
-	INT32	err;
+	int32_t	err;
 
 
 #ifdef DEBUG_VERBOSE
@@ -1067,9 +1067,9 @@ INT32 CMacXFS::xfs_drv_open (UINT16 drv, MXFSDD *dd, INT32 flg_ask_diskchange)
 *
 *************************************************************/
 
-INT32 CMacXFS::vRefNum2drv(short vRefNum, UINT16 *drv)
+int32_t CMacXFS::vRefNum2drv(short vRefNum, uint16_t *drv)
 {
-	UINT16 i;
+	uint16_t i;
 
 	for	(i = 0; i < NDRVS; i++)
 		if (drv_fsspec[i].vRefNum == vRefNum)
@@ -1089,7 +1089,7 @@ INT32 CMacXFS::vRefNum2drv(short vRefNum, UINT16 *drv)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_drv_close(UINT16 drv, UINT16 mode)
+int32_t CMacXFS::xfs_drv_close(uint16_t drv, uint16_t mode)
 {
 	if (drv == 'M'-'A')
 		return((mode) ? E_OK : EACCDN);
@@ -1123,7 +1123,7 @@ INT32 CMacXFS::xfs_drv_close(UINT16 drv, UINT16 mode)
 *
 *************************************************************/
 
-INT32 CMacXFS::MakeFSSpecManually( short vRefNum, long reldir,
+int32_t CMacXFS::MakeFSSpecManually( short vRefNum, long reldir,
 					char *macpath,
 					FSSpec *fs)
 {
@@ -1131,7 +1131,7 @@ INT32 CMacXFS::MakeFSSpecManually( short vRefNum, long reldir,
 	char *s,*t;		// Laufzeiger
 	unsigned long len;
 	OSErr err;
-	INT32 doserr;
+	int32_t doserr;
 	CInfoPBRec pb;
 
 
@@ -1255,18 +1255,18 @@ INT32 CMacXFS::MakeFSSpecManually( short vRefNum, long reldir,
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_path2DD
+int32_t CMacXFS::xfs_path2DD
 (
-	UINT16 mode,
-	UINT16 drv, MXFSDD *rel_dd, char *pathname,
+	uint16_t mode,
+	uint16_t drv, MXFSDD *rel_dd, char *pathname,
 	char **restpfad, MXFSDD *symlink_dd, char **symlink,
 	MXFSDD *dd,
-	UINT16 *dir_drive
+	uint16_t *dir_drive
 )
 {
 #pragma unused(symlink_dd)
 	OSErr err;
-	INT32 doserr;
+	int32_t doserr;
 	FSSpec fs;
 	CInfoPBRec pb;
 	unsigned char macpath[256];
@@ -1554,13 +1554,13 @@ Byte CMacXFS::mac2DOSAttr (CInfoPBRec *pb)
 *
 *************************************************************/
 
-INT32 CMacXFS::_snext(UINT16 drv, MAC_DTA *dta)
+int32_t CMacXFS::_snext(uint16_t drv, MAC_DTA *dta)
 {
 	Str255 VolumeName;
 	HVolumeParam pbh;
 	FSSpec fs;		/* fuer Aliase */
 	CInfoPBRec pb;
-	INT32 doserr;
+	int32_t doserr;
 	OSErr err;
 	unsigned char macname[256];		// Pascalstring Mac-Dateiname
 	char atariname[256];			// C-String Atari-Dateiname (lang)
@@ -1721,10 +1721,10 @@ INT32 CMacXFS::_snext(UINT16 drv, MAC_DTA *dta)
 
 doit:
 	dta->mxdta.dta_attribute = (char) dosname[11];
-	dta->mxdta.dta_len = cpu_to_be32((UINT32) ((dosname[11] & F_SUBDIR) ? 0L : pb.hFileInfo.ioFlLgLen));
+	dta->mxdta.dta_len = cpu_to_be32((uint32_t) ((dosname[11] & F_SUBDIR) ? 0L : pb.hFileInfo.ioFlLgLen));
 	/* Datum ist ioFlMdDat bzw. ioDrMdDat */
-	date_mac2dos(pb.hFileInfo.ioFlMdDat,	(UINT16 *) &(dta->mxdta.dta_time),
-								(UINT16 *) &(dta->mxdta.dta_date));
+	date_mac2dos(pb.hFileInfo.ioFlMdDat,	(uint16_t *) &(dta->mxdta.dta_time),
+								(uint16_t *) &(dta->mxdta.dta_date));
 
 	dta->mxdta.dta_time = cpu_to_be16(dta->mxdta.dta_time);
 	dta->mxdta.dta_date = cpu_to_be16(dta->mxdta.dta_date);
@@ -1743,8 +1743,8 @@ doit:
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_sfirst(UINT16 drv, MXFSDD *dd, char *name,
-                    MAC_DTA *dta, UINT16 attrib)
+int32_t CMacXFS::xfs_sfirst(uint16_t drv, MXFSDD *dd, char *name,
+                    MAC_DTA *dta, uint16_t attrib)
 {
 	if (drv_changed[drv])
 		return(E_CHNG);
@@ -1796,9 +1796,9 @@ INT32 CMacXFS::xfs_sfirst(UINT16 drv, MXFSDD *dd, char *name,
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_snext(UINT16 drv, MAC_DTA *dta)
+int32_t CMacXFS::xfs_snext(uint16_t drv, MAC_DTA *dta)
 {
-	INT32 err;
+	int32_t err;
 
 
 	if (drv_changed[drv])
@@ -1834,13 +1834,13 @@ INT32 CMacXFS::xfs_snext(UINT16 drv, MAC_DTA *dta)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_fopen(char *name, UINT16 drv, MXFSDD *dd,
-			UINT16 omode, UINT16 attrib)
+int32_t CMacXFS::xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
+			uint16_t omode, uint16_t attrib)
 {
 	FSSpec fs;
 	FInfo finfo;
 	OSErr err;
-	INT32 doserr;
+	int32_t doserr;
 	SignedByte perm;
 	/* HParamBlockRec pb; */
 	short refnum;
@@ -2028,7 +2028,7 @@ INT32 CMacXFS::xfs_fopen(char *name, UINT16 drv, MXFSDD *dd,
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_fdelete(UINT16 drv, MXFSDD *dd, char *name)
+int32_t CMacXFS::xfs_fdelete(uint16_t drv, MXFSDD *dd, char *name)
 {
 #ifdef DEMO
 	#pragma unused(drv, dd, name)
@@ -2067,8 +2067,8 @@ INT32 CMacXFS::xfs_fdelete(UINT16 drv, MXFSDD *dd, char *name)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_link(UINT16 drv, char *nam1, char *nam2,
-               MXFSDD *dd1, MXFSDD *dd2, UINT16 mode, UINT16 dst_drv)
+int32_t CMacXFS::xfs_link(uint16_t drv, char *nam1, char *nam2,
+               MXFSDD *dd1, MXFSDD *dd2, uint16_t mode, uint16_t dst_drv)
 {
 #ifdef DEMO
 	#pragma unused(drv, nam1, nam2, dd1, dd2, mode, dst_drv)
@@ -2224,7 +2224,7 @@ ende:
 *
 *************************************************************/
 
-void CMacXFS::cinfo_to_xattr(CInfoPBRec * pb, XATTR *xattr, UINT16 drv)
+void CMacXFS::cinfo_to_xattr(CInfoPBRec * pb, XATTR *xattr, uint16_t drv)
 {
 #pragma unused(drv)
 	xattr->attr = cpu_to_be16(mac2DOSAttr(pb));
@@ -2243,16 +2243,16 @@ void CMacXFS::cinfo_to_xattr(CInfoPBRec * pb, XATTR *xattr, UINT16 drv)
 	if (xattr->attr & cpu_to_be16(F_RDONLY))
 		xattr->mode &= cpu_to_be16(~(0222));		// Schreiben verboten
 
-	xattr->index = cpu_to_be32((UINT32) pb->hFileInfo.ioDirID);
-	xattr->dev = cpu_to_be16((UINT16) pb->hFileInfo.ioVRefNum);
+	xattr->index = cpu_to_be32((uint32_t) pb->hFileInfo.ioDirID);
+	xattr->dev = cpu_to_be16((uint16_t) pb->hFileInfo.ioVRefNum);
 	xattr->reserved1 = 0;
 	xattr->nlink = cpu_to_be16(1);
 	xattr->uid = xattr->gid = 0;
 	// F_SUBDIR-Abfrage ist unbedingt nötig!
-	xattr->size = cpu_to_be32((UINT32) ((be16_to_cpu(xattr->attr) & F_SUBDIR) ?
+	xattr->size = cpu_to_be32((uint32_t) ((be16_to_cpu(xattr->attr) & F_SUBDIR) ?
 								0 : pb->hFileInfo.ioFlLgLen));	// Log. Laenge Data Fork
 	xattr->blksize = cpu_to_be32(512);			// ?????
-	xattr->nblocks = cpu_to_be32((UINT32) (pb->hFileInfo.ioFlPyLen / 512));	// Phys. Länge / Blockgröße
+	xattr->nblocks = cpu_to_be32((uint32_t) (pb->hFileInfo.ioFlPyLen / 512));	// Phys. Länge / Blockgröße
 	date_mac2dos(pb->hFileInfo.ioFlMdDat, &(xattr->mtime), &(xattr->mdate));
 	xattr->mtime = cpu_to_be16(xattr->mtime);
 	xattr->mdate = cpu_to_be16(xattr->mdate);
@@ -2274,13 +2274,13 @@ void CMacXFS::cinfo_to_xattr(CInfoPBRec * pb, XATTR *xattr, UINT16 drv)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_xattr(UINT16 drv, MXFSDD *dd, char *name,
-				XATTR *xattr, UINT16 mode)
+int32_t CMacXFS::xfs_xattr(uint16_t drv, MXFSDD *dd, char *name,
+				XATTR *xattr, uint16_t mode)
 {
 	FSSpec fs;
 	CInfoPBRec pb;
 	OSErr err;
-	INT32 doserr;
+	int32_t doserr;
 	unsigned char fname[64];
 
 
@@ -2321,14 +2321,14 @@ INT32 CMacXFS::xfs_xattr(UINT16 drv, MXFSDD *dd, char *name,
 				return(cnverr(err));
 			xattr->attr = cpu_to_be16(F_SUBDIR);			// Volume-Root
 			xattr->mode = cpu_to_be16(S_IFDIR + 0777);	// rwx fuer user/group/world
-			xattr->dev = cpu_to_be16((UINT16) fs.vRefNum);
+			xattr->dev = cpu_to_be16((uint16_t) fs.vRefNum);
 			xattr->index = cpu_to_be32(fsRtDirID);		// Volume-Root
 		}
 		else
 		{
 			xattr->attr = cpu_to_be16(F_SUBDIR + F_RDONLY);
 			xattr->mode = cpu_to_be16(S_IFDIR + 0555);	// r-x fuer user/group/world
-			xattr->dev = cpu_to_be16((UINT16) dd->vRefNum);
+			xattr->dev = cpu_to_be16((uint16_t) dd->vRefNum);
 			xattr->index = cpu_to_be32(fsRtParID);		// Wurzel
 		}
 
@@ -2407,12 +2407,12 @@ INT32 CMacXFS::xfs_xattr(UINT16 drv, MXFSDD *dd, char *name,
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_attrib(UINT16 drv, MXFSDD *dd, char *name, UINT16 rwflag, UINT16 attr)
+int32_t CMacXFS::xfs_attrib(uint16_t drv, MXFSDD *dd, char *name, uint16_t rwflag, uint16_t attr)
 {
 	FSSpec fs;
 	CInfoPBRec pb;
 	OSErr err;
-	INT32 doserr;
+	int32_t doserr;
 	unsigned char fname[64];
 	int oldattr;
 
@@ -2527,7 +2527,7 @@ INT32 CMacXFS::xfs_attrib(UINT16 drv, MXFSDD *dd, char *name, UINT16 rwflag, UIN
 
 	if (err)
 		return(cnverr(err));
-	return((INT32) oldattr);
+	return((int32_t) oldattr);
 }
 
 
@@ -2537,8 +2537,8 @@ INT32 CMacXFS::xfs_attrib(UINT16 drv, MXFSDD *dd, char *name, UINT16 rwflag, UIN
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_fchown(UINT16 drv, MXFSDD *dd, char *name,
-                    UINT16 uid, UINT16 gid)
+int32_t CMacXFS::xfs_fchown(uint16_t drv, MXFSDD *dd, char *name,
+                    uint16_t uid, uint16_t gid)
 {
 #pragma unused(drv, dd, name, uid, gid)
 	return(EINVFN);
@@ -2551,7 +2551,7 @@ INT32 CMacXFS::xfs_fchown(UINT16 drv, MXFSDD *dd, char *name,
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_fchmod(UINT16 drv, MXFSDD *dd, char *name, UINT16 fmode)
+int32_t CMacXFS::xfs_fchmod(uint16_t drv, MXFSDD *dd, char *name, uint16_t fmode)
 {
 #pragma unused(drv, dd, name, fmode)
 	return(EINVFN);
@@ -2564,7 +2564,7 @@ INT32 CMacXFS::xfs_fchmod(UINT16 drv, MXFSDD *dd, char *name, UINT16 fmode)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_dcreate(UINT16 drv, MXFSDD *dd, char *name)
+int32_t CMacXFS::xfs_dcreate(uint16_t drv, MXFSDD *dd, char *name)
 {
 	FSSpec fs;
 	OSErr err;
@@ -2612,7 +2612,7 @@ INT32 CMacXFS::xfs_dcreate(UINT16 drv, MXFSDD *dd, char *name)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_ddelete(UINT16 drv, MXFSDD *dd)
+int32_t CMacXFS::xfs_ddelete(uint16_t drv, MXFSDD *dd)
 {
 #ifdef DEMO
 
@@ -2650,12 +2650,12 @@ INT32 CMacXFS::xfs_ddelete(UINT16 drv, MXFSDD *dd)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_DD2name(UINT16 drv, MXFSDD *dd, char *buf, UINT16 bufsiz)
+int32_t CMacXFS::xfs_DD2name(uint16_t drv, MXFSDD *dd, char *buf, uint16_t bufsiz)
 {
 	FSSpec fs;
 	OSErr err;
-	INT32 doserr;
-	UINT16 len;
+	int32_t doserr;
+	uint16_t len;
 	MXFSDD par_dd;
 
 	if (drv_changed[drv])
@@ -2701,7 +2701,7 @@ INT32 CMacXFS::xfs_DD2name(UINT16 drv, MXFSDD *dd, char *buf, UINT16 bufsiz)
 		return(ATARIERR_ERANGE);
 	par_dd.vRefNum = dd->vRefNum;
 	par_dd.dirID = fs.parID;
-	doserr = xfs_DD2name(drv, &par_dd, buf, (UINT16) (bufsiz - len));
+	doserr = xfs_DD2name(drv, &par_dd, buf, (uint16_t) (bufsiz - len));
 	if (doserr)
 		return(doserr);
 
@@ -2731,8 +2731,8 @@ INT32 CMacXFS::xfs_DD2name(UINT16 drv, MXFSDD *dd, char *buf, UINT16 bufsiz)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_dopendir(MAC_DIRHANDLE *dirh, UINT16 drv, MXFSDD *dd,
-				UINT16 tosflag)
+int32_t CMacXFS::xfs_dopendir(MAC_DIRHANDLE *dirh, uint16_t drv, MXFSDD *dd,
+				uint16_t tosflag)
 {
 	dirh -> dirID = dd->dirID;
 	dirh -> vRefNum = dd->vRefNum;
@@ -2782,8 +2782,8 @@ INT32 CMacXFS::xfs_dopendir(MAC_DIRHANDLE *dirh, UINT16 drv, MXFSDD *dd,
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, UINT16 drv,
-		UINT16 size, char *buf, XATTR *xattr, INT32 *xr)
+int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
+		uint16_t size, char *buf, XATTR *xattr, int32_t *xr)
 {
 	Str255 VolumeName;
 	HVolumeParam pbh;
@@ -2817,12 +2817,12 @@ INT32 CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, UINT16 drv,
 				xattr->mode = cpu_to_be16(S_IFDIR);				// subdir
 				xattr->mode |= cpu_to_be16(0777);				// rwx fuer user/group/world
 				xattr->index = 0;
-				xattr->dev = cpu_to_be16((UINT16) pbh.ioVRefNum);
+				xattr->dev = cpu_to_be16((uint16_t) pbh.ioVRefNum);
 				xattr->reserved1 = 0;
 				xattr->nlink = cpu_to_be16(1);
 				xattr->uid = xattr->gid = 0;
 				xattr->size = 0;
-				xattr->blksize = cpu_to_be32((UINT32) pbh.	ioVAlBlkSiz);
+				xattr->blksize = cpu_to_be32((uint32_t) pbh.	ioVAlBlkSiz);
 				xattr->nblocks = cpu_to_be32(pbh.ioVNmAlBlks);
 				date_mac2dos(pbh.ioVLsMod, &(xattr->mtime), &(xattr->mdate));
 				xattr->mtime = cpu_to_be16(xattr->mtime);
@@ -2943,7 +2943,7 @@ INT32 CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, UINT16 drv,
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_drewinddir(MAC_DIRHANDLE *dirh, UINT16 drv)
+int32_t CMacXFS::xfs_drewinddir(MAC_DIRHANDLE *dirh, uint16_t drv)
 {
 	if (drv_rvsDirOrder[drv])
 		return(xfs_dopendir(dirh, drv, (MXFSDD*) (&dirh->dirID), dirh->tosflag));
@@ -2958,7 +2958,7 @@ INT32 CMacXFS::xfs_drewinddir(MAC_DIRHANDLE *dirh, UINT16 drv)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_dclosedir(MAC_DIRHANDLE *dirh, UINT16 drv)
+int32_t CMacXFS::xfs_dclosedir(MAC_DIRHANDLE *dirh, uint16_t drv)
 {
 #pragma unused(drv)
 	dirh -> dirID = -1L;
@@ -3003,7 +3003,7 @@ INT32 CMacXFS::xfs_dclosedir(MAC_DIRHANDLE *dirh, UINT16 drv)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_dpathconf(UINT16 drv, MXFSDD *dd, UINT16 which)
+int32_t CMacXFS::xfs_dpathconf(uint16_t drv, MXFSDD *dd, uint16_t which)
 {
 #pragma unused(dd)
 	switch(which)
@@ -3037,7 +3037,7 @@ INT32 CMacXFS::xfs_dpathconf(UINT16 drv, MXFSDD *dd, UINT16 which)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_dfree(UINT16 drv, INT32 dirID, UINT32 data[4])
+int32_t CMacXFS::xfs_dfree(uint16_t drv, int32_t dirID, uint32_t data[4])
 {
 #pragma unused(dirID)
 	XVolumeParam xpb;		// für Platten > 2G
@@ -3078,11 +3078,11 @@ INT32 CMacXFS::xfs_dfree(UINT16 drv, INT32 dirID, UINT32 data[4])
 
 //		wbu.wbytes = xpb.ioVFreeBytes;		// CWPRO 3
 	wbu.bytes = xpb.ioVFreeBytes;		// CWPRO 5
-	data[0] = cpu_to_be32((UINT32) (wbu.bytes / xpb.ioVAlBlkSiz));	// # freie Blöcke
+	data[0] = cpu_to_be32((uint32_t) (wbu.bytes / xpb.ioVAlBlkSiz));	// # freie Blöcke
 
 //		wbu.wbytes = xpb.ioVTotalBytes;		// CWPRO 3
 	wbu.bytes = xpb.ioVTotalBytes;		// CWPRO 5
-	data[1] = cpu_to_be32((UINT32) (wbu.bytes / xpb.ioVAlBlkSiz));	// # alle Blöcke
+	data[1] = cpu_to_be32((uint32_t) (wbu.bytes / xpb.ioVAlBlkSiz));	// # alle Blöcke
 	data[2] = cpu_to_be32(xpb.ioVAlBlkSiz);				// Bytes pro Sektor
 	data[3] = cpu_to_be32(1);								// Sektoren pro Cluster
 	return(E_OK);
@@ -3101,13 +3101,13 @@ INT32 CMacXFS::xfs_dfree(UINT16 drv, INT32 dirID, UINT32 data[4])
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_wlabel(UINT16 drv, MXFSDD *dd, char *name)
+int32_t CMacXFS::xfs_wlabel(uint16_t drv, MXFSDD *dd, char *name)
 {
 #pragma unused(drv, dd, name)
 	return(EINVFN);
 }
 
-INT32 CMacXFS::xfs_rlabel(UINT16 drv, MXFSDD *dd, char *name, UINT16 bufsiz)
+int32_t CMacXFS::xfs_rlabel(uint16_t drv, MXFSDD *dd, char *name, uint16_t bufsiz)
 {
 #pragma unused(dd)
 	HVolumeParam pb;
@@ -3176,15 +3176,15 @@ OSErr CMacXFS::PathNameFromDirID( long dirid, short vrefnum,
 	return(0);
 }
 
-INT32 CMacXFS::dospath2macpath( UINT16 drv, MXFSDD *dd,
+int32_t CMacXFS::dospath2macpath( uint16_t drv, MXFSDD *dd,
 		char *dospath, char *macname)
 {
 	MXFSDD rel_dd;
 	MXFSDD my_dd;
 	MXFSDD symlink_dd;
-	INT32 reldir = dd->dirID;
+	int32_t reldir = dd->dirID;
 	short vRefNum = dd->vRefNum;
-	INT32 doserr;
+	int32_t doserr;
 	OSErr err;
 	char *restpfad;
 	char *symlink;
@@ -3252,7 +3252,7 @@ INT32 CMacXFS::dospath2macpath( UINT16 drv, MXFSDD *dd,
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_symlink(UINT16 drv, MXFSDD *dd, char *name, char *to)
+int32_t CMacXFS::xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to)
 {
 #ifdef DEMO
 
@@ -3270,7 +3270,7 @@ INT32 CMacXFS::xfs_symlink(UINT16 drv, MXFSDD *dd, char *name, char *to)
 #else
 
 	bool symlink_ok;
-	UINT16 dst_drv;
+	uint16_t dst_drv;
 	bool is_macpath;
 	char fullpath[256];
 	AliasHandle newalias;
@@ -3298,7 +3298,7 @@ INT32 CMacXFS::xfs_symlink(UINT16 drv, MXFSDD *dd, char *name, char *to)
 	/* -------------------------------------------------- */
 
 	symlink_ok = false;		/* wir sind erstmal pessimistisch */
-	dst_drv = (UINT16) (ToUpper(*to)-'A');
+	dst_drv = (uint16_t) (ToUpper(*to)-'A');
 	is_macpath = true;
 	if (/*(dst_drv >= 0) &&*/ (dst_drv < NDRVS) && (to[1] == ':'))
 	{	// Laufwerk angegeben
@@ -3456,8 +3456,8 @@ ende:
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_readlink(UINT16 drv, MXFSDD *dd, char *name,
-				char *buf, UINT16 bufsiz)
+int32_t CMacXFS::xfs_readlink(uint16_t drv, MXFSDD *dd, char *name,
+				char *buf, uint16_t bufsiz)
 {
 	FSSpec fs;
 
@@ -3489,12 +3489,12 @@ INT32 CMacXFS::xfs_readlink(UINT16 drv, MXFSDD *dd, char *name,
 *
 *************************************************************/
 
-INT32 CMacXFS::getCatInfo (UINT16 drv, CInfoPBRec *pb, bool resolveAlias)
+int32_t CMacXFS::getCatInfo (uint16_t drv, CInfoPBRec *pb, bool resolveAlias)
 {
 #pragma unused(resolveAlias)
 	FSSpec fs;
 	OSErr  err;
-	INT32   doserr;
+	int32_t   doserr;
 
 	err = PBGetCatInfoSync (pb);
 	if (err)
@@ -3533,19 +3533,19 @@ INT32 CMacXFS::getCatInfo (UINT16 drv, CInfoPBRec *pb, bool resolveAlias)
 *
 *************************************************************/
 
-INT32 CMacXFS::xfs_dcntl
+int32_t CMacXFS::xfs_dcntl
 (
-	UINT16 drv,
+	uint16_t drv,
 	MXFSDD *dd,
 	char *name,
-	UINT16 cmd,
+	uint16_t cmd,
 	void *pArg,
 	unsigned char *AdrOffset68k
 )
 {
 	CInfoPBRec pb;
 	OSErr err;
-	INT32 doserr;
+	int32_t doserr;
 	unsigned char fname[64];
 
 
@@ -3648,7 +3648,7 @@ INT32 CMacXFS::xfs_dcntl
 				return 0;
 
 			case MMEX_GETFSSPEC:
-				if (be32_to_cpu((UINT32) (mmex->destPtr)) >= m_AtariMemSize)
+				if (be32_to_cpu((uint32_t) (mmex->destPtr)) >= m_AtariMemSize)
 				{
 					DebugError("CMacXFS::xfs_dcntl(FMACMAGICEX, MMEX_GETFSSPEC) - invalid dest ptr");
 					return(ERROR);
@@ -3660,7 +3660,7 @@ INT32 CMacXFS::xfs_dcntl
 									pb.hFileInfo.ioVRefNum,
 									pb.hFileInfo.ioFlParID,
 									pb.hFileInfo.ioNamePtr,
-									(FSSpec *) (AdrOffset68k + be32_to_cpu((UINT32) (mmex->destPtr)))));
+									(FSSpec *) (AdrOffset68k + be32_to_cpu((uint32_t) (mmex->destPtr)))));
 				return cnverr ((OSErr) be32_to_cpu(mmex->longVal));
 
 			case MMEX_GETRSRCLEN:
@@ -3733,7 +3733,7 @@ OSErr CMacXFS::f_2_cinfo( MAC_FD *f, CInfoPBRec *pb, char *fname)
 }
 
 
-INT32 CMacXFS::dev_close( MAC_FD *f )
+int32_t CMacXFS::dev_close( MAC_FD *f )
 {
 	FCBPBRec fpb;
 	OSErr err;
@@ -3834,7 +3834,7 @@ INT32 CMacXFS::dev_close( MAC_FD *f )
 * a0-a1 verändern (PureC-Konvention) und ist "void". a5 ist undefiniert.
 * Mit dem Trick:
 *
-*	INT32 geta0 ( void )
+*	int32_t geta0 ( void )
 *		= 0x2008;			// MOVE.L	A0,D0
 *
 *	static pascal void dev_p_complete( void )
@@ -3854,7 +3854,7 @@ INT32 CMacXFS::dev_close( MAC_FD *f )
 */
 
 /*
-static INT32 CMacXFS::dev_pwrite( MAC_FD *f, ParamBlockRec *pb )
+static int32_t CMacXFS::dev_pwrite( MAC_FD *f, ParamBlockRec *pb )
 {
 	OSErr err;
 
@@ -3870,7 +3870,7 @@ static INT32 CMacXFS::dev_pwrite( MAC_FD *f, ParamBlockRec *pb )
 }
 
 
-static INT32 CMacXFS::dev_pread( MAC_FD *f, ParamBlockRec *pb )	
+static int32_t CMacXFS::dev_pread( MAC_FD *f, ParamBlockRec *pb )	
 {
 	OSErr err;
 
@@ -3888,7 +3888,7 @@ static INT32 CMacXFS::dev_pread( MAC_FD *f, ParamBlockRec *pb )
 }
 */
 
-INT32 CMacXFS::dev_read( MAC_FD *f, INT32 count, char *buf )
+int32_t CMacXFS::dev_read( MAC_FD *f, int32_t count, char *buf )
 {
 	OSErr err;
 	long lcount;
@@ -3909,11 +3909,11 @@ INT32 CMacXFS::dev_read( MAC_FD *f, INT32 count, char *buf )
 	else
 	if (err)
 		return(cnverr(err));
-	return((INT32) lcount);
+	return((int32_t) lcount);
 }
 
 
-INT32 CMacXFS::dev_write( MAC_FD *f, INT32 count, char *buf )
+int32_t CMacXFS::dev_write( MAC_FD *f, int32_t count, char *buf )
 {
 #ifdef DEMO
 	#pragma unused(f, count, buf)
@@ -3927,12 +3927,12 @@ INT32 CMacXFS::dev_write( MAC_FD *f, INT32 count, char *buf )
 	err = FSWrite(f->refnum, &lcount, buf);
 	if (err)
 		return(cnverr(err));
-	return((INT32) lcount);
+	return((int32_t) lcount);
 #endif
 }
 
 
-INT32 CMacXFS::dev_stat(MAC_FD *f, void *unsel, UINT16 rwflag, INT32 apcode)
+int32_t CMacXFS::dev_stat(MAC_FD *f, void *unsel, uint16_t rwflag, int32_t apcode)
 {
 #pragma unused(unsel, apcode)
 	OSErr err;
@@ -3954,7 +3954,7 @@ INT32 CMacXFS::dev_stat(MAC_FD *f, void *unsel, UINT16 rwflag, INT32 apcode)
 }
 
 
-INT32 CMacXFS::dev_seek(MAC_FD *f, INT32 pos, UINT16 mode)
+int32_t CMacXFS::dev_seek(MAC_FD *f, int32_t pos, uint16_t mode)
 {
 	OSErr err;
 	short macmode;
@@ -3978,7 +3978,7 @@ INT32 CMacXFS::dev_seek(MAC_FD *f, INT32 pos, UINT16 mode)
 }
 
 
-INT32 CMacXFS::dev_datime(MAC_FD *f, UINT16 d[2], UINT16 rwflag)
+int32_t CMacXFS::dev_datime(MAC_FD *f, uint16_t d[2], uint16_t rwflag)
 {
 	OSErr err;
 	char fname[64];
@@ -4039,7 +4039,7 @@ OSErr CMacXFS::getFSSpecByFileRefNum (short fRefNum, FSSpec *spec, FCBPBRec *pb)
 }
 
 
-INT32 CMacXFS::dev_ioctl(MAC_FD *f, UINT16 cmd, void *buf)
+int32_t CMacXFS::dev_ioctl(MAC_FD *f, uint16_t cmd, void *buf)
 {
 	OSErr err;
 	char fname[64];
@@ -4062,7 +4062,7 @@ INT32 CMacXFS::dev_ioctl(MAC_FD *f, UINT16 cmd, void *buf)
 		return(E_OK);
 	  	break;
 	  case FTRUNCATE:
-	  	err = SetEOF(f->refnum, cpu_to_be32(*((INT32 *) buf)));
+	  	err = SetEOF(f->refnum, cpu_to_be32(*((int32_t *) buf)));
 		return(cnverr(err));
 	  	break;
 
@@ -4190,11 +4190,11 @@ INT32 CMacXFS::dev_ioctl(MAC_FD *f, UINT16 cmd, void *buf)
 	return(EINVFN);
 }
 
-INT32 CMacXFS::dev_getc(MAC_FD *f, UINT16 mode)
+int32_t CMacXFS::dev_getc(MAC_FD *f, uint16_t mode)
 {
 #pragma unused(mode)
 	unsigned char c;
-	INT32 ret;
+	int32_t ret;
 
 	ret = dev_read(f, 1L, (char *) &c);
 	if (ret < 0L)
@@ -4205,11 +4205,11 @@ INT32 CMacXFS::dev_getc(MAC_FD *f, UINT16 mode)
 }
 
 
-INT32 CMacXFS::dev_getline( MAC_FD *f, char *buf, INT32 size, UINT16 mode )
+int32_t CMacXFS::dev_getline( MAC_FD *f, char *buf, int32_t size, uint16_t mode )
 {
 #pragma unused(mode)
 	char c;
-	INT32 gelesen,ret;
+	int32_t gelesen,ret;
 
 	for	(gelesen = 0L; gelesen < size;)
 		{
@@ -4229,7 +4229,7 @@ INT32 CMacXFS::dev_getline( MAC_FD *f, char *buf, INT32 size, UINT16 mode )
 }
 
 
-INT32 CMacXFS::dev_putc( MAC_FD *f, UINT16 mode, INT32 val )
+int32_t CMacXFS::dev_putc( MAC_FD *f, uint16_t mode, int32_t val )
 {
 #pragma unused(mode)
 	char c;
@@ -4251,14 +4251,14 @@ INT32 CMacXFS::dev_putc( MAC_FD *f, UINT16 mode, INT32 val )
 *
 *************************************************************/
 
-INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
+int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 {
 #pragma options align=packed
-	UINT16 fncode;
-	INT32 doserr;
+	uint16_t fncode;
+	int32_t doserr;
 	unsigned char *params = AdrOffset68k + param;
 
-	fncode = be16_to_cpu(*((UINT16 *) params));
+	fncode = be16_to_cpu(*((uint16_t *) params));
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::XFSFunctions(%d)", (int) fncode);
 	if (fncode == 7)
@@ -4280,7 +4280,7 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct syncparm
 			{
-				UINT16 drv;
+				uint16_t drv;
 			};
 			syncparm *psyncparm = (syncparm *) params;
 			doserr = xfs_sync(be16_to_cpu(psyncparm->drv));
@@ -4291,7 +4291,7 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct ptermparm
 			{
-				UINT32 pd;		// PD *
+				uint32_t pd;		// PD *
 			};
 			ptermparm *pptermparm = (ptermparm *) params;
 			xfs_pterm((PD *) (AdrOffset68k + be32_to_cpu(pptermparm->pd)));
@@ -4303,9 +4303,9 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct drv_openparm
 			{
-				UINT16 drv;
-				UINT32 dd;		// MXFSDD *
-				INT32 flg_ask_diskchange;	// in fact: DMD->D_XFS (68k-Pointer or NULL)
+				uint16_t drv;
+				uint32_t dd;		// MXFSDD *
+				int32_t flg_ask_diskchange;	// in fact: DMD->D_XFS (68k-Pointer or NULL)
 			};
 			drv_openparm *pdrv_openparm = (drv_openparm *) params;
 			doserr = xfs_drv_open(
@@ -4319,8 +4319,8 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct drv_closeparm
 			{
-				UINT16 drv;
-				UINT16 mode;
+				uint16_t drv;
+				uint16_t mode;
 			};
 			drv_closeparm *pdrv_closeparm = (drv_closeparm *) params;
 			doserr = xfs_drv_close(be16_to_cpu(pdrv_closeparm->drv),
@@ -4332,15 +4332,15 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct path2DDparm
 			{
-				UINT16 mode;
-				UINT16 drv;
-				UINT32 rel_dd;	// MXFSDD *
-				UINT32 pathname;		// char *
-				UINT32 restpfad;		// char **
-				UINT32 symlink_dd;	// MXFSDD *
-				UINT32 symlink;		// char **
-				UINT32 dd;		// MXFSDD *
-				UINT32 dir_drive;
+				uint16_t mode;
+				uint16_t drv;
+				uint32_t rel_dd;	// MXFSDD *
+				uint32_t pathname;		// char *
+				uint32_t restpfad;		// char **
+				uint32_t symlink_dd;	// MXFSDD *
+				uint32_t symlink;		// char **
+				uint32_t dd;		// MXFSDD *
+				uint32_t dir_drive;
 			};
 			char *restpath;
 			char *symlink;
@@ -4358,11 +4358,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 					(MXFSDD *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->symlink_dd)),
 					&symlink,
 					(MXFSDD *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->dd)),
-					(UINT16 *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->dir_drive))
+					(uint16_t *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->dir_drive))
 					);
 
-			*((char **) (AdrOffset68k + be32_to_cpu(ppath2DDparm->restpfad))) = (char *) cpu_to_be32(((UINT32) restpath) - ((UINT32) AdrOffset68k));
-			*((char **) (AdrOffset68k + be32_to_cpu(ppath2DDparm->symlink))) = (char *) cpu_to_be32(((UINT32) symlink) - ((UINT32) AdrOffset68k));
+			*((char **) (AdrOffset68k + be32_to_cpu(ppath2DDparm->restpfad))) = (char *) cpu_to_be32(((uint32_t) restpath) - ((uint32_t) AdrOffset68k));
+			*((char **) (AdrOffset68k + be32_to_cpu(ppath2DDparm->symlink))) = (char *) cpu_to_be32(((uint32_t) symlink) - ((uint32_t) AdrOffset68k));
 #ifdef DEBUG_VERBOSE
 			__dump((const unsigned char *) ppath2DDparm, sizeof(*ppath2DDparm));
 			if (doserr >= 0)
@@ -4375,11 +4375,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct sfirstparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 name;	// char *
-				UINT32 dta;		// MAC_DTA *
-				UINT16 attrib;
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t name;	// char *
+				uint32_t dta;		// MAC_DTA *
+				uint16_t attrib;
 			};
 			sfirstparm *psfirstparm = (sfirstparm *) params;
 			doserr = xfs_sfirst(
@@ -4396,8 +4396,8 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct snextparm
 			{
-				UINT16 drv;
-				UINT32 dta;		// MAC_DTA *
+				uint16_t drv;
+				uint32_t dta;		// MAC_DTA *
 			};
 			snextparm *psnextparm = (snextparm *) params;
 			doserr = xfs_snext(
@@ -4411,11 +4411,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct fopenparm
 			{
-				UINT32 name;	// char *
-				UINT16 drv;
-				UINT32 dd;		//MXFSDD *
-				UINT16 omode;
-				UINT16 attrib;
+				uint32_t name;	// char *
+				uint16_t drv;
+				uint32_t dd;		//MXFSDD *
+				uint16_t omode;
+				uint16_t attrib;
 			};
 			fopenparm *pfopenparm = (fopenparm *) params;
 			doserr = xfs_fopen(
@@ -4432,9 +4432,9 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct fdeleteparm
 			{
-				UINT16 drv;
-				UINT32 dd;		//MXFSDD *
-				UINT32 name;	// char *
+				uint16_t drv;
+				uint32_t dd;		//MXFSDD *
+				uint32_t name;	// char *
 			};
 			fdeleteparm *pfdeleteparm = (fdeleteparm *) params;
 			doserr = xfs_fdelete(
@@ -4449,13 +4449,13 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct flinkparm
 			{
-				UINT16 drv;
-				UINT32 nam1;	// char *
-				UINT32 nam2;	// char *
-				UINT32 dd1;		// MXFSDD *
-				UINT32 dd2;		// MXFSDD *
-				UINT16 mode;
-				UINT16 dst_drv;
+				uint16_t drv;
+				uint32_t nam1;	// char *
+				uint32_t nam2;	// char *
+				uint32_t dd1;		// MXFSDD *
+				uint32_t dd2;		// MXFSDD *
+				uint16_t mode;
+				uint16_t dst_drv;
 			};
 			flinkparm *pflinkparm = (flinkparm *) params;
 			doserr = xfs_link(
@@ -4474,11 +4474,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct xattrparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 name;	// char *
-				UINT32 xattr;	// XATTR *
-				UINT16 mode;
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t name;	// char *
+				uint32_t xattr;	// XATTR *
+				uint16_t mode;
 			};
 			xattrparm *pxattrparm = (xattrparm *) params;
 			doserr = xfs_xattr(
@@ -4495,11 +4495,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct attribparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 name;	// char *
-				UINT16 rwflag;
-				UINT16 attr;
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t name;	// char *
+				uint16_t rwflag;
+				uint16_t attr;
 			};
 			attribparm *pattribparm = (attribparm *) params;
 			doserr = xfs_attrib(
@@ -4516,11 +4516,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct chownparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 name;	// char *
-				UINT16 uid;
-				UINT16 gid;
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t name;	// char *
+				uint16_t uid;
+				uint16_t gid;
 			};
 			chownparm *pchownparm = (chownparm *) params;
 			doserr = xfs_fchown(
@@ -4537,10 +4537,10 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct chmodparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 name;	// char *
-				UINT16 fmode;
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t name;	// char *
+				uint16_t fmode;
 			};
 			chmodparm *pchmodparm = (chmodparm *) params;
 			doserr = xfs_fchmod(
@@ -4556,12 +4556,12 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct dcreateparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 name;	// char *
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t name;	// char *
 			};
 			dcreateparm *pdcreateparm = (dcreateparm *) params;
-			if (be32_to_cpu((UINT32) (pdcreateparm->name)) >= m_AtariMemSize)
+			if (be32_to_cpu((uint32_t) (pdcreateparm->name)) >= m_AtariMemSize)
 			{
 				DebugError("CMacXFS::xfs_dcreate() - invalid name ptr");
 				return(ERROR);
@@ -4579,8 +4579,8 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct ddeleteparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
 			};
 			ddeleteparm *pddeleteparm = (ddeleteparm *) params;
 			doserr = xfs_ddelete(
@@ -4594,10 +4594,10 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct dd2nameparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 buf;		// char *
-				UINT16 bufsiz;
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t buf;		// char *
+				uint16_t bufsiz;
 			};
 			dd2nameparm *pdd2nameparm = (dd2nameparm *) params;
 			doserr = xfs_DD2name(
@@ -4613,10 +4613,10 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct dopendirparm
 			{
-				UINT32 dirh;		// MAC_DIRHANDLE *
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT16 tosflag;
+				uint32_t dirh;		// MAC_DIRHANDLE *
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint16_t tosflag;
 			};
 			dopendirparm *pdopendirparm = (dopendirparm *) params;
 			doserr = xfs_dopendir(
@@ -4632,12 +4632,12 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct dreaddirparm
 			{
-				UINT32 dirh;		// MAC_DIRHANDLE *
-				UINT16 drv;
-				UINT16 size;
-				UINT32 buf;		// char *
-				UINT32 xattr;	// XATTR * oder NULL
-				UINT32 xr;		// INT32 * oder NULL
+				uint32_t dirh;		// MAC_DIRHANDLE *
+				uint16_t drv;
+				uint16_t size;
+				uint32_t buf;		// char *
+				uint32_t xattr;	// XATTR * oder NULL
+				uint32_t xr;		// int32_t * oder NULL
 			};
 			dreaddirparm *pdreaddirparm = (dreaddirparm *) params;
 			doserr = xfs_dreaddir(
@@ -4646,7 +4646,7 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 					be16_to_cpu(pdreaddirparm->size),
 					(char *) (AdrOffset68k + be32_to_cpu(pdreaddirparm->buf)),
 					(XATTR *) ((pdreaddirparm->xattr) ? AdrOffset68k + be32_to_cpu(pdreaddirparm->xattr) : NULL),
-					(INT32 *) ((pdreaddirparm->xr) ? (AdrOffset68k + be32_to_cpu(pdreaddirparm->xr)) : NULL)
+					(int32_t *) ((pdreaddirparm->xr) ? (AdrOffset68k + be32_to_cpu(pdreaddirparm->xr)) : NULL)
 					);
 			break;
 		}
@@ -4655,8 +4655,8 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct drewinddirparm
 			{
-				UINT32 dirh;		// MAC_DIRHANDLE *
-				UINT16 drv;
+				uint32_t dirh;		// MAC_DIRHANDLE *
+				uint16_t drv;
 			};
 			drewinddirparm *pdrewinddirparm = (drewinddirparm *) params;
 			doserr = xfs_drewinddir(
@@ -4670,8 +4670,8 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct dclosedirparm
 			{
-				UINT32 dirh;		// MAC_DIRHANDLE *
-				UINT16 drv;
+				uint32_t dirh;		// MAC_DIRHANDLE *
+				uint16_t drv;
 			};
 			dclosedirparm *pdclosedirparm = (dclosedirparm *) params;
 			doserr = xfs_dclosedir(
@@ -4685,9 +4685,9 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct dpathconfparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT16 which;
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint16_t which;
 			};
 			dpathconfparm *pdpathconfparm = (dpathconfparm *) params;
 			doserr = xfs_dpathconf(
@@ -4702,15 +4702,15 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct dfreeparm
 			{
-				UINT16 drv;
-				INT32 dirID;
-				UINT32 data;	// UINT32 data[4]
+				uint16_t drv;
+				int32_t dirID;
+				uint32_t data;	// uint32_t data[4]
 			};
 			dfreeparm *pdfreeparm = (dfreeparm *) params;
 			doserr = xfs_dfree(
 					be16_to_cpu(pdfreeparm->drv),
 					pdfreeparm->dirID,
-					(UINT32 *) (AdrOffset68k + be32_to_cpu(pdfreeparm->data))
+					(uint32_t *) (AdrOffset68k + be32_to_cpu(pdfreeparm->data))
 					);
 #ifdef DEBUG_VERBOSE
 			__dump((const unsigned char *) (AdrOffset68k + be32_to_cpu(pdfreeparm->data)), 16);
@@ -4722,9 +4722,9 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct wlabelparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 name;	// char *
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t name;	// char *
 			};
 			wlabelparm *pwlabelparm = (wlabelparm *) params;
 			doserr = xfs_wlabel(
@@ -4739,10 +4739,10 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct rlabelparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 name;	// char *
-				UINT16 bufsiz;
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t name;	// char *
+				uint16_t bufsiz;
 			};
 			rlabelparm *prlabelparm = (rlabelparm *) params;
 			doserr = xfs_rlabel(
@@ -4758,10 +4758,10 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct symlinkparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 name;	// char *
-				UINT32 to;		// char *
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t name;	// char *
+				uint32_t to;		// char *
 			};
 			symlinkparm *psymlinkparm = (symlinkparm *) params;
 			doserr = xfs_symlink(
@@ -4777,11 +4777,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct readlinkparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 name;	// char *
-				UINT32 buf;		// char *
-				UINT16 bufsiz;
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t name;	// char *
+				uint32_t buf;		// char *
+				uint16_t bufsiz;
 			};
 			readlinkparm *preadlinkparm = (readlinkparm *) params;
 			doserr = xfs_readlink(
@@ -4798,11 +4798,11 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct dcntlparm
 			{
-				UINT16 drv;
-				UINT32 dd;	// MXFSDD *
-				UINT32 name;	// char *
-				UINT16 cmd;
-				INT32 arg;
+				uint16_t drv;
+				uint32_t dd;	// MXFSDD *
+				uint32_t name;	// char *
+				uint16_t cmd;
+				int32_t arg;
 			};
 			dcntlparm *pdcntlparm = (dcntlparm *) params;
 			doserr = xfs_dcntl(
@@ -4835,19 +4835,19 @@ INT32 CMacXFS::XFSFunctions(UINT32 param, unsigned char *AdrOffset68k)
 *
 *************************************************************/
 
-INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
+int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 {
-	UINT16 fncode;
-	INT32 doserr;
+	uint16_t fncode;
+	int32_t doserr;
 	unsigned char *params = AdrOffset68k + param;
-	UINT32 ifd;
+	uint32_t ifd;
 
 
 	// first 2 bytes: function code
-	fncode = be16_to_cpu(*((UINT16 *) params));
+	fncode = be16_to_cpu(*((uint16_t *) params));
 	params += 2;
 	// next 4 bytes: pointer to MAC_FD
-	ifd = *((UINT32 *) params);
+	ifd = *((uint32_t *) params);
 	params += 4;
 	MAC_FD *f = (MAC_FD *) (AdrOffset68k + be32_to_cpu(ifd));
 
@@ -4867,9 +4867,9 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct devreadparm
 			{
-//				UINT32 f;	// MAC_FD *
-				INT32 count;
-				UINT32 buf;		// char *
+//				uint32_t f;	// MAC_FD *
+				int32_t count;
+				uint32_t buf;		// char *
 			};
 			devreadparm *pdevreadparm = (devreadparm *) params;
 			doserr = dev_read(
@@ -4884,9 +4884,9 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct devwriteparm
 			{
-//				UINT32 f;	// MAC_FD *
-				INT32 count;
-				UINT32 buf;		// char *
+//				uint32_t f;	// MAC_FD *
+				int32_t count;
+				uint32_t buf;		// char *
 			};
 			devwriteparm *pdevwriteparm = (devwriteparm *) params;
 			doserr = dev_write(
@@ -4901,10 +4901,10 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct devstatparm
 			{
-//				UINT32 f;	// MAC_FD *
-				UINT32 unsel;	//void *
-				UINT16 rwflag;
-				INT32 apcode;
+//				uint32_t f;	// MAC_FD *
+				uint32_t unsel;	//void *
+				uint16_t rwflag;
+				int32_t apcode;
 			};
 			devstatparm *pdevstatparm = (devstatparm *) params;
 			doserr = dev_stat(
@@ -4920,9 +4920,9 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct devseekparm
 			{
-//				UINT32 f;	// MAC_FD *
-				INT32 pos;
-				UINT16 mode;
+//				uint32_t f;	// MAC_FD *
+				int32_t pos;
+				uint16_t mode;
 			};
 			devseekparm *pdevseekparm = (devseekparm *) params;
 			doserr = dev_seek(
@@ -4937,14 +4937,14 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct devdatimeparm
 			{
-//				UINT32 f;	// MAC_FD *
-				UINT32 d;		// UINT16[2]
-				UINT16 rwflag;
+//				uint32_t f;	// MAC_FD *
+				uint32_t d;		// uint16_t[2]
+				uint16_t rwflag;
 			};
 			devdatimeparm *pdevdatimeparm = (devdatimeparm *) params;
 			doserr = dev_datime(
 					f,
-					(UINT16 *) (AdrOffset68k + be32_to_cpu(pdevdatimeparm->d)),
+					(uint16_t *) (AdrOffset68k + be32_to_cpu(pdevdatimeparm->d)),
 					be16_to_cpu(pdevdatimeparm->rwflag)
 					);
 			break;
@@ -4954,9 +4954,9 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct devioctlparm
 			{
-//				UINT32 f;	// MAC_FD *
-				UINT16 cmd;
-				UINT32 buf;		// void *
+//				uint32_t f;	// MAC_FD *
+				uint16_t cmd;
+				uint32_t buf;		// void *
 			};
 			devioctlparm *pdevioctlparm = (devioctlparm *) params;
 			doserr = dev_ioctl(
@@ -4971,8 +4971,8 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct devgetcparm
 			{
-//				UINT32 f;	// MAC_FD *
-				UINT16 mode;
+//				uint32_t f;	// MAC_FD *
+				uint16_t mode;
 			};
 			devgetcparm *pdevgetcparm = (devgetcparm *) params;
 			doserr = dev_getc(
@@ -4986,10 +4986,10 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct devgetlineparm
 			{
-//				UINT32 f;	// MAC_FD *
-				UINT32 buf;		// char *
-				INT32 size;
-				UINT16 mode;
+//				uint32_t f;	// MAC_FD *
+				uint32_t buf;		// char *
+				int32_t size;
+				uint16_t mode;
 			};
 			devgetlineparm *pdevgetlineparm = (devgetlineparm *) params;
 			doserr = dev_getline(
@@ -5005,9 +5005,9 @@ INT32 CMacXFS::XFSDevFunctions(UINT32 param, unsigned char *AdrOffset68k)
 		{
 			struct devputcparm
 			{
-//				UINT32 f;	// MAC_FD *
-				UINT16 mode;
-				INT32 val;
+//				uint32_t f;	// MAC_FD *
+				uint16_t mode;
+				int32_t val;
 			};
 			devputcparm *pdevputcparm = (devputcparm *) params;
 			doserr = dev_putc(
@@ -5183,16 +5183,16 @@ void CMacXFS::XFSVolUnmounted (ParmBlkPtr pb0)
 *
 *************************************************************/
 
-INT32 CMacXFS::Drv2DevCode(UINT32 params, unsigned char *AdrOffset68k)
+int32_t CMacXFS::Drv2DevCode(uint32_t params, unsigned char *AdrOffset68k)
 {
 	short vol;
-	UINT16 drv = be16_to_cpu(*((UINT16*) (AdrOffset68k + params)));
+	uint16_t drv = be16_to_cpu(*((uint16_t*) (AdrOffset68k + params)));
 
 
 	if (drv <= 1)
 	{
 		// Floppy A: & B:
-		return((INT32) 0x00010000 | (drv + 1));	// liefert 1 bzw. 2
+		return((int32_t) 0x00010000 | (drv + 1));	// liefert 1 bzw. 2
 	}
 
 	vol = drv_fsspec[drv].vRefNum;
@@ -5202,7 +5202,7 @@ INT32 CMacXFS::Drv2DevCode(UINT32 params, unsigned char *AdrOffset68k)
 		// evtl. AHDI-Drive?
 		if (false)
 		{	// !!! erstmal nicht unterstützt.
-			return((INT32) (0x00020000 | drv));
+			return((int32_t) (0x00020000 | drv));
 		}
 		else
 		{
@@ -5232,7 +5232,7 @@ INT32 CMacXFS::Drv2DevCode(UINT32 params, unsigned char *AdrOffset68k)
 			{	// ein SCSI-Device?
 				drvNum = driver;
 			}
-			return((INT32) (0x00010000 | (UINT16) drvNum));
+			return((int32_t) (0x00010000 | (uint16_t) drvNum));
 		}
 	}
 }
@@ -5245,13 +5245,13 @@ INT32 CMacXFS::Drv2DevCode(UINT32 params, unsigned char *AdrOffset68k)
 *
 *************************************************************/
 
-INT32 CMacXFS::RawDrvr (UINT32 param, unsigned char *AdrOffset68k)
+int32_t CMacXFS::RawDrvr (uint32_t param, unsigned char *AdrOffset68k)
 {
-	INT32 ret;
+	int32_t ret;
 	struct sparams
 	{
-		UINT16 opcode;
-		UINT32 device;
+		uint16_t opcode;
+		uint32_t device;
 	};
 
 
@@ -5469,7 +5469,7 @@ bool CMacXFS::GetPathFromFSSpec (FSSpec *spec, char* path, short pathSize)
 	// befindet, wird einfach geprüft, ob dessen DirID oder eine seiner Parent-Dirs
 	// als Root-Dir der MagiC-Laufwerke benutzt wird.
 	OSErr	err;
-	UINT16 drv;
+	uint16_t drv;
 	long	theDir, theDir2;
 	Boolean	isDir, ok = false;
 	Boolean	tmpMount[NDRVS], was_changed[NDRVS];
@@ -5506,7 +5506,7 @@ bool CMacXFS::GetPathFromFSSpec (FSSpec *spec, char* path, short pathSize)
 				// Pfad einsetzen
 				dd.dirID = theDir;
 				dd.vRefNum = drv_fsspec[drv].vRefNum;
-				if (xfs_DD2name (drv, &dd, &path[l], (UINT16) (pathSize-l)) == E_OK)
+				if (xfs_DD2name (drv, &dd, &path[l], (uint16_t) (pathSize-l)) == E_OK)
 				{
 					l = strlen (path);
 					if ((l+1) < pathSize)

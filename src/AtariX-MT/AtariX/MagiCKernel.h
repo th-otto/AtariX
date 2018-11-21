@@ -25,79 +25,77 @@
 #ifndef MAGICKERNEL_H_INCLUDED
 #define MAGICKERNEL_H_INCLUDED
 
-#include "osd_cpu.h"
-
    	#pragma options align=packed
 
 #define MagiCKernel_MAX_OPEN	32	// Größte Handlenummer-1 (0..31)
 
 struct MagiCKernel_PD
 {
-	UInt32 p_lowtpa;
-	void *p_hitpa;
-	void *p_tbase;
-	unsigned long p_tlen;
-	void *p_dbase;
-	unsigned long p_dlen;
-	void *p_bbase;
-	unsigned long p_blen;
-	void *p_dta;
-	void *p_parent;
-	UInt16 p_procid;		/* 0x28: Prozeß- ID */
-	UInt16 p_status;		/* 0x2a: ab MagiC 5.04 */
-	void *p_env;
+	uint32_t p_lowtpa;
+	uint32_t p_hitpa;
+	uint32_t p_tbase;
+	uint32_t p_tlen;
+	uint32_t p_dbase;
+	uint32_t p_dlen;
+	uint32_t p_bbase;
+	uint32_t p_blen;
+	uint32_t p_dta;
+	uint32_t p_parent;
+	uint16_t p_procid;		/* 0x28: Prozeß- ID */
+	uint16_t p_status;		/* 0x2a: ab MagiC 5.04 */
+	uint32_t p_env;
 	char p_devx[6];
-	char p_flags;		/* 0x36: Bit 0: Pdomain (MiNT:1/TOS:0) */
+	char p_flags;			/* 0x36: Bit 0: Pdomain (MiNT:1/TOS:0) */
 	char p_defdrv;
-	char p_res3[8];		/* 0x38: Terminierungskontext für ACC */
+	char p_res3[8];			/* 0x38: Terminierungskontext für ACC */
 	char p_drvx[32];		/* 0x40: Tabelle: Default-Path-Hdl. */
-	UInt32 p_procdata;	/* 0x60: Zeiger auf PROCDATA */
-	UInt16 p_umask;		/* 0x64: umask für Unix-Dateisysteme */
-	UInt16 p_procgroup;	/* 0x66: Prozeßgruppe (ab 6.10.96) */
-	UInt32 p_mem;		/* 0x68: soviel Speicher darf ich holen */
-	UInt32 p_context;		/* 0x6c: unter MAGIX statt p_reg benutzt */
-	UInt32 p_mflags;		/* 0x70: Bit 2: Malloc aus AltRAM erlaubt */
-	UInt32 p_app;		/* 0x74: APPL, die den Prozeß gestartet hat (main thread) */
-	UInt32 p_ssp;		/* 0x78: ssp bei Start des Prozesses */
-	UInt32 p_reg;		/* 0x7c: für Kompatibilität mit TOS */
+	uint32_t p_procdata;		/* 0x60: Zeiger auf PROCDATA */
+	uint16_t p_umask;			/* 0x64: umask für Unix-Dateisysteme */
+	uint16_t p_procgroup;		/* 0x66: Prozeßgruppe (ab 6.10.96) */
+	uint32_t p_mem;			/* 0x68: soviel Speicher darf ich holen */
+	uint32_t p_context;		/* 0x6c: unter MAGIX statt p_reg benutzt */
+	uint32_t p_mflags;		/* 0x70: Bit 2: Malloc aus AltRAM erlaubt */
+	uint32_t p_app;			/* 0x74: APPL, die den Prozeß gestartet hat (main thread) */
+	uint32_t p_ssp;			/* 0x78: ssp bei Start des Prozesses */
+	uint32_t p_reg;			/* 0x7c: für Kompatibilität mit TOS */
 	char p_cmdline[128];
 };
 
 struct MagiCKernel_SIGHNDL
 {
-	UInt32	sa_handler;		/* 0x00: Signalhandler */
-	UInt32	sa_sigextra;	/* 0x04: OR-Maske bei AusfÅhrung des Signals */
-	UInt16	sa_flags;
+	uint32_t	sa_handler;		/* 0x00: Signalhandler */
+	uint32_t	sa_sigextra;	/* 0x04: OR-Maske bei AusfÅhrung des Signals */
+	uint16_t	sa_flags;
 };
 
 struct MagiCKernel_FH
 {
-	UInt32	fh_fd;
-	UInt16	fh_flag;
+	uint32_t	fh_fd;
+	uint16_t	fh_flag;
 };
 
 struct MagiCKernel_PROCDATA
 {
-	UInt32	pr_magic;		/* magischer Wert, ähnlich wie bei MiNT */
-	UInt16	pr_ruid;		/* "real user ID" */
-	UInt16	pr_rgid;		/* "real group ID" */
-	UInt16	pr_euid;		/* "effective user ID" */
-	UInt16	pr_egid;		/* "effective group ID" */
-	UInt16	pr_suid;		/* "saved user ID" */
-	UInt16	pr_sgid;		/* "saved group ID" */
-	UInt16	pr_auid;		/* "audit user ID" */
-	UInt16	pr_pri;		/* "base process priority" (nur dummy) */
-	UInt32	pr_sigpending;	/* wartende Signale */
-	UInt32	pr_sigmask;	/* Signalmaske */
+	uint32_t	pr_magic;		/* magischer Wert, ähnlich wie bei MiNT */
+	uint16_t	pr_ruid;		/* "real user ID" */
+	uint16_t	pr_rgid;		/* "real group ID" */
+	uint16_t	pr_euid;		/* "effective user ID" */
+	uint16_t	pr_egid;		/* "effective group ID" */
+	uint16_t	pr_suid;		/* "saved user ID" */
+	uint16_t	pr_sgid;		/* "saved group ID" */
+	uint16_t	pr_auid;		/* "audit user ID" */
+	uint16_t	pr_pri;		/* "base process priority" (nur dummy) */
+	uint32_t	pr_sigpending;	/* wartende Signale */
+	uint32_t	pr_sigmask;	/* Signalmaske */
 	struct MagiCKernel_SIGHNDL pr_sigdata[32];
-	UInt32	pr_usrval;		/* "User"-Wert (ab 9/96) */
-	UInt32	pr_memlist;		/* Tabelle der "shared memory blocks" */
+	uint32_t	pr_usrval;		/* "User"-Wert (ab 9/96) */
+	uint32_t	pr_memlist;		/* Tabelle der "shared memory blocks" */
 	char		pr_fname[128];	/* Pfad der zugehörigen PRG-Datei */
 	char		pr_cmdlin[128];	/* Ursprüngliche Kommandozeile */
-	UInt16	pr_flags;		/* Bit 0: kein Eintrag in u:\proc */
+	uint16_t	pr_flags;		/* Bit 0: kein Eintrag in u:\proc */
 						/* Bit 1: durch Pfork() erzeugt */
 	char		pr_procname[10];	/* Prozeßname für u:\proc\ ohne Ext.		*/
-	UInt16	pr_bconmap;	/* z.Zt. unbenutzt */
+	uint16_t	pr_bconmap;	/* z.Zt. unbenutzt */
 	struct MagiCKernel_FH pr_hndm6;	/* Handle -6: unbenutzt */
 	struct MagiCKernel_FH pr_hndm5;	/* Handle -5: unbenutzt */
 	struct MagiCKernel_FH pr_hndm4;	/* Handle -4: standardmäßig NUL: */
@@ -109,74 +107,74 @@ struct MagiCKernel_PROCDATA
 
  struct MagiCKernel_APP
 {
-	UINT32	ap_next;			// Verkettungszeiger
-	UINT16	ap_id;			// Application-ID
-	UINT16	ap_parent;			// tatsächliche parent-ID
-	UINT16	ap_parent2;		// ggf. die ap_id des VT52, dorthin ->CH_EXIT
-	UINT16	ap_type;			// 0 = Main Thread/1 = Thread/2 = Signal Handler
-	UINT32	ap_oldsigmask;		// Alte Signalmaske (für Signal-Handler)
-	UINT32	ap_sigthr;			// Haupt-Thread: Zeiger auf aktiven Signalhandler
-							// Signalhandler: Zeiger auf vorherigen oder NULL
-	UINT16	ap_srchflg;			// für appl_search
-	UINT32	ap_menutree;		// Menübaum
-	UINT32	ap_attached;		// NULL oder Liste fÅr menu_attach()
-	UINT32	ap_desktree;		// Desktop-Hintergrund
-	UINT16	ap_1stob;			//  dazu erstes Objekt
-	UINT8		ap_dummy1[2];		// zwei Leerzeichen vor ap_name
-	UINT8		ap_name[8];		// Name (8 Zeichen mit trailing blanks)
-	UINT8		ap_dummy2[2];		// Leerstelle und ggf. Ausblendzeichen
-	UINT8		ap_dummy3;		// Nullbyte für EOS
-	UINT8		ap_status;			// APSTAT_...
-	UINT16	ap_hbits;			// eingetroffene Events
-	UINT16	ap_rbits;			// erwartete Events
-	UINT32	ap_evparm;			// Event-Daten, z.B. <pid> oder msg-Puffer
-	UINT32	ap_nxttim;			// Nächste auf Timer wartende APP
-	UINT32	ap_ms;			// Timer
-	UINT32	ap_nxtalrm;		// Nächste auf Alarm wartende APP
-	UINT32	ap_alrmms;			// Alarm
-	UINT16	ap_isalarm;			// Flag
-	UINT32	ap_nxtsem;			// Nächste auf Semaphore wartende APP
-	UINT32	ap_semaph;			// auf diese Semaphore warten wir
-	UINT16	ap_unselcnt;		// Länge der Tabelle ap_unselx
-	UINT32	ap_unselx;			// Tabelle für evnt_(m)IO
-	UINT32	ap_evbut;			// für evnt_button
-	UINT32	ap_mgrect1;		// für evnt_mouse
-	UINT32	ap_mgrect2;		// für evnt_mouse
-	UINT16	ap_kbbuf[8];		// Puffer für 8 Tasten
-	UINT16	ap_kbhead;			// Nächstes zu lesendes Zeichen
-	UINT16	ap_kbtail;			// Nächstes zu schreibendes Zeichen
-	UINT16	ap_kbcnt;			// Anzahl Zeichen im Puffer
-	UINT16	ap_len;			// Message- Pufferlänge
-	UINT8		ap_buf[0x300];		// Message- Puffer (768 Bytes = 48 Nachrichten)
-	UINT16	ap_critic;			// Zähler für "kritische Phase"
-	UINT8		ap_crit_act;		// Bit 0: killed
-							// Bit 1: stopped
-							// Bit 2: Signale testen
-	UINT8		ap_stpsig;			// Flag "durch Signal gestoppt"
-	UINT32	ap_sigfreeze;		// Signalhandler für SIGFREEZE
-	UINT16	ap_recogn;			// Bit 0: verstehe AP_TERM
-	UINT32	ap_flags;			// Bit 0: will keinen prop. AES-Zeichensatz
-	UINT16	ap_doex;
-	UINT16	ap_isgr;
-	UINT16	ap_wasgr;
-	UINT16	ap_isover;
-	UINT32	ap_ldpd;			// PD des Loader-Prozesses
-	UINT32	ap_env;			// Environment oder NULL
-	UINT32	ap_xtail;			// Erw. Kommandozeile (> 128 Bytes) od. NULL
-	UINT32	ap_thr_usp;			// usp für Threads
-	UINT32	ap_memlimit;
-	UINT32	ap_nice;			// z.Zt. unbenutzt
-	UINT8		ap_cmd[128];		// Programmpfad
-	UINT8		ap_tai[128];		// Programmparameter
-	UINT16	ap_mhidecnt;		// lokaler Maus-Hide-Counter
-	UINT16	ap_svd_mouse[37	];	// x/y/planes/bg/fg/msk[32]/moff_cnt
-	UINT16	ap_prv_mouse[37];
-	UINT16	ap_act_mouse[37];
-	UINT32	ap_ssp;
-	UINT32	ap_pd;
-	UINT32	ap_etvterm;
-	UINT32	ap_stkchk;			// magisches Wort für Stacküberprüfung
-	UINT8		ap_stack[0];		// Stack
+	uint32_t	ap_next;			// Verkettungszeiger
+	uint16_t	ap_id;				// Application-ID
+	uint16_t	ap_parent;			// tatsächliche parent-ID
+	uint16_t	ap_parent2;			// ggf. die ap_id des VT52, dorthin ->CH_EXIT
+	uint16_t	ap_type;			// 0 = Main Thread/1 = Thread/2 = Signal Handler
+	uint32_t	ap_oldsigmask;		// Alte Signalmaske (für Signal-Handler)
+	uint32_t	ap_sigthr;			// Haupt-Thread: Zeiger auf aktiven Signalhandler
+									// Signalhandler: Zeiger auf vorherigen oder NULL
+	uint16_t	ap_srchflg;			// für appl_search
+	uint32_t	ap_menutree;		// Menübaum
+	uint32_t	ap_attached;		// NULL oder Liste fÅr menu_attach()
+	uint32_t	ap_desktree;		// Desktop-Hintergrund
+	uint16_t	ap_1stob;			//  dazu erstes Objekt
+	uint8_t		ap_dummy1[2];		// zwei Leerzeichen vor ap_name
+	uint8_t		ap_name[8];			// Name (8 Zeichen mit trailing blanks)
+	uint8_t		ap_dummy2[2];		// Leerstelle und ggf. Ausblendzeichen
+	uint8_t		ap_dummy3;			// Nullbyte für EOS
+	uint8_t		ap_status;			// APSTAT_...
+	uint16_t	ap_hbits;			// eingetroffene Events
+	uint16_t	ap_rbits;			// erwartete Events
+	uint32_t	ap_evparm;			// Event-Daten, z.B. <pid> oder msg-Puffer
+	uint32_t	ap_nxttim;			// Nächste auf Timer wartende APP
+	uint32_t	ap_ms;				// Timer
+	uint32_t	ap_nxtalrm;			// Nächste auf Alarm wartende APP
+	uint32_t	ap_alrmms;			// Alarm
+	uint16_t	ap_isalarm;			// Flag
+	uint32_t	ap_nxtsem;			// Nächste auf Semaphore wartende APP
+	uint32_t	ap_semaph;			// auf diese Semaphore warten wir
+	uint16_t	ap_unselcnt;		// Länge der Tabelle ap_unselx
+	uint32_t	ap_unselx;			// Tabelle für evnt_(m)IO
+	uint32_t	ap_evbut;			// for evnt_button
+	uint32_t	ap_mgrect1;			// for evnt_mouse
+	uint32_t	ap_mgrect2;			// for evnt_mouse
+	uint16_t	ap_kbbuf[8];		// Puffer für 8 Tasten
+	uint16_t	ap_kbhead;			// Nächstes zu lesendes Zeichen
+	uint16_t	ap_kbtail;			// Nächstes zu schreibendes Zeichen
+	uint16_t	ap_kbcnt;			// Anzahl Zeichen im Puffer
+	uint16_t	ap_len;				// Message- Pufferlänge
+	uint8_t		ap_buf[0x300];		// Message- Puffer (768 Bytes = 48 Nachrichten)
+	uint16_t	ap_critic;			// Zähler für "kritische Phase"
+	uint8_t		ap_crit_act;		// Bit 0: killed
+									// Bit 1: stopped
+									// Bit 2: Signale testen
+	uint8_t		ap_stpsig;			// Flag "durch Signal gestoppt"
+	uint32_t	ap_sigfreeze;		// Signalhandler für SIGFREEZE
+	uint16_t	ap_recogn;			// Bit 0: verstehe AP_TERM
+	uint32_t	ap_flags;			// Bit 0: will keinen prop. AES-Zeichensatz
+	uint16_t	ap_doex;
+	uint16_t	ap_isgr;
+	uint16_t	ap_wasgr;
+	uint16_t	ap_isover;
+	uint32_t	ap_ldpd;			// PD des Loader-Prozesses
+	uint32_t	ap_env;				// Environment oder NULL
+	uint32_t	ap_xtail;			// Erw. Kommandozeile (> 128 Bytes) od. NULL
+	uint32_t	ap_thr_usp;			// usp für Threads
+	uint32_t	ap_memlimit;
+	uint32_t	ap_nice;			// z.Zt. unbenutzt
+	uint8_t		ap_cmd[128];		// Programmpfad
+	uint8_t		ap_tai[128];		// Programmparameter
+	uint16_t	ap_mhidecnt;		// lokaler Maus-Hide-Counter
+	uint16_t	ap_svd_mouse[37	];	// x/y/planes/bg/fg/msk[32]/moff_cnt
+	uint16_t	ap_prv_mouse[37];
+	uint16_t	ap_act_mouse[37];
+	uint32_t	ap_ssp;
+	uint32_t	ap_pd;
+	uint32_t	ap_etvterm;
+	uint32_t	ap_stkchk;			// magisches Wort für Stacküberprüfung
+	uint8_t		ap_stack[0];		// Stack
 };
 
   	#pragma options align=reset

@@ -154,7 +154,6 @@
 		AD96C531143E4EEC008E0D68 /* MagiCSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagiCSerial.h; sourceTree = "<group>"; };
 		AD96C533143E4EEC008E0D68 /* MyMoreFiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MyMoreFiles.c; sourceTree = "<group>"; };
 		AD96C534143E4EEC008E0D68 /* MyMoreFiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyMoreFiles.h; sourceTree = "<group>"; };
-		AD96C535143E4EEC008E0D68 /* osd_cpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = osd_cpu.h; sourceTree = "<group>"; };
 		AD96C536143E4EEC008E0D68 /* PascalStrings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PascalStrings.c; sourceTree = "<group>"; };
 		AD96C537143E4EEC008E0D68 /* PascalStrings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PascalStrings.h; sourceTree = "<group>"; };
 		AD96C538143E4EEC008E0D68 /* TextConversion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextConversion.cpp; sourceTree = "<group>"; };
@@ -351,7 +350,6 @@
 		AD96C54A143E4F12008E0D68 /* MagiC */ = {
 			isa = PBXGroup;
 			children = (
-				AD96C535143E4EEC008E0D68 /* osd_cpu.h */,
 				AD3E85AB143E59700054D0E8 /* Atari.h */,
 				AD3E85A0143E50DF0054D0E8 /* MyPreferences.cpp */,
 				AD3E85A1143E50DF0054D0E8 /* MyPreferences.h */,

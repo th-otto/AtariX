@@ -24,7 +24,6 @@
 
 // System-Header
 // Programm-Header
-#include "osd_cpu.h"
 //#include "MagiCScreen.h"
 #include "XCmd.h"
 #include "MacXFS.h"

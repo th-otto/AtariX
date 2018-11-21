@@ -27,7 +27,6 @@
 
 // System-Header
 // Programm-Header
-#include "osd_cpu.h"
 #include "XCmdDefs.h"
 #include "MagicMacXPluginTypes.h"
 
@@ -69,7 +68,7 @@ class CXCmd
 			CFPlugInRef *pRef,
 			MagicMacXPluginInterfaceStruct **ppInterface);
 	// die zentrale Kommandofunktion
-	INT32 Command(UINT32 params, unsigned char *AdrOffset68k);
+	int32_t Command(uint32_t params, unsigned char *AdrOffset68k);
 
    private:
 #if TARGET_RT_MAC_MACHO
@@ -88,8 +87,8 @@ class CXCmd
 	OSErr OnCommandLoadLibrary(
 				const char *szLibName,
 				bool bIsPath,
-				UINT32 *pDescriptor,
-				INT32 *pNumOfSymbols);
+				uint32_t *pDescriptor,
+				int32_t *pNumOfSymbols);
 	OSErr OnCommandUnloadLibrary(UInt32 XCmdDescriptor);
 	OSErr OnCommandFindSymbol(
 				UInt32 XCmdDescriptor,

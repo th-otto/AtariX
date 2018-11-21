@@ -27,7 +27,6 @@
 #include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 // Programm-Header
-#include "osd_cpu.h"
 #include "missing.h"
 #include "XCmd.h"
 #include "MacXFS.h"
@@ -66,7 +65,7 @@ class CMagiC
 	void SendAtariFile(const char *pBuf);
 	void SendShutdown(void);
 	void ChangeXFSDrive(short drvNr);
-	static void GetActAtariPrg(const char **pName, UINT32 *pact_pd);
+	static void GetActAtariPrg(const char **pName, uint32_t *pact_pd);
 	bool m_bEmulatorIsRunning;
 	bool m_bAtariWasRun;
 	bool m_bShutdown;
@@ -102,46 +101,46 @@ class CMagiC
 #else
 	static int IRQCallback(int IRQLine);
 #endif
-	UINT32 AtariInit( UINT32 params, unsigned char *AdrOffset68k );
-	UINT32 AtariBIOSInit( UINT32 params, unsigned char *AdrOffset68k );
-	UINT32 AtariVdiInit( UINT32 params, unsigned char *AdrOffset68k );
-	UINT32 AtariExec68k( UINT32 params, unsigned char *AdrOffset68k );
-	UINT32 OpenSerialBIOS(void);
+	uint32_t AtariInit( uint32_t params, unsigned char *AdrOffset68k );
+	uint32_t AtariBIOSInit( uint32_t params, unsigned char *AdrOffset68k );
+	uint32_t AtariVdiInit( uint32_t params, unsigned char *AdrOffset68k );
+	uint32_t AtariExec68k( uint32_t params, unsigned char *AdrOffset68k );
+	uint32_t OpenSerialBIOS(void);
 	static void SendMessageToMainThread( bool bAsync, UInt32 command );
-	static UINT32 AtariDOSFn( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariGettime( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSettime( UINT32 params, unsigned char *AdrOffset68k );
+	static uint32_t AtariDOSFn( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariGettime( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSettime( uint32_t params, unsigned char *AdrOffset68k );
 	static void *_Remote_AtariSysHalt( void *param );
-	static UINT32 AtariSysHalt( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSetpalette( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSetcolor( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariVsetRGB( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariVgetRGB( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSysErr( UINT32 params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSysHalt( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSetpalette( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSetcolor( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariVsetRGB( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariVgetRGB( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSysErr( uint32_t params, unsigned char *AdrOffset68k );
 	static void *_Remote_AtariSysErr( void *param );
-	static UINT32 AtariColdBoot( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariExit( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariDebugOut( UINT32 params, unsigned char *AdrOffset68k );
+	static uint32_t AtariColdBoot( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariExit( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariDebugOut( uint32_t params, unsigned char *AdrOffset68k );
 	static void *_Remote_AtariError( void *param );
-	static UINT32 AtariError( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariPrtOs( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariPrtIn( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariPrtOut( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariPrtOutS( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSerConf( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSerIs( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSerOs( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSerIn( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSerOut( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSerOpen( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSerClose( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSerRead( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSerWrite( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSerStat( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariSerIoctl( UINT32 params, unsigned char *AdrOffset68k );
-	UINT32 AtariGetKeyboardOrMouseData( UINT32 params, unsigned char *AdrOffset68k );
-	UINT32 MmxDaemon( UINT32 params, unsigned char *AdrOffset68k );
-	static UINT32 AtariYield( UINT32 params, unsigned char *AdrOffset68k );
+	static uint32_t AtariError( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariPrtOs( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariPrtIn( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariPrtOut( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariPrtOutS( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSerConf( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSerIs( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSerOs( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSerIn( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSerOut( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSerOpen( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSerClose( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSerRead( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSerWrite( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSerStat( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariSerIoctl( uint32_t params, unsigned char *AdrOffset68k );
+	uint32_t AtariGetKeyboardOrMouseData( uint32_t params, unsigned char *AdrOffset68k );
+	uint32_t MmxDaemon( uint32_t params, unsigned char *AdrOffset68k );
+	static uint32_t AtariYield( uint32_t params, unsigned char *AdrOffset68k );
 
 	// private Attribute
 	CMagiCScreen *m_pMagiCScreen;		// Bildschirmdaten
@@ -149,8 +148,8 @@ class CMagiC
 	size_t m_RAM68ksize;				// Größe dieses Blocks
 	size_t m_Video68ksize;				// Größe dieses Blocks
 	unsigned char *m_AtariKbData;		// [0] = kbshift, [1] = kbrepeat
-	UINT32 *m_pAtariActPd;
-	UINT32 *m_pAtariActAppl;
+	uint32_t *m_pAtariActPd;
+	uint32_t *m_pAtariActAppl;
 	BasePage *m_BasePage;			// geladener MagiC-Kernel
 	MPQueueID m_EmuNotifQID;			// Notification-Queue für den Thread
 	MPTaskID m_EmuTaskID;			// Der Thread

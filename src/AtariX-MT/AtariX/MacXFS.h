@@ -33,7 +33,6 @@
 #include <aliases.h>
 */
 // Programm-Header
-#include "osd_cpu.h"
 #include "Atari.h"
 #include "MAC_XFS.H"
 // Definitionen
@@ -73,10 +72,10 @@ class CMacXFS
 	CMacXFS();
 	~CMacXFS();
 	void Set68kAdressRange(UInt32 AtariMemSize);
-	INT32 XFSFunctions( UINT32 params, unsigned char *AdrOffset68k );
-	INT32 XFSDevFunctions( UINT32 params, unsigned char *AdrOffset68k );
-	INT32 Drv2DevCode( UINT32 params, unsigned char *AdrOffset68k );
-	INT32 RawDrvr( UINT32 params, unsigned char *AdrOffset68k );
+	int32_t XFSFunctions( uint32_t params, unsigned char *AdrOffset68k );
+	int32_t XFSDevFunctions( uint32_t params, unsigned char *AdrOffset68k );
+	int32_t Drv2DevCode( uint32_t params, unsigned char *AdrOffset68k );
+	int32_t RawDrvr( uint32_t params, unsigned char *AdrOffset68k );
 	void SetXFSDrive (
 			short drv,
 			MacXFSDrvType drvType,
@@ -97,51 +96,51 @@ class CMacXFS
 #pragma options align=packed
 
 typedef struct _mx_dhd {
-     UINT32		dhd_dmd;			// struct _mx_dmd *dhd_dmd;
+     uint32_t		dhd_dmd;			// struct _mx_dmd *dhd_dmd;
 } MX_DHD;
 
 typedef struct _mx_dev {
-     INT32      dev_close;
-     INT32      dev_read;
-     INT32      dev_write;
-     INT32      dev_stat;
-     INT32      dev_seek;
-     INT32      dev_datime;
-     INT32      dev_ioctl;
-     INT32      dev_getc;
-     INT32      dev_getline;
-     INT32      dev_putc;
+     int32_t      dev_close;
+     int32_t      dev_read;
+     int32_t      dev_write;
+     int32_t      dev_stat;
+     int32_t      dev_seek;
+     int32_t      dev_datime;
+     int32_t      dev_ioctl;
+     int32_t      dev_getc;
+     int32_t      dev_getline;
+     int32_t      dev_putc;
 } MX_DEV;
 
 typedef struct _mx_dd {
-     UINT32	dd_dmd;				// struct _mx_dmd *dd_dmd;
-     UINT16      dd_refcnt;
+     uint32_t	dd_dmd;				// struct _mx_dmd *dd_dmd;
+     uint16_t      dd_refcnt;
 } MX_DD;
 
 typedef struct _mx_dta {
      char      dta_res[20];
      char      dta_drive;
      char      dta_attribute;
-     UINT16      dta_time;
-     UINT16      dta_date;
-     UINT32     dta_len;
+     uint16_t      dta_time;
+     uint16_t      dta_date;
+     uint32_t     dta_len;
      char      dta_name[14];
 } MX_DTA;
 
 typedef struct _mx_dmd {
-     UINT32		d_xfs;				// struct _mx_xfs *d_xfs;
-     UINT16      d_drive;
-     UINT32		d_root;				// MX_DD     *d_root;
-     UINT16      biosdev;
-     UINT32      driver;
-     UINT32      devcode;
+     uint32_t		d_xfs;				// struct _mx_xfs *d_xfs;
+     uint16_t      d_drive;
+     uint32_t		d_root;				// MX_DD     *d_root;
+     uint16_t      biosdev;
+     uint32_t      driver;
+     uint32_t      devcode;
 } MX_DMD;
 
 typedef struct _mx_fd {
-     UINT32		fd_dmd;				// struct _mx_dmd *fd_dmd;
-     UINT16      fd_refcnt;
-     UINT16      fd_mode;
-     UINT32		fd_dev;				// MX_DEV    *fd_dev;
+     uint32_t		fd_dmd;				// struct _mx_dmd *fd_dmd;
+     uint16_t      fd_refcnt;
+     uint16_t      fd_mode;
+     uint32_t		fd_dev;				// MX_DEV    *fd_dev;
 } MX_FD;
 
 /* Open- Modus von Dateien (Mag!X- intern)                                 */
@@ -161,26 +160,26 @@ typedef struct _mx_fd {
 	{
 	     char      sname[11];		/* Suchname */
 	     char      sattr;			/* Suchattribut */
-	     INT32      dirID;			/* Verzeichnis */
-	     INT16	vRefNum;		/* Mac-Volume */
-	     UINT16      index;		/* Index innerhalb des Verzeichnis */
+	     int32_t      dirID;			/* Verzeichnis */
+	     int16_t	vRefNum;		/* Mac-Volume */
+	     uint16_t      index;		/* Index innerhalb des Verzeichnis */
 	} _MAC_DTA;
 
 	typedef struct
 	{
 	     MX_FD	fd;			/* allgemeiner Teil (big endian) */
 	     short	refnum;		/* Mac-Teil: Handle (host native endian) */
-	     UINT16	mod_time_dirty;	/* Mac-Teil: Fdatime war aufgerufen (host native endian) */
-	     UINT16	mod_time[2];	/* Mac-Teil: Zeit fuer Fdatime (DOS-Codes) (host native endian) */
+	     uint16_t	mod_time_dirty;	/* Mac-Teil: Fdatime war aufgerufen (host native endian) */
+	     uint16_t	mod_time[2];	/* Mac-Teil: Zeit fuer Fdatime (DOS-Codes) (host native endian) */
 	} MAC_FD;
 
 	typedef struct
 	{
 	     MX_DHD	dhd;			/* allgemeiner Teil */
-	     INT32	dirID;			/* Verzeichniskennung (host native endian) */
+	     int32_t	dirID;			/* Verzeichniskennung (host native endian) */
 	     short	vRefNum;		// Mac-Volume (host native endian)
-	     UINT16	index;		/* Position des Lesezeigers (host native endian) */
-	     UINT16	tosflag;		/* TOS-Modus, d.h. 8+3 und ohne Inode (host native endian) */
+	     uint16_t	index;		/* Position des Lesezeigers (host native endian) */
+	     uint16_t	tosflag;		/* TOS-Modus, d.h. 8+3 und ohne Inode (host native endian) */
 	} MAC_DIRHANDLE;
 
 	typedef union
@@ -191,7 +190,7 @@ typedef struct _mx_fd {
 
 	typedef struct
 	{
-	  UINT16	len;			/* Symlink-Laenge inklusive EOS, gerade */
+	  uint16_t	len;			/* Symlink-Laenge inklusive EOS, gerade */
 	  char		data[256];
 	} MX_SYMLINK;
 
@@ -204,7 +203,7 @@ typedef struct _mx_fd {
    	#pragma options align=reset
 
 	//bool GetXFSRootDir (short drv, short *vRefNum, long *dirID);
-	UINT32 DriveToDeviceCode (short drv);
+	uint32_t DriveToDeviceCode (short drv);
 	long EjectDevice (short opcode, long device);
 	// zur Zeit unbenutzt:
 	//bool GetPathFromFSSpec (FSSpec *spec, char* path, short pathSize);
@@ -243,10 +242,10 @@ typedef struct _mx_fd {
 	static char ToLower(char c);
 	static void AtariFnameToMacFname(const unsigned char *src, unsigned char *dst);
 	static void MacFnameToAtariFname(const unsigned char *src, unsigned char *dst);
-	static void date_mac2dos( unsigned long macdate, UINT16 *time, UINT16 *date);
-	static void date_dos2mac( UINT16 time, UINT16 date, unsigned long *macdate);
+	static void date_mac2dos( unsigned long macdate, uint16_t *time, uint16_t *date);
+	static void date_dos2mac( uint16_t time, uint16_t date, unsigned long *macdate);
 	static int fname_is_invalid( char *name);
-	static INT32 cnverr (OSErr err);
+	static int32_t cnverr (OSErr err);
 	static bool filename_match(char *muster, char *fname);
 	static bool conv_path_elem(const char *path, char *name);
 	static bool nameto_8_3 (const unsigned char *macname,
@@ -258,54 +257,54 @@ typedef struct _mx_fd {
 
 	// XFS-Aufrufe
 
-	INT32 xfs_sync(UINT16 drv);
+	int32_t xfs_sync(uint16_t drv);
 	void xfs_pterm (PD *pd);
-	INT32 xfs_drv_open (UINT16 drv, MXFSDD *dd, INT32 flg_ask_diskchange);
-	INT32 xfs_drv_close(UINT16 drv, UINT16 mode);
-	INT32 xfs_path2DD(UINT16 mode, UINT16 drv, MXFSDD *rel_dd, char *pathname,
+	int32_t xfs_drv_open (uint16_t drv, MXFSDD *dd, int32_t flg_ask_diskchange);
+	int32_t xfs_drv_close(uint16_t drv, uint16_t mode);
+	int32_t xfs_path2DD(uint16_t mode, uint16_t drv, MXFSDD *rel_dd, char *pathname,
                   char **restpfad, MXFSDD *symlink_dd, char **symlink,
                    MXFSDD *dd,
-                   UINT16 *dir_drive );
-	INT32 xfs_sfirst(UINT16 drv, MXFSDD *dd, char *name, MAC_DTA *dta, UINT16 attrib);
-	INT32 xfs_snext(UINT16 drv, MAC_DTA *dta);
-	INT32 xfs_fopen(char *name, UINT16 drv, MXFSDD *dd,
-				UINT16 omode, UINT16 attrib);
-	INT32 xfs_fdelete(UINT16 drv, MXFSDD *dd, char *name);
-	INT32 xfs_link(UINT16 drv, char *nam1, char *nam2,
-	               MXFSDD *dd1, MXFSDD *dd2, UINT16 mode, UINT16 dst_drv);
-	INT32 xfs_xattr(UINT16 drv, MXFSDD *dd, char *name,
-					XATTR *xattr, UINT16 mode);
-	INT32 xfs_attrib(UINT16 drv, MXFSDD *dd, char *name, UINT16 rwflag, UINT16 attr);
-	INT32 xfs_fchown(UINT16 drv, MXFSDD *dd, char *name, UINT16 uid, UINT16 gid);
-	INT32 xfs_fchmod(UINT16 drv, MXFSDD *dd, char *name, UINT16 fmode);
-	INT32 xfs_dcreate(UINT16 drv, MXFSDD *dd, char *name);
-	INT32 xfs_ddelete(UINT16 drv, MXFSDD *dd);
-	INT32 xfs_DD2name(UINT16 drv, MXFSDD *dd, char *buf, UINT16 bufsiz);
-	INT32 xfs_dopendir(MAC_DIRHANDLE *dirh, UINT16 drv, MXFSDD *dd, UINT16 tosflag);
-	INT32 xfs_dreaddir(MAC_DIRHANDLE *dirh, UINT16 drv,
-			UINT16 size, char *buf, XATTR *xattr, INT32 *xr);
-	INT32 xfs_drewinddir(MAC_DIRHANDLE *dirh, UINT16 drv);
-	INT32 xfs_dclosedir(MAC_DIRHANDLE *dirh, UINT16 drv);
-	INT32 xfs_dpathconf(UINT16 drv, MXFSDD *dd, UINT16 which);
-	INT32 xfs_dfree(UINT16 drv, INT32 dirID, UINT32 data[4]);
-	INT32 xfs_wlabel(UINT16 drv, MXFSDD *dd, char *name);
-	INT32 xfs_rlabel(UINT16 drv, MXFSDD *dd, char *name, UINT16 bufsiz);
-	INT32 xfs_readlink(UINT16 drv, MXFSDD *dd, char *name,
-					char *buf, UINT16 bufsiz);
-	INT32 xfs_dcntl(UINT16 drv, MXFSDD *dd, char *name, UINT16 cmd, void *pArg, unsigned char *AdrOffset68k);
+                   uint16_t *dir_drive );
+	int32_t xfs_sfirst(uint16_t drv, MXFSDD *dd, char *name, MAC_DTA *dta, uint16_t attrib);
+	int32_t xfs_snext(uint16_t drv, MAC_DTA *dta);
+	int32_t xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
+				uint16_t omode, uint16_t attrib);
+	int32_t xfs_fdelete(uint16_t drv, MXFSDD *dd, char *name);
+	int32_t xfs_link(uint16_t drv, char *nam1, char *nam2,
+	               MXFSDD *dd1, MXFSDD *dd2, uint16_t mode, uint16_t dst_drv);
+	int32_t xfs_xattr(uint16_t drv, MXFSDD *dd, char *name,
+					XATTR *xattr, uint16_t mode);
+	int32_t xfs_attrib(uint16_t drv, MXFSDD *dd, char *name, uint16_t rwflag, uint16_t attr);
+	int32_t xfs_fchown(uint16_t drv, MXFSDD *dd, char *name, uint16_t uid, uint16_t gid);
+	int32_t xfs_fchmod(uint16_t drv, MXFSDD *dd, char *name, uint16_t fmode);
+	int32_t xfs_dcreate(uint16_t drv, MXFSDD *dd, char *name);
+	int32_t xfs_ddelete(uint16_t drv, MXFSDD *dd);
+	int32_t xfs_DD2name(uint16_t drv, MXFSDD *dd, char *buf, uint16_t bufsiz);
+	int32_t xfs_dopendir(MAC_DIRHANDLE *dirh, uint16_t drv, MXFSDD *dd, uint16_t tosflag);
+	int32_t xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
+			uint16_t size, char *buf, XATTR *xattr, int32_t *xr);
+	int32_t xfs_drewinddir(MAC_DIRHANDLE *dirh, uint16_t drv);
+	int32_t xfs_dclosedir(MAC_DIRHANDLE *dirh, uint16_t drv);
+	int32_t xfs_dpathconf(uint16_t drv, MXFSDD *dd, uint16_t which);
+	int32_t xfs_dfree(uint16_t drv, int32_t dirID, uint32_t data[4]);
+	int32_t xfs_wlabel(uint16_t drv, MXFSDD *dd, char *name);
+	int32_t xfs_rlabel(uint16_t drv, MXFSDD *dd, char *name, uint16_t bufsiz);
+	int32_t xfs_readlink(uint16_t drv, MXFSDD *dd, char *name,
+					char *buf, uint16_t bufsiz);
+	int32_t xfs_dcntl(uint16_t drv, MXFSDD *dd, char *name, uint16_t cmd, void *pArg, unsigned char *AdrOffset68k);
 
 	// Gerätetreiber
 
-	INT32 dev_close( MAC_FD *f );
-	INT32 dev_read( MAC_FD *f, INT32 count, char *buf );
-	INT32 dev_write( MAC_FD *f, INT32 count, char *buf );
-	INT32 dev_stat( MAC_FD *f, void *unsel, UINT16 rwflag, INT32 apcode );
-	INT32 dev_seek( MAC_FD *f, INT32 pos, UINT16 mode );
-	INT32 dev_datime( MAC_FD *f, UINT16 d[2], UINT16 rwflag );
-	INT32 dev_ioctl( MAC_FD *f, UINT16 cmd, void *buf );
-	INT32 dev_getc( MAC_FD *f, UINT16 mode );
-	INT32 dev_getline( MAC_FD *f, char *buf, INT32 size, UINT16 mode );
-	INT32 dev_putc( MAC_FD *f, UINT16 mode, INT32 val );
+	int32_t dev_close( MAC_FD *f );
+	int32_t dev_read( MAC_FD *f, int32_t count, char *buf );
+	int32_t dev_write( MAC_FD *f, int32_t count, char *buf );
+	int32_t dev_stat( MAC_FD *f, void *unsel, uint16_t rwflag, int32_t apcode );
+	int32_t dev_seek( MAC_FD *f, int32_t pos, uint16_t mode );
+	int32_t dev_datime( MAC_FD *f, uint16_t d[2], uint16_t rwflag );
+	int32_t dev_ioctl( MAC_FD *f, uint16_t cmd, void *buf );
+	int32_t dev_getc( MAC_FD *f, uint16_t mode );
+	int32_t dev_getline( MAC_FD *f, char *buf, int32_t size, uint16_t mode );
+	int32_t dev_putc( MAC_FD *f, uint16_t mode, int32_t val );
 
 	// Hilfsfunktionen
 
@@ -313,23 +312,23 @@ typedef struct _mx_fd {
 			bool fromAtari);
 	OSErr fsspec2DirID (int drv);
 //	OSErr cpath2DirID( int drv, char *cpath );
-	INT32 resolve_symlink( FSSpec *fs, UINT16 buflen, char *buf );
+	int32_t resolve_symlink( FSSpec *fs, uint16_t buflen, char *buf );
 	OSErr resAlias(AliasHandle alias,  FSSpec *gSpec, bool gOnlyMountedVols);
-	INT32 drv_open (UINT16 drv, bool onlyMountedVols);
-	INT32 vRefNum2drv(short vRefNum, UINT16 *drv);
-	INT32 MakeFSSpecManually( short vRefNum, long reldir,
+	int32_t drv_open (uint16_t drv, bool onlyMountedVols);
+	int32_t vRefNum2drv(short vRefNum, uint16_t *drv);
+	int32_t MakeFSSpecManually( short vRefNum, long reldir,
 					char *macpath,
 					FSSpec *fs);
 	char getArchiveMask (CInfoPBRec *pb);
 	Byte mac2DOSAttr (CInfoPBRec *pb);
-	INT32 _snext(UINT16 drv, MAC_DTA *dta);
-	void cinfo_to_xattr( CInfoPBRec * pb, XATTR *xattr, UINT16 drv);
+	int32_t _snext(uint16_t drv, MAC_DTA *dta);
+	void cinfo_to_xattr( CInfoPBRec * pb, XATTR *xattr, uint16_t drv);
 	OSErr PathNameFromDirID( long dirid, short vrefnum,
 		char *fullpathname);
-	INT32 dospath2macpath( UINT16 drv, MXFSDD *dd,
+	int32_t dospath2macpath( uint16_t drv, MXFSDD *dd,
 			char *dospath, char *macname);
-	INT32 xfs_symlink(UINT16 drv, MXFSDD *dd, char *name, char *to);
-	INT32 getCatInfo (UINT16 drv, CInfoPBRec *pb, bool resolveAlias);
+	int32_t xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to);
+	int32_t getCatInfo (uint16_t drv, CInfoPBRec *pb, bool resolveAlias);
 
 	OSErr f_2_cinfo( MAC_FD *f, CInfoPBRec *pb, char *fname);
 	OSErr getFSSpecByFileRefNum (short fRefNum, FSSpec *spec, FCBPBRec *pb);
