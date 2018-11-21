@@ -31,28 +31,27 @@
 // Schalter
 
 
-#if defined(_DEBUG) && defined(__cplusplus)
-class CDebug
-{
-	public:
-	static void _DebugInit(const unsigned char *DebugFileName);
-	static void _DebugTrace(const char *format, ...);
-	static void _DebugInfo(const char *format, ...);
-	static void _DebugWarning(const char *format, ...);
-	static void _DebugError(const char *format, ...);
+#ifdef __cplusplus
+extern "C" {
+#endif
+	void _DebugInit(const char *DebugFileName);
+	void _DebugTrace(const char *format, ...);
+	void _DebugInfo(const char *format, ...);
+	void _DebugWarning(const char *format, ...);
+	void _DebugError(const char *format, ...);
+	
+	void _DebugPrint(const char *head, const char *format, va_list arglist);
+#ifdef __cplusplus
+}
+#endif
 
-	static int GeneralPurposeVariable;
+#if defined(_DEBUG)
 
-	private:
-	static void _DebugPrint(const char *head, const char *format, va_list arglist);
-	static short RefNum;
-};
-
-#define DebugInit CDebug::_DebugInit
-#define DebugTrace(...) CDebug::_DebugTrace(__VA_ARGS__)
-#define DebugInfo(...) CDebug::_DebugInfo(__VA_ARGS__)
-#define DebugWarning(...) CDebug::_DebugWarning(__VA_ARGS__)
-#define DebugError(...) CDebug::_DebugError(__VA_ARGS__)
+#define DebugInit _DebugInit
+#define DebugTrace(...) _DebugTrace(__VA_ARGS__)
+#define DebugInfo(...) _DebugInfo(__VA_ARGS__)
+#define DebugWarning(...) _DebugWarning(__VA_ARGS__)
+#define DebugError(...) _DebugError(__VA_ARGS__)
 
 #else
 

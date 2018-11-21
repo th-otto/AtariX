@@ -170,7 +170,7 @@ UInt32 CMagiCPrint::Write(const unsigned char *pBuf, UInt32 cnt)
 	OutCnt = (long) cnt;
 	err = FSWrite(m_PrintFileRefNum, &OutCnt, pBuf);
 
-//	CDebug::DebugInfo("CMagiCPrint::Write() --- s_LastPrinterAccess = %u", s_LastPrinterAccess);
+//	DebugInfo("CMagiCPrint::Write() --- s_LastPrinterAccess = %u", s_LastPrinterAccess);
 
 	// Rückgabe: Anzahl geschriebener Zeichen
 

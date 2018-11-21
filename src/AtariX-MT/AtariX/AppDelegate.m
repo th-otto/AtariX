@@ -211,7 +211,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	m_configEmulationDone = true;
 }
 
-- (void)showPreferences:sender
+- (void)showPreferences:(id)sender
 {
 	DebugTrace("%s()", __func__);
     if (preferencesController == nil)

@@ -331,7 +331,7 @@ void CClipboard::Mac2Atari(const uint8_t *pData)
 	for	(int i = 0; i < strlen(pData); i++)
 	{
 		uc = (unsigned char) pData[i];
-		CDebug::DebugInfo("CClipboard::Mac2Atari() --- "
+		DebugInfo("CClipboard::Mac2Atari() --- "
 					"Byte[%d] = %u (%c)", i, uc, (uc >= 32) ? uc : '?');
 	}
 #endif

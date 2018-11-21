@@ -31,8 +31,7 @@
 
 // Schalter
 
-short CDebug::RefNum = 0;
-int CDebug::GeneralPurposeVariable = 0;
+static FILE *debug_file;
 
 
 /**********************************************************************
@@ -41,23 +40,13 @@ int CDebug::GeneralPurposeVariable = 0;
 *
 **********************************************************************/
 
-void CDebug::_DebugInit(const unsigned char *DebugFileName)
+void _DebugInit(const char *DebugFileName)
 {
 	if (DebugFileName)
 	{
-		FSSpec spec;
-		OSErr err;
-
-		err = FSMakeFSSpec(0, 0, DebugFileName, &spec);
-		if	((err != 0) && (err != fnfErr))
+		debug_file = fopen(DebugFileName, "w");
+		if	(debug_file == NULL)
 			return;		// Fehler
-		// Bestehende Datei lšschen
-		FSpDelete(&spec);
-		// Neue Datei anlegen
-		err = FSpCreate(&spec, 0, 0, smSystemScript);
-		// Neue Datei šffnen
-		if	(!err)
-			err = FSpOpenDF(&spec, fsWrPerm, &RefNum);
 	}
 }
 
@@ -68,19 +57,20 @@ void CDebug::_DebugInit(const unsigned char *DebugFileName)
 *
 **********************************************************************/
 
-void CDebug::_DebugPrint(const char *head, const char *format, va_list arglist)
+void _DebugPrint(const char *head, const char *format, va_list arglist)
 {
 	char line[1024];
 	char *s;
-//	unsigned long SystemTime;		// in 60stel Sekunden
-	DateTimeRec dtr;
-
+	struct tm tm;
+	time_t now;
+	
 	//return;
 
 //	SystemTime = TickCount();
 //	sprintf(line, "(%ld) %s", SystemTime, head);
-	GetTime(&dtr);
-	sprintf(line, "(%02d:%02d:%02d) %s", dtr.hour, dtr.minute, dtr.second, head);
+	now = time(0);
+	tm = *localtime(&now);
+	sprintf(line, "(%02d:%02d:%02d) %s", tm.tm_hour, tm.tm_min, tm.tm_sec, head);
 
 	s = line + strlen(line);
 	vsprintf(s, format, arglist);
@@ -95,13 +85,9 @@ void CDebug::_DebugPrint(const char *head, const char *format, va_list arglist)
 		memmove(s, s+1, strlen(s+1) + 1);
 	}
 
-	if (RefNum)
+	if (debug_file)
 	{
-		// Zeilenende
-		strcat(line, "\r\n");
-		long count;
-		count = (long) strlen(line);
-		(void) FSWrite(RefNum, &count, line);
+		fprintf(debug_file, "%s\n", line);
 	}
 	else
 	{
@@ -116,7 +102,7 @@ void CDebug::_DebugPrint(const char *head, const char *format, va_list arglist)
 *
 **********************************************************************/
 
-void CDebug::_DebugTrace(const char *format, ...)
+void _DebugTrace(const char *format, ...)
 {
 	va_list arglist;
 	va_start(arglist, format);
@@ -124,7 +110,7 @@ void CDebug::_DebugTrace(const char *format, ...)
 	_DebugPrint( "", format, arglist);
 }
 
-void CDebug::_DebugInfo(const char *format, ...)
+void _DebugInfo(const char *format, ...)
 {
 	va_list arglist;
 	va_start(arglist, format);
@@ -132,7 +118,7 @@ void CDebug::_DebugInfo(const char *format, ...)
 	_DebugPrint( "DBG-INF ", format, arglist);
 }
 
-void CDebug::_DebugWarning(const char *format, ...)
+void _DebugWarning(const char *format, ...)
 {
 	va_list arglist;
 	va_start(arglist, format);
@@ -140,7 +126,7 @@ void CDebug::_DebugWarning(const char *format, ...)
 	_DebugPrint( "DBG-WRN ", format, arglist);
 }
 
-void CDebug::_DebugError(const char *format, ...)
+void _DebugError(const char *format, ...)
 {
 	va_list arglist;
 	va_start(arglist, format);

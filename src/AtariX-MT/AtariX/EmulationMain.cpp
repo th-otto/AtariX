@@ -53,9 +53,14 @@ int EmulationInit(void)
 	return 0;
 }
 
-int EmulationOpenWindow()
+int EmulationOpenWindow(void)
 {
 	return theEmulation.OpenWindow();
+}
+
+void EmulationCloseWindow(void)
+{
+	theEmulation.CloseWindow();
 }
 
 void EmulationRun(void)
@@ -66,8 +71,10 @@ void EmulationRun(void)
 		theEmulation.StartEmulatorThread();
 		if (theEmulation.isRunning())
 			s_EmulationIsRunning = 1;
+		else
+			EmulationStop();
 	}
-	DebugTrace("%s() =>", __func__);
+	DebugTrace("%s() => %d", __func__, s_EmulationIsRunning);
 }
 
 void EmulationRunSdl(void)
@@ -75,12 +82,15 @@ void EmulationRunSdl(void)
 	theEmulation.EventLoop();
 }
 
+void EmulationStop(void)
+{
+	theEmulation.CloseWindow();
+	theEmulation.StopEmulatorThread();
+	s_EmulationIsRunning = 0;
+}
+
 void EmulationExit(void)
 {
-	if (s_EmulationIsRunning)
-	{
-	}
-
 	if (s_EmulationIsInit)
 	{
 		theEmulation.Cleanup();

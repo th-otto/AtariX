@@ -36,11 +36,13 @@ extern "C"
 #endif
 
 int EmulationInit(void);
-int EmulationOpenWindow();
+int EmulationOpenWindow(void);
+void EmulationCloseWindow(void);
 void EmulationRun(void);
 void EmulationRunSdl(void);
 int EmulationIsRunning(void);
 void EmulationExit(void);
+void EmulationStop(void);
 void EmulationConfig
 (
 	const char *atariKernelPathUrl,

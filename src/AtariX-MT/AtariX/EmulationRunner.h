@@ -49,6 +49,7 @@ class EmulationRunner
         ~EmulationRunner(void);
 
 		int StartEmulatorThread(void);
+		void StopEmulatorThread(void);
 		void EventLoop(void);
         void Init(void);
 		void Config(
@@ -65,6 +66,7 @@ class EmulationRunner
 			 const char *atariPrintCommand,
 			 const char *atariSerialDevice);
 		int OpenWindow(void);
+		void CloseWindow(void);
 		void Cleanup(void);
 		void ChangeAtariDrive(unsigned drvnr, CFURLRef drvUrl);
 		bool isRunning(void) { return m_EmulatorRunning; }
@@ -77,7 +79,9 @@ class EmulationRunner
         void EmulatorWindowUpdate(void);
 
 		void _OpenWindow(void);
+		void _CloseWindow(void);
 		void _StartEmulatorThread(void);
+		void _StopEmulatorThread(void);
 
 	unsigned m_atariScreenW;
 	unsigned m_atariScreenH;
@@ -111,3 +115,5 @@ private:
 const int RUN_EMULATOR_WINDOW_UPDATE = 1;
 const int OPEN_EMULATOR_WINDOW =2;
 const int RUN_EMULATOR = 3;
+const int STOP_EMULATOR = 4;
+const int CLOSE_EMULATOR_WINDOW = 5;

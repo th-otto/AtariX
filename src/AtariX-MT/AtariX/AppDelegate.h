@@ -19,7 +19,7 @@
 
 @property (nonatomic, retain) NSWindowController *preferencesController;
 
-- (void) showPreferences:sender;
+- (void) showPreferences:(id)sender;
 - (void) changeRootfsUrl:(NSString *)newUrl;
 - (NSString *) getAtariKernelUrl:(NSInteger)atariLanguage;
 - (BOOL) checkRootfs;

@@ -198,9 +198,6 @@ int CXCmd::Callback(UInt32 cmd, void *pParm)
 {
 	#pragma unused(pParm)
 
-#ifdef _DEBUG
-	CDebug::GeneralPurposeVariable++;
-#endif
 	DebugInfo("CXCmd::Callback(cmd = %d)", cmd);
 //	ExitToShell();
 	switch(cmd)

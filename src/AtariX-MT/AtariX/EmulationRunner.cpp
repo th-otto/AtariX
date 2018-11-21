@@ -23,6 +23,7 @@
 
 #include <assert.h>
 #include "EmulationRunner.h"
+#include "Debug.h"
 
 
 /*********************************************************************************************************
@@ -244,6 +245,27 @@ int EmulationRunner::StartEmulatorThread(void)
 
 /*********************************************************************************************************
  *
+ * Stop the 68k emulation thread
+ *
+ *********************************************************************************************************/
+
+void EmulationRunner::StopEmulatorThread(void)
+{
+	DebugTrace("%s()", __func__);
+	// Send user event to event loop
+	SDL_Event event;
+		
+	event.type = SDL_USEREVENT;
+	event.user.code = STOP_EMULATOR;
+	event.user.data1 = 0;
+	event.user.data2 = 0;
+		
+	SDL_PushEvent(&event);
+}
+
+
+/*********************************************************************************************************
+ *
  * Open the Emulation window (asynchronous function)
  *
  *********************************************************************************************************/
@@ -267,6 +289,27 @@ int EmulationRunner::OpenWindow(void)
 	}
 	else
 		return 1;
+}
+
+
+/*********************************************************************************************************
+ *
+ * Open the Emulation window (asynchronous function)
+ *
+ *********************************************************************************************************/
+
+void EmulationRunner::CloseWindow(void)
+{
+	DebugTrace("%s(): %d", __func__, m_sdl_window != 0);
+	// Send user event to event loop
+	SDL_Event event;
+		
+	event.type = SDL_USEREVENT;
+	event.user.code = CLOSE_EMULATOR_WINDOW;
+	event.user.data1 = 0;
+	event.user.data2 = 0;
+		
+	SDL_PushEvent(&event);
 }
 
 
@@ -628,6 +671,29 @@ void EmulationRunner::_StartEmulatorThread(void)
 
 
 /*********************************************************************************************************
+ *
+ * (private) Stop the 68k emulation thread
+ *
+ *********************************************************************************************************/
+
+void EmulationRunner::_StopEmulatorThread(void)
+{
+	if (m_timer)
+	{
+		(void) SDL_RemoveTimer(m_timer);
+		m_timer = 0;
+	}
+	m_EmulatorRunning = false;
+	if (m_EmulatorThread)
+	{
+		m_Emulator.TerminateThread();
+		SDL_WaitThread(m_EmulatorThread, NULL);
+		m_EmulatorThread = NULL;
+	}
+}
+
+
+/*********************************************************************************************************
 *
 * Create all necessary surfaces and textures and open the emulation window
 *
@@ -661,6 +727,7 @@ void EmulationRunner::_OpenWindow(void)
 	short cmpCount = 3;
 	short cmpSize = 8;
 
+	DebugTrace("%s()", __func__);
 	switch(Globals.s_Preferences.m_atariScreenColourMode)
 	{
 		case atariScreenMode2:
@@ -856,6 +923,45 @@ void EmulationRunner::_OpenWindow(void)
 	pixmap->planeBytes    = planeBytes;					// offset to next plane
 	pixmap->pmTable       = NULL;
 	pixmap->pmReserved    = NULL;
+
+	DebugTrace("%s() =>", __func__);
+}
+
+
+void EmulationRunner::_CloseWindow(void)
+{
+	DebugTrace("%s()", __func__);
+	if (m_sdl_window)
+	{
+		DebugTrace("SDL_DestroyWindow");
+		SDL_DestroyWindow(m_sdl_window);
+		m_sdl_window = 0;
+	}
+	if (m_sdl_texture)
+	{
+		DebugTrace("SDL_DestroyTexture");
+		SDL_DestroyTexture(m_sdl_texture);
+		m_sdl_texture = 0;
+	}
+	if (m_sdl_renderer)
+	{
+		DebugTrace("SDL_DestroyRenderer");
+		SDL_DestroyRenderer(m_sdl_renderer);
+		m_sdl_renderer = 0;
+	}
+	if (m_sdl_surface && m_sdl_surface != m_sdl_atari_surface)
+	{
+		DebugTrace("SDL_FreeSurface(sdl_surface)");
+		SDL_FreeSurface(m_sdl_surface);
+		m_sdl_surface = 0;
+	}
+	if (m_sdl_atari_surface)
+	{
+		DebugTrace("SDL_FreeSurface(atari_surface)");
+		SDL_FreeSurface(m_sdl_atari_surface);
+		m_sdl_atari_surface = 0;
+	}
+	DebugTrace("%s() =>", __func__);
 }
 
 
@@ -908,6 +1014,7 @@ Uint32 EmulationRunner::LoopTimer(Uint32 interval, void *param)
 void EmulationRunner::Cleanup(void)
 {
     (void) SDL_RemoveTimer(m_timer);
+	m_timer = 0;
     SDL_Quit();
 }
 
@@ -1128,6 +1235,10 @@ void EmulationRunner::HandleUserEvents(SDL_Event* event)
 			}
 			break;
 
+		case CLOSE_EMULATOR_WINDOW:
+			_CloseWindow();
+			break;
+			
 		case RUN_EMULATOR:
 			if (!m_EmulatorThread)
 			{
@@ -1142,6 +1253,10 @@ void EmulationRunner::HandleUserEvents(SDL_Event* event)
 			}
             break;
 
+		case STOP_EMULATOR:
+			_StopEmulatorThread();
+			break;
+			
         default:
             break;
     }
