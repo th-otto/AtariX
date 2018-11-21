@@ -153,7 +153,7 @@ UInt32 CMagiCSerial::Close()
 {
 	if	(m_fd != -1)
 	{
-		DebugInfo("CMagiCSerial::Open() -- Schließe Gerätedatei");
+		DebugInfo("CMagiCSerial::Close() -- closing device file");
 		close(m_fd);
 		m_fd = -1;
 	}
