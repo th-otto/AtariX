@@ -25,6 +25,14 @@
 #include <Cocoa/Cocoa.h>
 #include "AtariCrashWindowController.h"
 
+/* these were renamed in SDK 10.12 and above */
+#if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#define NSAlertStyleWarning NSWarningAlertStyle
+#define NSAlertStyleInformational NSInformationalAlertStyle
+#define NSAlertStyleCritical NSCriticalAlertStyle
+#endif
+
+
 
 static int GuiMyMainThreadAlert(const char *msg_text, const char *info_text, int nButtons)
 {
@@ -43,7 +51,7 @@ static int GuiMyMainThreadAlert(const char *msg_text, const char *info_text, int
 	}
 	[alert setMessageText:nmsg];
 	[alert setInformativeText:ninfo];
-	[alert setAlertStyle:NSWarningAlertStyle];
+	[alert setAlertStyle:NSAlertStyleWarning];
 
 	/*
 	[alert beginSheetModalForWindow:[searchField window] modalDelegate:self didEndSelector:@selector(alertDidEnd:returnCode:contextInfo:) contextInfo:nil];

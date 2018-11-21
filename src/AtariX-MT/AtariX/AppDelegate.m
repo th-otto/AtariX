@@ -3,6 +3,13 @@
 #include "EmulationMain.h"
 #include "Debug.h"
 
+/* these were renamed in SDK 10.12 and above */
+#if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#define NSAlertStyleWarning NSWarningAlertStyle
+#define NSAlertStyleInformational NSInformationalAlertStyle
+#define NSAlertStyleCritical NSCriticalAlertStyle
+#endif
+
 
 static NSString *DMKRootfsPathUrlKey = @"rootfsPathUrl";
 static NSString *DMKAtariMemorySizeKey = @"atariMemorySize";
@@ -46,7 +53,7 @@ static NSString *DMKAtariScreenStretchYKey = @"atariScreenStretchY";
 		[alert addButtonWithTitle:@"OK"];
 		[alert setMessageText:@"The Atari root file system is not initialised or is invalid.\nPlease first choose an existing one, or create one, then restart the application!"];
 		[alert setInformativeText:@" The necessary file MAGX.INF could not be found in the current Atari root file system path.\n If you want to create a root file system using the currently defined path, you might select \"Revert Root FS\" from the menu.\n Alternatively you can choose a different path to either an already initialised root file system or to your desired root FS directory.\n In the latter case you must afterwards create the root file sytem as described."];
-		[alert setAlertStyle:NSWarningAlertStyle];
+		[alert setAlertStyle:NSAlertStyleWarning];
 		[alert runModal];
 		[alert release];
 	}
@@ -449,7 +456,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 			[alert addButtonWithTitle:NSLocalizedString(@"Add", nil)];
 			[alert setMessageText:NSLocalizedString(@"Create directory MAGIC_C inside the provided path?", nil)];
 			[alert setInformativeText:NSLocalizedString(@"The path provided does not end with directory MAGIC_C. It should be added automatically.", nil)];
-			[alert setAlertStyle:NSWarningAlertStyle];
+			[alert setAlertStyle:NSAlertStyleWarning];
 			ret = [alert runModal];
 			[alert release];
 #endif
@@ -566,7 +573,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 	[alert addButtonWithTitle:NSLocalizedString(@"Create or Revert", nil)];
 	[alert setMessageText:NSLocalizedString(@"Overwrite files inside the provided directory?", nil)];
 	[alert setInformativeText:NSLocalizedString(@"You are going to create or revert the Atari boot drive. Existing files or directories inside the same directory will be overwritten.", nil)];
-	[alert setAlertStyle:NSWarningAlertStyle];
+	[alert setAlertStyle:NSAlertStyleWarning];
 	ret = [alert runModal];
 	[alert release];
 	if ((ret == 1) || (ret == NSAlertFirstButtonReturn))
@@ -678,13 +685,13 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 	{
 		[alert setMessageText:NSLocalizedString(@"Atari boot drive successfully created.", nil)];
 		[alert setInformativeText:NSLocalizedString(@"All files and folders were successfully copied to the Atari boot drive directory.", nil)];
-		[alert setAlertStyle:NSInformationalAlertStyle];
+		[alert setAlertStyle:NSAlertStyleInformational];
 	}
 	else
 	{
 		[alert setMessageText:NSLocalizedString(@"There were errors during creation.", nil)];
 		[alert setInformativeText:NSLocalizedString(@"Not all files and folders could be copied successfully. Your Atari boot drive may be incomplete.", nil)];
-		[alert setAlertStyle:NSWarningAlertStyle];
+		[alert setAlertStyle:NSAlertStyleWarning];
 	}
 	[alert runModal];
 	[alert release];
