@@ -1056,165 +1056,181 @@ const char *SDL_WindowEventID_to_str(SDL_WindowEventID id)
 *
 *********************************************************************************************************/
 
-void EmulationRunner::EventLoop(void)
+void EmulationRunner::EventHandle(SDL_Event &event)
 {
 	uint8_t *clipboardData;
+	
+	switch(event.type)
+	{
+		case SDL_WINDOWEVENT:
+		{
+			const SDL_WindowEvent *ev = (SDL_WindowEvent *) &event;
+#if 0
+			DebugInfo("SDL window event: evt=%u, wid=%u, ev=%s, data1=0x%08x, data2=0x%08x",
+					  ev->type,
+					  ev->windowID,
+					  SDL_WindowEventID_to_str((SDL_WindowEventID) ev->event),
+					  ev->data1,
+					  ev->data2);
+#endif
+			switch(ev->event)
+			{
+				case SDL_WINDOWEVENT_SHOWN:
+					m_visible = true;
+					m_initiallyVisible = true;
+					break;
+					
+				case SDL_WINDOWEVENT_FOCUS_GAINED:
+					// TODO: Copy Mac Clipboard to Atari Clipboard
+					if (SDL_HasClipboardText())
+					{
+						// get clipboard text from SDL, hopefully in UTF-8
+						clipboardData = (uint8_t *) SDL_GetClipboardText();
+						if (clipboardData)
+						{
+							CClipboard::Mac2Atari(clipboardData);
+							SDL_free(clipboardData);
+						}
+					}
+					// Now catch keyboard events
+					SDL_KeyboardActivate(1);
+					if (m_atariHideHostMouse)
+					{
+						SDL_ShowCursor(SDL_DISABLE);
+					}
+					break;
+					
+				case SDL_WINDOWEVENT_FOCUS_LOST:
+					// TODO: Copy Atari Clipboard to Mac Clipboard
+					clipboardData = NULL;
+					CClipboard::Atari2Mac(&clipboardData);
+					if (clipboardData)
+					{
+						SDL_SetClipboardText((const char *) clipboardData);
+						free(clipboardData);
+					}
+					// No longer catch keyboard events
+					SDL_KeyboardActivate(0);
+					if (m_atariHideHostMouse)
+					{
+						// show mouse pointer
+						SDL_ShowCursor(SDL_ENABLE);
+					}
+					break;
+			}
+		}
+			break;
+			
+		case SDL_USEREVENT:
+			HandleUserEvents(&event);
+			break;
+			
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+		{
+			const SDL_KeyboardEvent *ev = (SDL_KeyboardEvent *) &event;
+#if 0
+			DebugInfo("type %s", ev->type == SDL_KEYUP ? "up" : "down");
+			DebugInfo("state %s", ev->state == SDL_PRESSED ? "pressed" : "released");
+			DebugInfo("scancode = %08x, keycode = %08x, mod = %04x", ev->keysym.scancode, ev->keysym.sym, ev->keysym.mod);
+#endif
+			(void) m_Emulator.SendSdlKeyboard(ev->keysym.scancode, ev->type == SDL_KEYUP);
+		}
+			// Quit when user presses a key.
+			//m_bQuitLoop = true;
+			//showPreferencesWindow();
+			break;
+			
+		case SDL_MOUSEMOTION:
+		{
+			const SDL_MouseMotionEvent *ev = (SDL_MouseMotionEvent *) &event;
+#if 0
+			DebugInfo("mouse motion x = %d, y = %d, xrel = %d, yrel = %d", ev->x, ev->y, ev->xrel, ev->yrel);
+#endif
+			int x = ev->x;
+			int y = ev->y;
+			if (m_atariScreenStretchX)
+				x /= 2;
+			if (m_atariScreenStretchY)
+				y /= 2;
+			m_Emulator.SendMousePosition(x, y);
+		}
+			break;
+			
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+		{
+			const SDL_MouseButtonEvent *ev = (SDL_MouseButtonEvent *) &event;
+#if 0
+			DebugInfo("mouse button %s: x = %d, y = %d, button = %d",
+					  ev->type == SDL_MOUSEBUTTONUP ? "up" : "down", ev->x, ev->y, ev->button);
+#endif
+			int atariMouseButton = -1;
+			if (ev->button == 1)
+				atariMouseButton = 0;
+			else
+				if (ev->button == 3)
+					atariMouseButton = 1;
+			if (atariMouseButton >= 0)
+			{
+				// left button is 0, right button is 1
+				m_Emulator.SendMouseButton(atariMouseButton, ev->type == SDL_MOUSEBUTTONDOWN);
+			}
+		}
+			break;
+			
+		case SDL_MOUSEWHEEL:
+		{
+#if 0
+			const SDL_MouseWheelEvent *ev = (SDL_MouseWheelEvent *) &event;
+			DebugInfo("mouse wheel: x = %d, y = %d", ev->x, ev->y);
+#endif
+		}
+			break;
+			
+		case SDL_TEXTEDITING:
+			break;
+			
+		case SDL_TEXTINPUT:
+			break;
+			
+		case SDL_QUIT:
+			m_Emulator.TerminateThread();
+			m_bQuitLoop = true;
+			break;
+			
+		default:
+			/* DebugWarn("unhandled SDL event %u", event.type); */
+			break;
+	}
+	
+}
 
-	DebugTrace("%s()", __func__);
-    SDL_Event event;
-
+void EmulationRunner::EventLoop(void)
+{
+	SDL_Event event;
+	
 	// Do not catch keyboard events, leave them for dialogue windows
 	SDL_KeyboardActivate(0);		// TODO: Find better hack
 
-    while((!m_bQuitLoop) && (SDL_WaitEvent(&event)))
+    while(!m_bQuitLoop && SDL_PollEvent(&event))
 	{
-        switch(event.type)
-		{
-			case SDL_WINDOWEVENT:
-				{
-					const SDL_WindowEvent *ev = (SDL_WindowEvent *) &event;
-#if 0
-					DebugInfo("SDL window event: evt=%u, wid=%u, ev=%s, data1=0x%08x, data2=0x%08x",
-							ev->type,
-							ev->windowID,
-							SDL_WindowEventID_to_str((SDL_WindowEventID) ev->event),
-							ev->data1,
-							ev->data2);
-#endif
-					switch(ev->event)
-					{
-						case SDL_WINDOWEVENT_SHOWN:
-							m_visible = true;
-							m_initiallyVisible = true;
-							break;
-
-						case SDL_WINDOWEVENT_FOCUS_GAINED:
-							// TODO: Copy Mac Clipboard to Atari Clipboard
-							if (SDL_HasClipboardText())
-							{
-								// get clipboard text from SDL, hopefully in UTF-8
-								clipboardData = (uint8_t *) SDL_GetClipboardText();
-								if (clipboardData)
-								{
-									CClipboard::Mac2Atari(clipboardData);
-									SDL_free(clipboardData);
-								}
-							}
-							// Now catch keyboard events
-							SDL_KeyboardActivate(1);
-							if (m_atariHideHostMouse)
-							{
-								SDL_ShowCursor(SDL_DISABLE);
-							}
-							break;
-
-						case SDL_WINDOWEVENT_FOCUS_LOST:
-							// TODO: Copy Atari Clipboard to Mac Clipboard
-							clipboardData = NULL;
-							CClipboard::Atari2Mac(&clipboardData);
-							if (clipboardData)
-							{
-								SDL_SetClipboardText((const char *) clipboardData);
-								free(clipboardData);
-							}
-							// No longer catch keyboard events
-							SDL_KeyboardActivate(0);
-							if (m_atariHideHostMouse)
-							{
-								// show mouse pointer
-								SDL_ShowCursor(SDL_ENABLE);
-							}
-							break;
-					}
-				}
-				break;
-
-            case SDL_USEREVENT:
-                HandleUserEvents(&event);
-                break;
-                
-            case SDL_KEYDOWN:
-            case SDL_KEYUP:
-				{
-					const SDL_KeyboardEvent *ev = (SDL_KeyboardEvent *) &event;
-#if 0
-					DebugInfo("type %s", ev->type == SDL_KEYUP ? "up" : "down");
-					DebugInfo("state %s", ev->state == SDL_PRESSED ? "pressed" : "released");
-					DebugInfo("scancode = %08x, keycode = %08x, mod = %04x", ev->keysym.scancode, ev->keysym.sym, ev->keysym.mod);
-#endif
-					(void) m_Emulator.SendSdlKeyboard(ev->keysym.scancode, ev->type == SDL_KEYUP);
-				}
-                // Quit when user presses a key.
-                //m_bQuitLoop = true;
-				//showPreferencesWindow();
-                break;
-
-			case SDL_MOUSEMOTION:
-				{
-					const SDL_MouseMotionEvent *ev = (SDL_MouseMotionEvent *) &event;
-#if 0
-					DebugInfo("mouse motion x = %d, y = %d, xrel = %d, yrel = %d", ev->x, ev->y, ev->xrel, ev->yrel);
-#endif
-					int x = ev->x;
-					int y = ev->y;
-					if (m_atariScreenStretchX)
-						x /= 2;
-					if (m_atariScreenStretchY)
-						y /= 2;
-					m_Emulator.SendMousePosition(x, y);
-				}
-				break;
-
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP:
-				{
-					const SDL_MouseButtonEvent *ev = (SDL_MouseButtonEvent *) &event;
-#if 0
-					DebugInfo("mouse button %s: x = %d, y = %d, button = %d",
-							ev->type == SDL_MOUSEBUTTONUP ? "up" : "down", ev->x, ev->y, ev->button);
-#endif
-					int atariMouseButton = -1;
-					if (ev->button == 1)
-						atariMouseButton = 0;
-					else
-					if (ev->button == 3)
-						atariMouseButton = 1;
-					if (atariMouseButton >= 0)
-					{
-						// left button is 0, right button is 1
-						m_Emulator.SendMouseButton(atariMouseButton, ev->type == SDL_MOUSEBUTTONDOWN);
-					}
-				}
-				break;
-
-			case SDL_MOUSEWHEEL:
-				{
-#if 0
-					const SDL_MouseWheelEvent *ev = (SDL_MouseWheelEvent *) &event;
-					DebugInfo("mouse wheel: x = %d, y = %d", ev->x, ev->y);
-#endif
-				}
-				break;
-
-			case SDL_TEXTEDITING:
-				break;
-
-			case SDL_TEXTINPUT:
-				break;
-
-            case SDL_QUIT:
-				m_Emulator.TerminateThread();
-                m_bQuitLoop = true;
-                break;
-
-            default:
-				/* DebugWarn("unhandled SDL event %u", event.type); */
-                break;
-        }
-            
+		EventHandle(event);
     }
+}
 
-	DebugTrace("%s() =>", __func__);
+
+void EmulationRunner::EventPump(void)
+{
+	SDL_Event event;
+	
+	// Do not catch keyboard events, leave them for dialogue windows
+	SDL_KeyboardActivate(0);		// TODO: Find better hack
+	
+	while(!m_bQuitLoop && SDL_WaitEvent(&event))
+	{
+		EventHandle(event);
+	}
 }
 
 

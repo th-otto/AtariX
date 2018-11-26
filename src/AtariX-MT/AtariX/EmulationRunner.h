@@ -51,6 +51,8 @@ class EmulationRunner
 		int StartEmulatorThread(void);
 		void StopEmulatorThread(void);
 		void EventLoop(void);
+		void EventPump(void);
+		void EventHandle(SDL_Event &event);
         void Init(void);
 		void Config(
 			const char *atariKernelPathUrl,

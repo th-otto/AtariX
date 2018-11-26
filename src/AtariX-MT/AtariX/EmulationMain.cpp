@@ -69,10 +69,15 @@ void EmulationRun(void)
 	if (s_EmulationIsInit && !s_EmulationIsRunning)
 	{
 		theEmulation.StartEmulatorThread();
+		theEmulation.EventPump();
 		if (theEmulation.isRunning())
+		{
 			s_EmulationIsRunning = 1;
-		else
+		} else
+		{
+			DebugError("Emulator not running, stopping");
 			EmulationStop();
+		}
 	}
 	DebugTrace("%s() => %d", __func__, s_EmulationIsRunning);
 }

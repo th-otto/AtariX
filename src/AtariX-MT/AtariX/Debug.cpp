@@ -32,7 +32,15 @@
 // Schalter
 
 static FILE *debug_file;
+enum LOG_LEVEL {
+	LOG_NONE,
+	LOG_ERROR,
+	LOG_WARNING,
+	LOG_INFO,
+	LOG_TRACE
+};
 
+static enum LOG_LEVEL debug_level = LOG_ERROR;
 
 /**********************************************************************
 *
@@ -105,32 +113,40 @@ void _DebugPrint(const char *head, const char *format, va_list arglist)
 void _DebugTrace(const char *format, ...)
 {
 	va_list arglist;
-	va_start(arglist, format);
 
+	if (debug_level < LOG_TRACE)
+		return;
+	va_start(arglist, format);
 	_DebugPrint( "", format, arglist);
 }
 
 void _DebugInfo(const char *format, ...)
 {
 	va_list arglist;
-	va_start(arglist, format);
 
+	if (debug_level < LOG_INFO)
+		return;
+	va_start(arglist, format);
 	_DebugPrint( "DBG-INF ", format, arglist);
 }
 
 void _DebugWarning(const char *format, ...)
 {
 	va_list arglist;
-	va_start(arglist, format);
 
+	if (debug_level < LOG_WARNING)
+		return;
+	va_start(arglist, format);
 	_DebugPrint( "DBG-WRN ", format, arglist);
 }
 
 void _DebugError(const char *format, ...)
 {
 	va_list arglist;
-	va_start(arglist, format);
 
+	if (debug_level < LOG_ERROR)
+		return;
+	va_start(arglist, format);
 	_DebugPrint( "DBG-ERR ", format, arglist);
 }
 #endif
