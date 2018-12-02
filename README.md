@@ -27,7 +27,7 @@ The application has been developed until end of 2014. First tests showed that it
 * Emulates MC68020 processor
 * Arbitrary screen sizes and colour depths
 * Zoom, helpful for original 640x400 or 640x200 resolution
-* Full access to macoOS file system, up to root
+* Full access to macOS file system, up to root
 * German, French and English localisation for emulator
 * German, French and English localisation for emulated system
 
@@ -44,16 +44,16 @@ The AtariX emulator is licensed according to GPLv3, see LICENSE file.
 
 # External Licenses
 
-**Musashi 68k emulator in C**
-Copyright 1998-2002 Karl Stenerud
-Source: https://github.com/kstenerud/Musashi
-License: https://github.com/kstenerud/Musashi/readme.txt
+**Musashi 68k emulator in C**  
+Copyright 1998-2002 Karl Stenerud  
+Source: https://github.com/kstenerud/Musashi  
+License: https://github.com/kstenerud/Musashi/blob/master/readme.txt  
 
 **SDL library:**  
 Source: https://www.libsdl.org  
 Copyright: paultaylor@jthink.net  
-License: http://www.gzip.org/zlib/zlib_license.html
+License: https://www.libsdl.org/license.php  
 
-**Atari VDI Drivers**
-Copyright: Wilfried und Sven Behne
-License: mit freundlicher Genehmigung
+**Atari VDI Drivers**  
+Copyright: Wilfried und Sven Behne  
+License: mit freundlicher Genehmigung  
