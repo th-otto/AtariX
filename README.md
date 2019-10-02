@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/th-otto/AtariX.svg?branch=master)](https://travis-ci.org/th-otto/AtariX)
+
+Latest snapshot: [![Download](https://api.bintray.com/packages/th-otto/atarix-files/snapshots/images/download.svg) ](https://bintray.com/th-otto/atarix-files/snapshots/_latestVersion#files)
+
 # Atari X
 <img alt="Logo" src="src/AtariX-MT/AtariX/ApplicationIcon.png" width="80">
 
