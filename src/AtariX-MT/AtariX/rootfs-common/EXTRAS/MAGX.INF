@@ -29,33 +29,32 @@
 ;    _FLG
 ;    _DEV
 ; erweitert in MagiC 4.02:
-;    _FLG		Bit 5
+;    _FLG       Bit 5
 ; neu ab MagiC 5.01:
-;	#[vfat]
-;	#[aes]
+;     #[vfat]
+;     #[aes]
 ; neu ab MagiC 5.10:
-;    _FLG		Bit 6
-;	_FSL
+;    _FLG       Bit 6
+;    _FSL
 ; neu ab MagiC 5.20:
 ;    _OBS
 ;    _TXB
 ;    _TXS
-;	_BKG
+;    _BKG
 ; erweitert in MagiC 6.00:
-;    _FLG		Bit 7
+;    _FLG       Bit 7
 ; nicht mehr vorhanden ab MagiC 6.00
-;	_TXT
+;    _TXT
 ; neu ab MagiC 6.00
-;	#[boot]		neue Abschnittkennung
-;	cookies
-;	log
-;	tiles
-;	image
-;	 und im Abschnitt #[aes]:
-;	_INW
-;	_SLB
-;	#[shelbuf]	neue Abschnittkennung
-
+;    #[boot]    neue Abschnittkennung
+;    cookies
+;    log
+;    tiles
+;    image
+;      und im Abschnitt #[aes]:
+;    _INW
+;    _SLB
+;    #[shelbuf] neue Abschnittkennung
 
 
 ; ZunÑchst kommt die BS-Versionsnummer, die diese Datei gesichert hat
@@ -167,11 +166,11 @@ drives=eh
 ;#_TXS 1 1 4
 
 ; Hiermit kann man das Aussehen der INFO-Zeile aller Fenster Ñndern
-;	lineh	Zeilenhîhe. Eine Hîhe von 0 bedeutet: Standardhîhe
-;	fontID	Zeichensatz-ID fÅr die INFO-Zeile. Eine 0 bedeutet: derselbe
-;			Zeichensatz wie fÅr den groûen AES-Text
-;	monoFlag	1 (Ñquidistant) oder 0 (proportional)
-;	fontH	Zeichensatzhîhe fÅr vst_height()
+;  lineh Zeilenhîhe. Eine Hîhe von 0 bedeutet: Standardhîhe
+;  fontID   Zeichensatz-ID fÅr die INFO-Zeile. Eine 0 bedeutet: derselbe
+;        Zeichensatz wie fÅr den groûen AES-Text
+;  monoFlag 1 (Ñquidistant) oder 0 (proportional)
+;  fontH Zeichensatzhîhe fÅr vst_height()
 
 ;#_INW lineh fontID monoFlag fontH
 
@@ -194,8 +193,7 @@ drives=eh
 ;         Taste beim Fensterscrollen umgekehrt, d.h. das Echtzeitscrolling
 ;         ist per Default abgeschaltet.
 ; Bit 6:  Dito fÅr Echtzeitvergrîûern und -verschieben
-; Bit 7:	(ab MagiC 6.00): 3D-MenÅs einschalten. Geht nur bei
-;		proportionalem groûen AES-Zeichensatz
+; Bit 7:  (ab MagiC 6.00): 3D-MenÅs einschalten.
 ;
 ; Fehlt der Eintrag, werden alle Flags als 0 angenommen.
 
@@ -309,5 +307,5 @@ drives=eh
 #a000000
 #b001001
 #c7770007000600070055200505552220770557075055507703111302
-#d                                            ;
-#_DSK MAGXDESK V4.00 1				; Beginn der Shell-Daten
+#d                                             ;
+#_DSK MAGXDESK V5.00 1   ; Beginn der Shell-Daten
