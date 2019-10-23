@@ -19,6 +19,8 @@ Contrary to its predecessor it does not contain the highly optimized Asgard68k e
 
 The application has been developed until end of 2014. First tests showed that it seems to run under macOS 10.13 "High Sierra", but one has to **manually create a directory MAGIC_C**, preferably in the Documents folder, then start AtariX, **select the newly created directory** as root drive (will appear as "C:" in emulation), initialise the drive and then start the emulator.
 
+AtariX is a 32-bit application, that means it won't run on Catalina (macOS 10.15) or later.
+
 # Screenshots
 <img alt="No" src="assets/Atari-Desktop.png" width="1024">
 <img alt="Yes" src="assets/Settings-Common.png" width="640">
