@@ -18,7 +18,7 @@
 
 /*
 *
-* "Preferences" für MagicMacX
+* "Preferences" f√ºr MagicMacX
 *
 */
 

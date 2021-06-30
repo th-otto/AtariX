@@ -18,7 +18,7 @@
 
 /*
 *
-* Enthält alles, was mit "MagicMac OS" zu tun hat
+* Enth√§lt alles, was mit "MagicMac OS" zu tun hat
 *
 */
 

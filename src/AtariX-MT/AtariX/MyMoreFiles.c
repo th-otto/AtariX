@@ -18,7 +18,7 @@
 
 /*
 *
-* Enthält alle benötigten Routinen aus MoreFilesExtras.cpp
+* Enth√§lt alle ben√∂tigten Routinen aus MoreFilesExtras.cpp
 *
 */
 
@@ -32,7 +32,7 @@
 /**********************************************************************
 *
 * Ermittelt die dirID und die vRefnum des Verzeichnisses,
-* in dem die ausführbare Datei bzw. das Bundle liegt
+* in dem die ausf√ºhrbare Datei bzw. das Bundle liegt
 *
 * Im Fall "Bundle" wird der aktuelle Pfad auf dieses Verzeichnis
 * gesetzt.
@@ -45,7 +45,7 @@ void GetExeLocation
 	ProcessInfoRec *pProcInfo,
 	FSSpec *pProcDirFsp,
 	long *pProc_dirID,			// hier liegt das Bundle
-	long *pExecutableDirID		// hier liegt die ausgeführte Programmdatei
+	long *pExecutableDirID		// hier liegt die ausgef√ºhrte Programmdatei
 )
 {
 	FSSpec FSpApp;
@@ -92,7 +92,7 @@ void GetExeLocation
 #endif
 	*pProc_dirID = FSpApp.parID;
 
-	// Der Pfad, in dem die ausgeführte Datei liegt
+	// Der Pfad, in dem die ausgef√ºhrte Datei liegt
 	FSMakeFSSpec(FSpApp.vRefNum, *pProc_dirID, nil, pProcDirFsp);
 }
 
@@ -101,7 +101,7 @@ void GetExeLocation
 *
 * Aus MM
 *
-* Prüft, ob die Datei ein Alias ist und löst den ggf. auf.
+* Pr√ºft, ob die Datei ein Alias ist und l√∂st den ggf. auf.
 * Liefert Fehlercode, z.B., wenn ein Login-Dialog vom User abgebrochen wurde.
 *
 **********************************************************************/

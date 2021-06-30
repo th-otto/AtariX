@@ -33,9 +33,9 @@
 typedef UInt32 (tfXCMDFunction)(UInt32 parm, unsigned char *AdrOffset68k);
 
 // Mit dieser Struktur werden Informationen von MagicMacX an
-// ein XCMD-Modul übermittelt:
+// ein XCMD-Modul √ºbermittelt:
 
-typedef int (tfXCmdCallback) (UInt32 cmd, void *pParm);
+typedef int (tfXCmdCallback) (uint32_t cmd, void *pParm);
 enum enXCmdCallbackCmd
 {
 	eXCmdCallbackCmd_BeginDialog = 1,
@@ -44,7 +44,7 @@ enum enXCmdCallbackCmd
 
 struct XCmdInfo
 {
-	UInt32	xcmd_Length;		// Strukturlänge
+	UInt32	xcmd_Length;		// Strukturl√§nge
 	UInt32	xcmd_Version;		// Version
 	tfXCmdCallback *xcmd_Callback;	// Callback-Funktion
 };

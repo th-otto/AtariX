@@ -18,7 +18,7 @@
 
 /*
 *
-* "Preferences" für MagicMacX
+* "Preferences" f√ºr MagicMacX
 *
 */
 
@@ -76,7 +76,7 @@ CMyPreferences::CMyPreferences()
 	for	(i = 0; i < NDRIVES; i++)
 	{
 		m_drvPath[i] = NULL;
-		m_drvFlags[i] = 0;		// Lange Namen, vorwärts sortiert
+		m_drvFlags[i] = 0;		// Lange Namen, vorw√§rts sortiert
 	}
 	m_drvFlags['C'-'A'] |= 2;		// C: hat 8+3
 
@@ -144,7 +144,7 @@ int CMyPreferences::GetPreferences()
 	// default: F15 (Pause)
 	m_KeyCodeForRightMouseButton = (unsigned short) GetRsrcNum(CFSTR(KEYCODEFORRIGHTMOUSEBUTTON), 113);
 
-	// Laufwerke (außer C: und M: und U:)
+	// Laufwerke (au√üer C: und M: und U:)
 
 #if 0
 	int i;
@@ -180,14 +180,14 @@ int CMyPreferences::GetPreferences()
 
 	GetRsrcStr(CFSTR(PRINTINGCOMMAND), m_szPrintingCommand, "lpr -P HP870cxi -o raw %s");
 
-	// BSD-Pfad für Modem
+	// BSD-Pfad f√ºr Modem
 
 	GetRsrcStr(CFSTR(AUXPATH), m_szAuxPath, "/dev/cu.modem");
 
 	// Atari-Bildschirm
 
 	m_bAtariScreenManualSize = (bool) GetRsrcNum(CFSTR(SETSCREENSIZEMANUALLY), 0);
-	// wichtig: Wenn im Fenster, dann Mac-Menüleiste immer anzeigen
+	// wichtig: Wenn im Fenster, dann Mac-Men√ºleiste immer anzeigen
 	if	(m_bAtariScreenManualSize)
 		m_bShowMacMenu = true;
 	m_AtariScreenX = (unsigned short) GetRsrcNum(CFSTR(SETSCREENSIZE_X), 5);
@@ -266,7 +266,7 @@ void CMyPreferences::Update_Drives(void)
 
 		if	(ATARIDRIVEISMAPPABLE(i))
 		{
-			// Alle Laufwerke außer C:, M: und U: können einen änderbaren Mac-Pfad haben.
+			// Alle Laufwerke au√üer C:, M: und U: k√∂nnen einen √§nderbaren Mac-Pfad haben.
 
 			sprintf(szData, "Drive_%c", i + 'A');
 			cfKey = CFStringCreateWithCString/*NoCopy*/(kCFAllocatorDefault, szData, kCFStringEncodingISOLatin1/*, kCFAllocatorNull*/);
@@ -279,19 +279,19 @@ void CMyPreferences::Update_Drives(void)
 
 		if	(ATARIDRIVEISMAPPABLE(i) || (i == 'C' - 'A'))
 		{
-			// zusätzlich kann C: geänderte Flags haben, M: und U: jedoch nicht.
+			// zus√§tzlich kann C: ge√§nderte Flags haben, M: und U: jedoch nicht.
 
 			sprintf(szData, "Drive_%c_Flags", i + 'A');
 			cfKey = CFStringCreateWithCString/*NoCopy*/(kCFAllocatorDefault, szData, kCFStringEncodingISOLatin1/*, kCFAllocatorNull*/);
 			if	((m_drvAlias[i]) || (i == 'M'-'A'))
 			{
-				//(void) GetRsrcNum(cfKey, m_drvFlags[i], true);	// ggf. hinzufügen
+				//(void) GetRsrcNum(cfKey, m_drvFlags[i], true);	// ggf. hinzuf√ºgen
 				SetRsrcNum(cfKey, m_drvFlags[i]);
 				Update();	// save to disk (necessary!!!)
 			}
 			else
 			{
-				// Flags löschen, wenn existieren
+				// Flags l√∂schen, wenn existieren
 				SetRsrcStr(cfKey, NULL);
 				Update();
 			}

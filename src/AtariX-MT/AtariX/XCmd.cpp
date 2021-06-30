@@ -18,7 +18,7 @@
 
 /*
 *
-* Enthält die Verwaltung der nachladbaren Module
+* Enth√§lt die Verwaltung der nachladbaren Module
 *
 */
 
@@ -166,7 +166,7 @@ OSErr CXCmd::Preload(void)
 			break;
 
 		if	((myCPB.hFileInfo.ioFlAttrib & ioDirMask) || (myCPB.hFileInfo.ioFlFndrInfo.fdFlags & fInvisible))
-			continue;	// Verzeichnisse und unsichtbare Dateien überspringen
+			continue;	// Verzeichnisse und unsichtbare Dateien √ºberspringen
 
 		// Datei gefunden. FSSpec erstellen
 		err2 = FSMakeFSSpec (myCPB.hFileInfo.ioVRefNum, myCPB.hFileInfo.ioFlParID, fName, &spec);
@@ -176,7 +176,7 @@ OSErr CXCmd::Preload(void)
 		{
 			P2C(fName);
 			DebugWarning("CXCmd::Preload() -- error opening %s", fName+1);
-			continue;	// überspringen
+			continue;	// √ºberspringen
 		}
 
 		(void) Load(&spec, &ConnectionId);
@@ -188,13 +188,13 @@ OSErr CXCmd::Preload(void)
 
 /**********************************************************************
 *
-* (STATISCH) Callback für XCmd
+* (STATISCH) Callback f√ºr XCmd
 *
 * Hiermit kann ein XCMD Funktionen von MagicMacX aufrufen.
 *
 **********************************************************************/
 
-int CXCmd::Callback(UInt32 cmd, void *pParm)
+int CXCmd::Callback(uint32_t cmd, void *pParm)
 {
 	#pragma unused(pParm)
 
@@ -254,7 +254,7 @@ void CXCmd::InitXCMD(CFragConnectionID ConnectionId)
 
 /**********************************************************************
 *
-* XCmd über FSSpec laden
+* XCmd √ºber FSSpec laden
 *
 **********************************************************************/
 
@@ -269,7 +269,7 @@ OSErr CXCmd::Load(FSSpec *pSpec, CFragConnectionID* pConnectionId)
 
 	DebugInfo(" CXCmd::Load(FSSpec *) -- Lade XCMD mit dem Dateinamen \"%#s\"", pSpec->name);
 
-	// Dateilänge ermitteln
+	// Dateil√§nge ermitteln
 
 	pb.hFileInfo.ioVRefNum = pSpec -> vRefNum;
 	pb.hFileInfo.ioNamePtr = pSpec -> name;
@@ -305,7 +305,7 @@ OSErr CXCmd::Load(FSSpec *pSpec, CFragConnectionID* pConnectionId)
 
 /**********************************************************************
 *
-* XCmd über GetSharedLibrary laden
+* XCmd √ºber GetSharedLibrary laden
 *
 **********************************************************************/
 
@@ -324,7 +324,7 @@ OSErr CXCmd::Load(ConstStr63Param libName, CFragConnectionID* pConnectionId)
 	FSSpec Spec;
 	unsigned char buf[256];
 	pstrcpy(buf, libName);			// kopiere Pascal-String
-	P2C(buf);					// mit '\0' abschließen
+	P2C(buf);					// mit '\0' abschlie√üen
 	char *s = (char *) (buf+1);
 	bool bExt;
 	char *t;
@@ -499,7 +499,7 @@ OSErr CXCmd::LoadPlugin
 			{
 				DebugInfo("CXCmd::LoadPlugin() -- MagicMacX interface found.\n");
 
-				*ppInterface = interfaceTable[0];		// wir nehmen das erste Interface, das paßt
+				*ppInterface = interfaceTable[0];		// wir nehmen das erste Interface, das pa√üt
 				err = (*ppInterface)->PluginInit(*ppInterface, &m_XCmdPlugInInfo);
 				if (err)
 				{
@@ -512,7 +512,7 @@ OSErr CXCmd::LoadPlugin
 				// Now we are done with our interface
 
 				// Done with our interface.
-				// This causes the plug-in’s code to be unloaded.
+				// This causes the plug-in‚Äôs code to be unloaded.
 
 				//(*ppInterface)->Release(*ppInterface);
 			}
@@ -549,7 +549,7 @@ OSErr CXCmd::LoadPlugin
 
 /**********************************************************************
 *
-* Erzeuge neuen Glue-Code für ein Symbol
+* Erzeuge neuen Glue-Code f√ºr ein Symbol
 *
 **********************************************************************/
 
@@ -568,7 +568,7 @@ void *CXCmd::NewGlue
 	else
 	if	(symclass ==  kTVectorCFragSymbol /*kCodeCFragSymbol ???*/)
 	{
-		// neuen Eintrag für verkettete Liste erzeugen
+		// neuen Eintrag f√ºr verkettete Liste erzeugen
 		pGlueCode = (GlueCode *) NewPtr(sizeof(GlueCode));
 		if	(!pGlueCode)
 		{
@@ -577,7 +577,7 @@ void *CXCmd::NewGlue
 		}
 //		pGlueCode->id = id;
 		pGlueCode->p = MachOFunctionPointerForCFMFunctionPointer(pCFragPtr);
-		// einhängen
+		// einh√§ngen
 		pGlueCode->pNext = NULL;
 		s_Plugins[XCmdDescriptor].pGlueList = pGlueCode;
 		return(pGlueCode->p);
@@ -687,13 +687,13 @@ OSErr CXCmd::OnCommandLoadLibrary
 	if	(bIsPath)
 	{
 		//
-		// Wird der Pfad angegeben, unterstützen wir nur CFM/PEF
+		// Wird der Pfad angegeben, unterst√ºtzen wir nur CFM/PEF
 		//
 
 		c2pstrcpy(str, szLibName);
 		err = FSMakeFSSpec(
-				CGlobals::s_ProcDir.vRefNum,	// wird ignoriert, wenn Pfad vollständig
-				CGlobals::s_ProcDirID,		// wird ignoriert, wenn Pfad vollständig
+				CGlobals::s_ProcDir.vRefNum,	// wird ignoriert, wenn Pfad vollst√§ndig
+				CGlobals::s_ProcDirID,		// wird ignoriert, wenn Pfad vollst√§ndig
 				str,
 				&Spec);
 		if	(!err)

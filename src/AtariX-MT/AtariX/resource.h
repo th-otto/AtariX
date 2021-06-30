@@ -22,22 +22,22 @@
 *
 */
 
-// Menüs
+// Men√ºs
 
 #define MENUID_APPLE		1
 #define MENUID_FILE		2
 #define MENUID_EDIT		3
 
-// Menüeinträge von Menü 1
+// Men√ºeintr√§ge von Men√º 1
 #define MENUENTRY_ABOUT	1
 
-// Menüeinträge von Menü 2
+// Men√ºeintr√§ge von Men√º 2
 #define MENUENTRY_MAGIC	1
 #define MENUENTRY_HIDE	2
 #define MENUENTRY_PAGE	4
 #define MENUENTRY_QUIT	6
 
-// Menüeinträge von Menü 3
+// Men√ºeintr√§ge von Men√º 3
 #define MENUENTRY_COPY	4
 #define MENUENTRY_PREFS	8
 

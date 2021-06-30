@@ -820,7 +820,7 @@ void m68k_write_memory_32(m68k_addr_type address, m68k_data_type value)
 
 // statische Variablen
 
-UInt32 CMagiC::s_LastPrinterAccess = 0;
+uint32_t CMagiC::s_LastPrinterAccess = 0;
 
 CMagiCSerial *pTheSerial;
 CMagiCPrint *pThePrint;
@@ -2123,7 +2123,7 @@ void CMagiC::PutKeyToBuffer(unsigned char key)
 *
 **********************************************************************/
 
-void CMagiC::SendBusError(UInt32 addr, const char *AccessMode)
+void CMagiC::SendBusError(uint32_t addr, const char *AccessMode)
 {
 #if defined(USE_ASGARD_PPC_68K_EMU)
 	Asgard68000SetExitImmediately();
@@ -2362,7 +2362,7 @@ int CMagiC::SendSdlKeyboard(int sdlScanCode, bool KeyUp)
 *
 **********************************************************************/
 
-int CMagiC::SendKeyboardShift( UInt32 modifiers )
+int CMagiC::SendKeyboardShift( uint32_t modifiers )
 {
 	unsigned char val;
 	bool bAutoBreak;
@@ -3057,7 +3057,7 @@ uint32_t CMagiC::AtariVgetRGB(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-void CMagiC::SendMessageToMainThread( bool bAsync, UInt32 command )
+void CMagiC::SendMessageToMainThread( bool bAsync, uint32_t command )
 {
 	EventRef ev;
 	HICommand commandStruct;
@@ -3257,7 +3257,9 @@ uint32_t CMagiC::AtariDebugOut(uint32_t params, unsigned char *AdrOffset68k)
 
 uint32_t CMagiC::AtariError(uint32_t params, unsigned char *AdrOffset68k)
 {
+#ifdef _DEBUG
 	UInt16 errorCode = be16_to_cpu(*((UInt16 *) (AdrOffset68k + params)));
+#endif
 
 	DebugInfo("CMagiC::AtariError(%hd)", errorCode);
 	/*

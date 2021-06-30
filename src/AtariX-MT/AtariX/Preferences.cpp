@@ -18,7 +18,7 @@
 
 /*
 *
-* Enthält alle Kommunikation mit den "Preferences"
+* Enth√§lt alle Kommunikation mit den "Preferences"
 *
 */
 
@@ -67,7 +67,7 @@ CPreferences::~CPreferences()
 
 /**********************************************************************
 *
-* Initialisierung: Ist seit CFPreferences überflüssig.
+* Initialisierung: Ist seit CFPreferences √ºberfl√ºssig.
 *
 * => 0 = OK, sonst = Fehler
 *
@@ -81,7 +81,7 @@ int CPreferences::Init(const char *name, OSType Creator, OSType PrefsType)
 
 /**********************************************************************
 *
-* Öffnet die Preferences-Datei: Überflüssig seit CFPreferences
+* √ñffnet die Preferences-Datei: √úberfl√ºssig seit CFPreferences
 * => 0 = OK, sonst = Fehler
 *
 **********************************************************************/
@@ -94,7 +94,7 @@ int CPreferences::Open(void)
 
 /**********************************************************************
 *
-* Aktualisiert die Preferences-Datei, ohne sie zu schließen
+* Aktualisiert die Preferences-Datei, ohne sie zu schlie√üen
 * => 0 = OK, sonst = Fehler
 *
 **********************************************************************/
@@ -107,7 +107,7 @@ void CPreferences::Update(void)
 
 /**********************************************************************
 *
-* Schließt die Preferences-Datei: Seit CFPreferences überflüssig
+* Schlie√üt die Preferences-Datei: Seit CFPreferences √ºberfl√ºssig
 *
 **********************************************************************/
 
@@ -343,7 +343,7 @@ long CPreferences::GetRsrcNum(CFStringRef key, long deflt, bool bAdd)
 /**********************************************************************
 *
 * Holt ein Zeichenketten-Feld
-* Rückgabe: Anzahl der Zeichenketten
+* R√ºckgabe: Anzahl der Zeichenketten
 *
 * DOCTYPES: "APP,PRG,TTP,TOS=MgMx/Gem1"
 *

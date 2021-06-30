@@ -18,7 +18,7 @@
 
 /*
 *
-* Enth둳t Definitionen f웦 MagicMacX-XCMD-Module
+* Enth채lt Definitionen f체r MagicMacX-XCMD-Module
 *
 */
 
@@ -27,13 +27,13 @@
 
 // So sieht eine XCMD-Funktion aus
 
-typedef UInt32 (XCMDFunction)(UInt32 parm, unsigned char *AdrOffset68k);
+typedef uint32_t (XCMDFunction)(uint32_t parm, unsigned char *AdrOffset68k);
 
 
 // Mit dieser Struktur werden Informationen von MagicMacX an
-// ein XCMD-Modul 웑ermittelt:
+// ein XCMD-Modul 체bermittelt:
 
-typedef int (XCmdCallbackFunctionProcType) (UInt32 cmd, void *pParm);
+typedef int (XCmdCallbackFunctionProcType) (uint32_t cmd, void *pParm);
 enum XCmdCallbackFunction
 {
 	eXCmdCF_BeginDialog = 1,
@@ -42,8 +42,8 @@ enum XCmdCallbackFunction
 
 struct strXCmdInfo
 {
-	UInt32	xcmd_Length;		// Strukturl둵ge
-	UInt32	xcmd_Version;		// Version
+	uint32_t	xcmd_Length;		// Strukturl채nge
+	uint32_t	xcmd_Version;		// Version
 	XCmdCallbackFunctionProcType	*xcmd_Callback;		// Callback-Funktion
 };
 

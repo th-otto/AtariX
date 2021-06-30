@@ -18,7 +18,7 @@
 
 /*
 *
-* EnthŠlt alles, was mit der Atari-Tastatur zu tun hat
+* EnthÃ¤lt alles, was mit der Atari-Tastatur zu tun hat
 *
 */
 

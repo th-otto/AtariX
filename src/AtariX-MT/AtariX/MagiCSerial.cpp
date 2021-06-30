@@ -18,7 +18,7 @@
 
 /*
 *
-* Serielle Schnittstelle für MagicMacX
+* Serielle Schnittstelle f√ºr MagicMacX
 *
 */
 
@@ -65,7 +65,7 @@ struct termios gActualTTYAttrs;
 CMagiCSerial::CMagiCSerial()
 {
 	m_fd = -1;
-	gActualTTYAttrs.c_ospeed = gActualTTYAttrs.c_ispeed = 0xffffffff;	// ungültig
+	gActualTTYAttrs.c_ospeed = gActualTTYAttrs.c_ispeed = 0xffffffff;	// ung√ºltig
 }
 
 
@@ -124,12 +124,12 @@ UInt32 CMagiCSerial::Open(const char *BsdPath)
 	gActualTTYAttrs.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 	gActualTTYAttrs.c_oflag &= ~OPOST;
 	gActualTTYAttrs.c_cc[ VMIN ] = 0;
-	gActualTTYAttrs.c_cc[ VTIME ] = 0;		// sofort zurück, wenn keine Zeichen da. War 10, d.h. 10*0,1s = 1s;
+	gActualTTYAttrs.c_cc[ VTIME ] = 0;		// sofort zur√ºck, wenn keine Zeichen da. War 10, d.h. 10*0,1s = 1s;
 
 	// Default: Beide Richtungen gleich schnell
 	gActualTTYAttrs.c_ospeed = gActualTTYAttrs.c_ispeed;
 
-	// Default: keine Parität
+	// Default: keine Parit√§t
 	gActualTTYAttrs.c_cflag &= ~(PARENB);
     
 	// Set the options
@@ -145,7 +145,7 @@ UInt32 CMagiCSerial::Open(const char *BsdPath)
 
 /**********************************************************************
 *
-* schließen
+* schlie√üen
 *
 **********************************************************************/
 
@@ -163,7 +163,7 @@ UInt32 CMagiCSerial::Close()
 
 /**********************************************************************
 *
-* geöffnet?
+* ge√∂ffnet?
 *
 **********************************************************************/
 
@@ -342,7 +342,7 @@ UInt32 CMagiCSerial::Drain(void)
 
 /**********************************************************************
 *
-* Löscht Ein/Ausgangspuffer
+* L√∂scht Ein/Ausgangspuffer
 *
 **********************************************************************/
  
@@ -376,7 +376,7 @@ UInt32 CMagiCSerial::Flush(bool bInputBuffer, bool bOutputBuffer)
 
 /**********************************************************************
 *
-* Baudrate oder Synchronisationsmodus holen/ändern
+* Baudrate oder Synchronisationsmodus holen/√§ndern
 *
 **********************************************************************/
 
@@ -475,7 +475,7 @@ UInt32 CMagiCSerial::Config(
 		bSet = true;
 	}
 
-	// Parität ein/aus
+	// Parit√§t ein/aus
 
 	if	(pbOldParityEnable)
 	{
@@ -495,7 +495,7 @@ UInt32 CMagiCSerial::Config(
 		bSet = true;
 	}
 
-	// Parität gerade/ungerade
+	// Parit√§t gerade/ungerade
 
 	if	(pbOldParityEven)
 	{

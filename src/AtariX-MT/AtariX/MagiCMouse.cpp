@@ -18,7 +18,7 @@
 
 /*
 *
-* Enth둳t alles, was mit der Atari-Maus zu tun hat
+* Enth채lt alles, was mit der Atari-Maus zu tun hat
 *
 */
 
@@ -80,9 +80,9 @@ void CMagiCMouse::Init(unsigned char *pLineAVars, Point PtPos)
 
 /**********************************************************************
 *
-* Neue Mausposition 웑ergeben
+* Neue Mausposition 체bergeben
 *
-* R웒kgabe: true = Mausbewegung notwendig false = keine Mausbewegung
+* R체ckgabe: true = Mausbewegung notwendig false = keine Mausbewegung
 *
 **********************************************************************/
 
@@ -102,9 +102,9 @@ bool CMagiCMouse::SetNewPosition(Point PtPos)
 
 /**********************************************************************
 *
-* Neuen Maustastenstatus 웑ergeben
+* Neuen Maustastenstatus 체bergeben
 *
-* R웒kgabe: true = Maustasten-Aktualisierung notwendig / false = Maustasten unver둵dert
+* R체ckgabe: true = Maustasten-Aktualisierung notwendig / false = Maustasten unver채ndert
 *
 **********************************************************************/
 
@@ -120,7 +120,7 @@ bool CMagiCMouse::SetNewButtonState(unsigned int NumOfButton, bool bIsDown)
 *
 * Mauspaket liefern
 *
-* R웒kgabe: true = Mausbewegung notwendig false = keine Mausbewegung
+* R체ckgabe: true = Mausbewegung notwendig false = keine Mausbewegung
 *
 **********************************************************************/
 

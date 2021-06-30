@@ -20,7 +20,7 @@
  * MacXFS.h
  * ========
  *
- * Enthält die Definition der Übergabestrukturen vom MacOS
+ * Enth√§lt die Definition der √úbergabestrukturen vom MacOS
  * an das Mac-XFS von MagiCMacX
  *
  */
@@ -196,7 +196,7 @@ typedef struct _mx_fd {
 
 	struct MXFSDD
 	{
-		long dirID;
+		int32_t dirID;
 		short vRefNum;
 	};
 
@@ -220,13 +220,13 @@ typedef struct _mx_fd {
 * Fuer jedes Laufwerk gibt es einen FSSpec, der
 * das MAC-Verzeichnis repraesentiert, das fuer
 * "x:\" steht.
-* Ungültige FSSpec haben die Volume-Id 0.
+* Ung√ºltige FSSpec haben die Volume-Id 0.
 */
 	FSSpec drv_fsspec[NDRVS];		// => macSys, damit MagiC die volume-ID
 							// ermitteln kann.
 
 	FSRef xfs_path[NDRVS];		// nur auswerten, wenn drv_valid = true
-	bool drv_valid[NDRVS];			// zeigt an, ob alias gültig ist.
+	bool drv_valid[NDRVS];			// zeigt an, ob alias g√ºltig ist.
 	CInfoPBRec	drv_pbrec[NDRVS];
 	long drv_dirID[NDRVS];
 	bool drv_longnames[NDRVS];			// initialisiert auf 0en
@@ -293,7 +293,7 @@ typedef struct _mx_fd {
 					char *buf, uint16_t bufsiz);
 	int32_t xfs_dcntl(uint16_t drv, MXFSDD *dd, char *name, uint16_t cmd, void *pArg, unsigned char *AdrOffset68k);
 
-	// Gerätetreiber
+	// Ger√§tetreiber
 
 	int32_t dev_close( MAC_FD *f );
 	int32_t dev_read( MAC_FD *f, int32_t count, char *buf );

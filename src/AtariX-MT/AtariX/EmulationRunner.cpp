@@ -877,7 +877,7 @@ void EmulationRunner::_OpenWindow(void)
 	//	SDL_SetRenderDrawColor(m_sdl_renderer, 255, 255, 255, 255);
 	//	SDL_RenderClear(m_sdl_renderer);
 
-	// alles weiß, aber noch nicht rendern, weil Fenster unsichtbar.
+	// alles wei√ü, aber noch nicht rendern, weil Fenster unsichtbar.
 
 	// draw test
 #if 1

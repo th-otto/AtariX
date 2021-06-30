@@ -18,7 +18,7 @@
 
 /*
 *
-* Enthält die Verwaltung der nachladbaren Module
+* Enth√§lt die Verwaltung der nachladbaren Module
 *
 */
 
@@ -36,7 +36,7 @@
 struct GlueCode
 {
 	GlueCode *pNext;
-//	CFragConnectionID id;		// zugehörige Bibliothek
+//	CFragConnectionID id;		// zugeh√∂rige Bibliothek
 	void *p;				// Zeiger auf MachO-Glue-Code
 };
 

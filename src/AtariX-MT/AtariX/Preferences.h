@@ -18,7 +18,7 @@
 
 /*
 *
-* Enthält alle Kommunikation mit den "Preferences"
+* Enth√§lt alle Kommunikation mit den "Preferences"
 *
 */
 

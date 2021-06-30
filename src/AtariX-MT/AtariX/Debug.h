@@ -18,7 +18,7 @@
 
 /*
 *
-* EnthŠlt die Debugger-Ausgaben
+* EnthÃ¤lt die Debugger-Ausgaben
 *
 */
 

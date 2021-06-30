@@ -18,7 +18,7 @@
 
 /*
 *
-* Enthält alle globalen Variablen
+* Enth√§lt alle globalen Variablen
 *
 */
 
@@ -45,7 +45,7 @@ uint8_t CGlobals::s_atariRootfsPathUrl[1024];
 uint8_t CGlobals::s_atariScrapFileUnixPath[1024];
 FSSpec CGlobals::s_ProcDir;
 long CGlobals::s_ProcDirID;					// hier liegt das Bundle
-long CGlobals::s_ExecutableDirID;				// hier liegt die ausführbare Datei
+long CGlobals::s_ExecutableDirID;				// hier liegt die ausf√ºhrbare Datei
 char CGlobals::s_ThisPathNameCarbon[256];
 char CGlobals::s_ThisPathNameUnix[256];
 

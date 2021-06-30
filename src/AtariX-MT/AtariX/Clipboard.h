@@ -18,7 +18,7 @@
 
 /*
 *
-* Clipboard-Umsetzung für MagicMacX
+* Clipboard-Umsetzung f√ºr MagicMacX
 *
 */
 

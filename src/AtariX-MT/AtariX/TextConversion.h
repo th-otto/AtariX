@@ -18,7 +18,7 @@
 
 /*
 *
-* Zeichensatz-Umsetzung für MagicMacX
+* Zeichensatz-Umsetzung f√ºr MagicMacX
 *
 */
 

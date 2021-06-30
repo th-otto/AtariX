@@ -18,7 +18,7 @@
 
 /*
 *
-* Enthält alles, was mit "MagicMac OS" zu tun hat
+* Enth√§lt alles, was mit "MagicMac OS" zu tun hat
 *
 */
 
@@ -54,14 +54,14 @@ class CMagiC
 	void StopExec( void );				// ... pause it
 	void TerminateThread( void );		// terminate it
 
-//	int SendKeyboard(UInt32 message, bool KeyUp);
+//	int SendKeyboard(uint32_t message, bool KeyUp);
 	int SendSdlKeyboard(int sdlScanCode, bool KeyUp);
-	int SendKeyboardShift(UInt32 modifiers);
+	int SendKeyboardShift(uint32_t modifiers);
 	int SendMousePosition(int x, int y);
 	int SendMouseButton(unsigned int NumOfButton, bool bIsDown);
 	int SendHz200(void);
 	int SendVBL(void);
-	void SendBusError(UInt32 addr, const char *AccessMode);
+	void SendBusError(uint32_t addr, const char *AccessMode);
 	void SendAtariFile(const char *pBuf);
 	void SendShutdown(void);
 	void ChangeXFSDrive(short drvNr);
@@ -106,7 +106,7 @@ class CMagiC
 	uint32_t AtariVdiInit( uint32_t params, unsigned char *AdrOffset68k );
 	uint32_t AtariExec68k( uint32_t params, unsigned char *AdrOffset68k );
 	uint32_t OpenSerialBIOS(void);
-	static void SendMessageToMainThread( bool bAsync, UInt32 command );
+	static void SendMessageToMainThread( bool bAsync, uint32_t command );
 	static uint32_t AtariDOSFn( uint32_t params, unsigned char *AdrOffset68k );
 	static uint32_t AtariGettime( uint32_t params, unsigned char *AdrOffset68k );
 	static uint32_t AtariSettime( uint32_t params, unsigned char *AdrOffset68k );
@@ -145,23 +145,23 @@ class CMagiC
 	// private Attribute
 	CMagiCScreen *m_pMagiCScreen;		// Bildschirmdaten
 	unsigned char *m_RAM68k;			// Zeiger auf den emulierten Speicher
-	size_t m_RAM68ksize;				// Größe dieses Blocks
-	size_t m_Video68ksize;				// Größe dieses Blocks
+	size_t m_RAM68ksize;				// Gr√∂√üe dieses Blocks
+	size_t m_Video68ksize;				// Gr√∂√üe dieses Blocks
 	unsigned char *m_AtariKbData;		// [0] = kbshift, [1] = kbrepeat
 	uint32_t *m_pAtariActPd;
 	uint32_t *m_pAtariActAppl;
 	BasePage *m_BasePage;			// geladener MagiC-Kernel
-	MPQueueID m_EmuNotifQID;			// Notification-Queue für den Thread
+	MPQueueID m_EmuNotifQID;			// Notification-Queue f√ºr den Thread
 	MPTaskID m_EmuTaskID;			// Der Thread
 	CMacXFS m_MacXFS;				// das XFS
 	CMagiCKeyboard m_MagiCKeyboard;	// Atari-Tastatur
 	CMagiCMouse m_MagiCMouse;		// Atari-Maus
 	CMagiCSerial m_MagiCSerial;			// serielle Schnittstelle
 	CMagiCPrint m_MagiCPrint;			// serielle Schnittstelle
-	UInt32 m_CurrModifierKeys;			// aktueller Zustand von Shift/Cmd/...
+	uint32_t m_CurrModifierKeys;			// aktueller Zustand von Shift/Cmd/...
 	bool m_bBIOSSerialUsed;
 	bool m_bBusErrorPending;
-	UInt32 m_BusErrorAddress;
+	uint32_t m_BusErrorAddress;
 	char m_BusErrorAccessMode[32];
 
 	bool m_bInterrupt200HzPending;
@@ -185,7 +185,7 @@ class CMagiC
 	bool m_bSpecialExec;
 	unsigned char *m_LineAVars;
 
-	// Ringpuffer für Tastatur/Maus
+	// Ringpuffer f√ºr Tastatur/Maus
 	unsigned char m_cKeyboardOrMouseData[KEYBOARDBUFLEN];
 	unsigned char *m_pKbRead;		// Lesezeiger
 	unsigned char *m_pKbWrite;		// Schreibzeiger
@@ -193,7 +193,7 @@ class CMagiC
 	MPCriticalRegionID m_AECriticalRegionId;
 	// Apple Events (Atari-Programm direkt starten)
 	int m_iNoOfAtariFiles;
-	int m_iOldestAtariFile;	// für den Ringpuffer
+	int m_iOldestAtariFile;	// f√ºr den Ringpuffer
 	char m_szStartAtariFiles[N_ATARI_FILES][256];
 
 	// Bildschirmdaten
@@ -204,8 +204,8 @@ class CMagiC
 //	unsigned long m_BgBufferLineLenInBytes;
 	MPCriticalRegionID m_ScrCriticalRegionId;
 
-	// fürs Drucken (leider statisch)
-	static UInt32 s_LastPrinterAccess;
+	// f√ºrs Drucken (leider statisch)
+	static uint32_t s_LastPrinterAccess;
 
-	UInt32 m_AtariShutDownDelay;		// added for AtariX
+	uint32_t m_AtariShutDownDelay;		// added for AtariX
 };

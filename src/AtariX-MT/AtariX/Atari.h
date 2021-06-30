@@ -18,7 +18,7 @@
 
 /*
 *
-* Enthält alle Konstanten und Strukturen für den Atari
+* Enth√§lt alle Konstanten und Strukturen f√ºr den Atari
 *
 */
 
@@ -129,7 +129,7 @@ struct mutimbuf
 {
 	uint16_t		actime;          /* Zugriffszeit */
 	uint16_t		acdate;
-	uint16_t		modtime;         /* letzte Änderung */
+	uint16_t		modtime;         /* letzte √Ñnderung */
 	uint16_t		moddate;
 };
 
@@ -217,23 +217,23 @@ struct ExeHeader
 
 struct SYSHDR
 {
-	UInt16		os_entry;		/* $00 BRA to reset handler             */
-	UInt16		os_version;		/* $02 TOS version number               */
-	UInt32		os_start;		/* $04 -> reset handler                 */
-	UInt32		os_base;		/* $08 -> baseof OS                     */
-	UInt32		os_membot;		/* $0c -> end BIOS/GEMDOS/VDI ram usage */
-	UInt32		os_rsv1;		/* $10 << unused,reserved >>            */
-	UInt32		os_magic;		/* $14 -> GEM memory usage parm. block   */
-	UInt32		os_gendat;		/* $18 Date of system build($MMDDYYYY)  */
-	UInt16		os_palmode;		/* $1c OS configuration bits            */
-	UInt16		os_gendatg;		/* $1e DOS-format date of system build   */
+	uint16_t		os_entry;		/* $00 BRA to reset handler             */
+	uint16_t		os_version;		/* $02 TOS version number               */
+	uint32_t		os_start;		/* $04 -> reset handler                 */
+	uint32_t		os_base;		/* $08 -> baseof OS                     */
+	uint32_t		os_membot;		/* $0c -> end BIOS/GEMDOS/VDI ram usage */
+	uint32_t		os_rsv1;		/* $10 << unused,reserved >>            */
+	uint32_t		os_magic;		/* $14 -> GEM memory usage parm. block   */
+	uint32_t		os_gendat;		/* $18 Date of system build($MMDDYYYY)  */
+	uint16_t		os_palmode;		/* $1c OS configuration bits            */
+	uint16_t		os_gendatg;		/* $1e DOS-format date of system build   */
 	/*
 	Die folgenden Felder gibt es ab TOS 1.2
 	*/
-	UInt32		_root;			/* $20 -> base of OS pool               */
-	UInt32		kbshift;		/* $24 -> 68-Adresse der Atari-Variablen "kbshift" und "kbrepeat" */
-	UInt32		_run;			/* $28 -> GEMDOS PID of current process */
-	UInt32		p_rsv2;			/* $2c << unused, reserved >>           */
+	uint32_t		_root;			/* $20 -> base of OS pool               */
+	uint32_t		kbshift;		/* $24 -> 68-Adresse der Atari-Variablen "kbshift" und "kbrepeat" */
+	uint32_t		_run;			/* $28 -> GEMDOS PID of current process */
+	uint32_t		p_rsv2;			/* $2c << unused, reserved >>           */
 };
 
 /* Interruptvektoren */
@@ -241,7 +241,7 @@ struct SYSHDR
 #define	INTV_0_RESET_SSP        0x000	/* ssp bei Reset */
 #define	INTV_1_RESET_PC         0x004	/* pc bei Reset */
 #define	INTV_2_BUS_ERROR        0x008	/* Busfehler */
-#define	INTV_3_ADDRESS_ERROR	0x00c	/* Adreßfehler */
+#define	INTV_3_ADDRESS_ERROR	0x00c	/* Adre√üfehler */
 #define	INTV_4_ILLEGAL          0x010	/* Illegaler Opcode */
 #define	INTV_5_DIV_BY_ZERO      0x014	/* Division durch 0 */
 #define	INTV_6_CHK              0x018	/* chk Opcode */
@@ -457,7 +457,7 @@ struct SYSHDR
 #define ATARI_KBD_SCANCODE_8			9
 #define ATARI_KBD_SCANCODE_9			10
 #define ATARI_KBD_SCANCODE_0			11
-#define ATARI_KBD_SCANCODE_MINUS		12				// de: 'ß'  us: '-'
+#define ATARI_KBD_SCANCODE_MINUS		12				// de: '√ü'  us: '-'
 #define ATARI_KBD_SCANCODE_EQUALS		13				// de: '`'  us: '='
 #define ATARI_KBD_SCANCODE_BACKSPACE	14
 #define ATARI_KBD_SCANCODE_TAB			15
@@ -471,7 +471,7 @@ struct SYSHDR
 #define ATARI_KBD_SCANCODE_I			23
 #define ATARI_KBD_SCANCODE_O			24
 #define ATARI_KBD_SCANCODE_P			25
-#define ATARI_KBD_SCANCODE_LEFTBRACKET	26				// de: 'Ü' us: '['
+#define ATARI_KBD_SCANCODE_LEFTBRACKET	26				// de: '√ú' us: '['
 #define ATARI_KBD_SCANCODE_RIGHTBRACKET	27				// de: '+' us: ']'
 #define ATARI_KBD_SCANCODE_RETURN		28
 #define ATARI_KBD_SCANCODE_CONTROL		29
@@ -484,8 +484,8 @@ struct SYSHDR
 #define ATARI_KBD_SCANCODE_J			36
 #define ATARI_KBD_SCANCODE_K			37
 #define ATARI_KBD_SCANCODE_L			38
-#define ATARI_KBD_SCANCODE_SEMICOLON	39				// de: 'Ö'  us: ';'
-#define ATARI_KBD_SCANCODE_APOSTROPHE	40				// de: 'Ä'  us: '''
+#define ATARI_KBD_SCANCODE_SEMICOLON	39				// de: '√ñ'  us: ';'
+#define ATARI_KBD_SCANCODE_APOSTROPHE	40				// de: '√Ñ'  us: '''
 #define ATARI_KBD_SCANCODE_GRAVE		41				// de: '#'
 #define ATARI_KBD_SCANCODE_LSHIFT		42
 #define ATARI_KBD_SCANCODE_BACKSLASH	43				// de: --   us: '\'
@@ -593,7 +593,7 @@ enum eXCMD
 	eUnLoad = 14
 };
 
-// Befehlsformat für XCmd-Kommandos:
+// Befehlsformat f√ºr XCmd-Kommandos:
 
 struct strXCMD
 {
@@ -605,7 +605,7 @@ struct strXCMD
 		struct
 		{
 			char m_PathOrName[256];	// ->	Pfad (Kommando 10) oder Name
-			int32_t m_nSymbols;		// <-	Anzahl Symbole beim Öffnen
+			int32_t m_nSymbols;		// <-	Anzahl Symbole beim √ñffnen
 		} m_10_11;
 		struct
 		{
@@ -632,9 +632,9 @@ struct CMagiC_CPPCCallback
 {
 	typedef uint32_t (CMagiC::*CMagiC_PPCCallback)(uint32_t params, unsigned char *AdrOffset68k);
 	CMagiC_PPCCallback m_Callback;
-	#if defined(__GNUC__)
-	UInt32 dummy;
-	#endif
+#if defined(__GNUC__)
+	uint32_t dummy;
+#endif
 	CMagiC *m_thisptr;
 };
 
@@ -643,9 +643,9 @@ struct CMacXFS_CPPCCallback
 {
 	typedef int32_t (CMacXFS::*CMacXFS_PPCCallback)(uint32_t params, unsigned char *AdrOffset68k);
 	CMacXFS_PPCCallback m_Callback;
-	#if defined(__GNUC__)
-	UInt32 dummy;
-	#endif
+#if defined(__GNUC__)
+	uint32_t dummy;
+#endif
 	CMacXFS *m_thisptr;
 };
 
@@ -654,9 +654,9 @@ struct CXCmd_CPPCCallback
 {
 	typedef int32_t (CXCmd::*CXCmd_PPCCallback)(uint32_t params, unsigned char *AdrOffset68k);
 	CXCmd_PPCCallback m_Callback;		// gcc: 2 words, mwc: 3 words
-	#if defined(__GNUC__)
-	UInt32 dummy;
-	#endif
+#if defined(__GNUC__)
+	uint32_t dummy;
+#endif
 	CXCmd *m_thisptr;
 };
 
@@ -690,52 +690,52 @@ struct OldMmSysHdr
 {
 	uint32_t	magic;				// ist 'MagC'
 	uint32_t	syshdr;				// Adresse des Atari-Syshdr
-	uint32_t	keytabs;			// 5*128 Bytes fÅr Tastaturtabellen
+	uint32_t	keytabs;			// 5*128 Bytes f√ºr Tastaturtabellen
 	uint32_t	ver;				// Version
 	uint16_t	cpu;				// CPU (30=68030, 40=68040)
 	uint16_t	fpu;				// FPU (0=nix,4=68881,6=68882,8=68040)
-	uint32_t	boot_sp;			// sp fürs Booten
+	uint32_t	boot_sp;			// sp f√ºrs Booten
 	uint32_t	biosinit;			// nach Initialisierung aufrufen
-	uint32_t	pixmap;				// Daten fÅrs VDI
-	uint32_t	offs_32k;			// Adressenoffset für erste 32k im MAC
-	uint32_t	a5;					// globales Register a5 für Mac-Programm
+	uint32_t	pixmap;				// Daten f√ºrs VDI
+	uint32_t	offs_32k;			// Adressenoffset f√ºr erste 32k im MAC
+	uint32_t	a5;					// globales Register a5 f√ºr Mac-Programm
 	uint32_t	tasksw;				// != NULL, wenn Taskswitch erforderlich
 	uint32_t	gettime;			// Datum und Uhrzeit ermitteln
 	uint32_t	bombs;				// Atari-Routine, wird vom MAC aufgerufen
 	uint32_t	syshalt;			// "System halted", String in a0
 	uint32_t	coldboot;
-	uint32_t	debugout;			// fürs Debugging
-	uint32_t	prtis;				// 	Für Drucker (PRT)
+	uint32_t	debugout;			// f√ºrs Debugging
+	uint32_t	prtis;				// 	F√ºr Drucker (PRT)
 	uint32_t	prtos;				//
 	uint32_t	prtin;				//
 	uint32_t	prtout;				//
-	uint32_t	serconf;			//	Rsconf für ser1
-	uint32_t	seris;				//    Für ser1 (AUX)
+	uint32_t	serconf;			//	Rsconf f√ºr ser1
+	uint32_t	seris;				//    F√ºr ser1 (AUX)
 	uint32_t	seros;				//
 	uint32_t	serin;				//
 	uint32_t	serout;				//
-	uint32_t	xfs;				// Routinen für das XFS
-	uint32_t	xfs_dev;			//  Zugehîriger Dateitreiber
+	uint32_t	xfs;				// Routinen f√ºr das XFS
+	uint32_t	xfs_dev;			//  Zugeh√∂riger Dateitreiber
 	uint32_t	set_physbase;		// Bildschirmadresse bei Setscreen umsetzen (a0 zeigt auf den Stack von Setscreen())
 	uint32_t	VsetRGB;			// Farbe setzen (a0 zeigt auf den Stack bei VsetRGB())
 	uint32_t	VgetRGB;			// Farbe erfragen (a0 zeigt auf den Stack bei VgetRGB())
-	uint32_t	error;				// Fehlermeldung in d0.l an das Mac-System zurückgeben
+	uint32_t	error;				// Fehlermeldung in d0.l an das Mac-System zur√ºckgeben
 						     		//	Fehlermeldungen bei MacSys_error:
-									//	-1: nicht unterstützte Grafikauflîsung => kein VDI-Treiber
+									//	-1: nicht unterst√ºtzte Grafikaufl√∂sung => kein VDI-Treiber
 	uint32_t	init;				// Wird beim Warmstart des Atari aufgerufen
 	uint32_t	drv2devcode;		// umrechnen Laufwerk->Devicenummer
-	uint32_t	rawdrvr;			// Raw-Driver (Eject) für Mac
+	uint32_t	rawdrvr;			// Raw-Driver (Eject) f√ºr Mac
 	uint32_t	floprd;
 	uint32_t	flopwr;
 	uint32_t	flopfmt;
 	uint32_t	flopver;
-	uint32_t	superstlen;			// Größe des Supervisorstack pro APP
+	uint32_t	superstlen;			// Gr√∂√üe des Supervisorstack pro APP
 	uint32_t	dos_macfn;			// DOS-Funktionen 0x60..0xfe
 	uint32_t	settime;			// xbios Settime
 	uint32_t	prn_wrts;			// String auf Drucker
 	uint32_t	version;			// Versionsnummer der Struktur
-	uint32_t	in_interrupt;		// Interruptzähler für Mac-Seite
-	uint32_t	drv_fsspec;			// Liste der FSSpec für Mac-Laufwerke
+	uint32_t	in_interrupt;		// Interruptz√§hler f√ºr Mac-Seite
+	uint32_t	drv_fsspec;			// Liste der FSSpec f√ºr Mac-Laufwerke
 	uint32_t	cnverr;				// LONG cnverr( WORD mac_errcode )
 	uint32_t	res1;				// reserviert
 	uint32_t	res2;				// reserviert
@@ -743,18 +743,18 @@ struct OldMmSysHdr
 };
 
 // Die Cookie-Struktur wird vom Emulator bereitgestellt. Ihre Adresse
-// erhält der Kernel über die Übergabestruktur. Ausgefüllt werden die
-// Felder vom Kernel, außer den ersten dreien.
+// erh√§lt der Kernel √ºber die √úbergabestruktur. Ausgef√ºllt werden die
+// Felder vom Kernel, au√üer den ersten dreien.
 
 struct MgMxCookieData
 {
 	uint32_t	mgmx_magic;			// ist "MgMx"
 	uint32_t	mgmx_version;		// Versionsnummer
-	uint32_t	mgmx_len;			// Strukturlänge
+	uint32_t	mgmx_len;			// Strukturl√§nge
 	uint32_t	mgmx_xcmd;			// PPC-Bibliotheken laden und verwalten
 	uint32_t	mgmx_xcmd_exec;		// PPC-Aufruf aus PPC-Bibliothek
-	uint32_t	mgmx_internal;		// 68k-Adresse der Übergabestruktur
-	uint32_t	mgmx_daemon;		// Routine für den "mmx.prg"-Hintergrundprozeß
+	uint32_t	mgmx_internal;		// 68k-Adresse der √úbergabestruktur
+	uint32_t	mgmx_daemon;		// Routine f√ºr den "mmx.prg"-Hintergrundproze√ü
 };
 
 /*
@@ -764,11 +764,11 @@ PTRLEN	EQU	4		; Zeiger auf Elementfunktion braucht 4 Zeiger
 
 ;Atari -> Mac
 MacSysX_magic:			DS.L 1		; ist 'MagC'
-MacSysX_len:			DS.L 1		; Länge der Struktur
+MacSysX_len:			DS.L 1		; L√§nge der Struktur
 MacSysX_syshdr:			DS.L 1		; Adresse des Atari-Syshdr
-MacSysX_keytabs:		DS.L 1		; 5*128 Bytes für Tastaturtabellen
+MacSysX_keytabs:		DS.L 1		; 5*128 Bytes f√ºr Tastaturtabellen
 MacSysX_mem_root:		DS.L 1		; Speicherlisten
-MacSysX_act_pd:			DS.L 1		; Zeiger auf aktuellen Prozeß
+MacSysX_act_pd:			DS.L 1		; Zeiger auf aktuellen Proze√ü
 MacSysX_act_appl:		DS.L 1		; Zeiger auf aktuelle Task
 MacSysX_verAtari:		DS.L 1		; Versionsnummer MagicMacX.OS
 ;Mac -> Atari
@@ -778,12 +778,12 @@ MacSysX_fpu:			DS.W 1		; FPU (0=nix,4=68881,6=68882,8=68040)
 MacSysX_init:			DS.L PTRLEN	; Wird beim Warmstart des Atari aufgerufen
 MacSysX_biosinit:		DS.L PTRLEN	; nach Initialisierung aufrufen
 MacSysX_VdiInit:		DS.L PTRLEN	; nach Initialisierung des VDI aufrufen
-MacSysX_pixmap:			DS.L 1		; Daten fürs VDI
+MacSysX_pixmap:			DS.L 1		; Daten f√ºrs VDI
 MacSysX_pMMXCookie:		DS.L 1		; 68k-Zeiger auf MgMx-Cookie
 MacSysX_Xcmd:			DS.L PTRLEN	; XCMD-Kommandos
 MacSysX_PPCAddr:		DS.L 1		; tats. PPC-Adresse von 68k-Adresse 0
 MacSysX_VideoAddr:		DS.L 1		; tats. PPC-Adresse des Bildschirmspeichers
-MacSysX_Exec68k:		DS.L PTRLEN	; hier kann der PPC-Callback 68k-Code ausführen
+MacSysX_Exec68k:		DS.L PTRLEN	; hier kann der PPC-Callback 68k-Code ausf√ºhren
 MacSysX_gettime:		DS.L 1		; LONG GetTime(void) Datum und Uhrzeit ermitteln
 MacSysX_settime:		DS.L 1		; void SetTime(LONG *time) Datum/Zeit setzen
 MacSysX_Setpalette:		DS.L 1		; void Setpalette( int ptr[16] )
@@ -792,36 +792,36 @@ MacSysX_VsetRGB:		DS.L 1		; void VsetRGB( WORD index, WORD count, LONG *array )
 MacSysX_VgetRGB:		DS.L 1		; void VgetRGB( WORD index, WORD count, LONG *array )
 MacSysX_syshalt:		DS.L 1		; SysHalt( char *str ) "System halted"
 MacSysX_syserr:			DS.L 1		; SysErr( long val ) "a1 = 0 => Bomben"
-MacSysX_coldboot:		DS.L 1		; ColdBoot(void) Kaltstart ausführen
+MacSysX_coldboot:		DS.L 1		; ColdBoot(void) Kaltstart ausf√ºhren
 MacSysX_exit:			DS.L 1		; Exit(void) beenden
-MacSysX_debugout:		DS.L 1		; MacPuts( char *str ) fürs Debugging
+MacSysX_debugout:		DS.L 1		; MacPuts( char *str ) f√ºrs Debugging
 MacSysX_error:			DS.L 1		; d0 = -1: kein Grafiktreiber
-MacSysX_prtos:			DS.L 1		; Bcostat(void) für PRT
-MacSysX_prtin:			DS.L 1		; Cconin(void) für PRT
-MacSysX_prtout:			DS.L 1		; Cconout( void *params ) für PRT
+MacSysX_prtos:			DS.L 1		; Bcostat(void) f√ºr PRT
+MacSysX_prtin:			DS.L 1		; Cconin(void) f√ºr PRT
+MacSysX_prtout:			DS.L 1		; Cconout( void *params ) f√ºr PRT
 MacSysX_prn_wrts:		DS.L 1		; LONG PrnWrts({char *buf, LONG count}) String auf Drucker
-MacSysX_serconf:		DS.L 1		; Rsconf( void *params ) für ser1
-MacSysX_seris:			DS.L 1		; Bconstat(void) für ser1 (AUX)
-MacSysX_seros:			DS.L 1		; Bcostat(void) für ser1
-MacSysX_serin:			DS.L 1		; Cconin(void) für ser1
-MacSysX_serout:			DS.L 1		; Cconout( void *params ) für ser1
-MacSysX_SerOpen:		DS.L 1		; Serielle Schnittstelle öffnen
-MacSysX_SerClose:		DS.L 1		; Serielle Schnittstelle schließen
+MacSysX_serconf:		DS.L 1		; Rsconf( void *params ) f√ºr ser1
+MacSysX_seris:			DS.L 1		; Bconstat(void) f√ºr ser1 (AUX)
+MacSysX_seros:			DS.L 1		; Bcostat(void) f√ºr ser1
+MacSysX_serin:			DS.L 1		; Cconin(void) f√ºr ser1
+MacSysX_serout:			DS.L 1		; Cconout( void *params ) f√ºr ser1
+MacSysX_SerOpen:		DS.L 1		; Serielle Schnittstelle √∂ffnen
+MacSysX_SerClose:		DS.L 1		; Serielle Schnittstelle schlie√üen
 MacSysX_SerRead:		DS.L 1		; Mehrere Zeichen von seriell lesen
 MacSysX_SerWrite:		DS.L 1		; Mehrere Zeichen auf seriell schreiben
-MacSysX_SerStat:		DS.L 1		; Lese-/Schreibstatus für serielle Schnittstelle
-MacSysX_SerIoctl:		DS.L 1		; Ioctl-Aufrufe für serielle Schnittstelle
+MacSysX_SerStat:		DS.L 1		; Lese-/Schreibstatus f√ºr serielle Schnittstelle
+MacSysX_SerIoctl:		DS.L 1		; Ioctl-Aufrufe f√ºr serielle Schnittstelle
 MacSysX_GetKbOrMous:	DS.L PTRLEN	; Liefert Tastatur/Maus
 MacSysX_dos_macfn:		DS.L 1		; DosFn({int,void*} *) DOS-Funktionen 0x60..0xfe
 MacSysX_xfs_version:	DS.L 1		; Version des Mac-XFS
-MacSysX_xfs_flags:		DS.L 1		; Flags für das Mac-XFS
-MacSysX_xfs:			DS.L PTRLEN	; zentrale Routine für das XFS
-MacSysX_xfs_dev:		DS.L PTRLEN	; zugehöriger Dateitreiber
+MacSysX_xfs_flags:		DS.L 1		; Flags f√ºr das Mac-XFS
+MacSysX_xfs:			DS.L PTRLEN	; zentrale Routine f√ºr das XFS
+MacSysX_xfs_dev:		DS.L PTRLEN	; zugeh√∂riger Dateitreiber
 MacSysX_drv2devcode:	DS.L PTRLEN	; umrechnen Laufwerk->Devicenummer
-MacSysX_rawdrvr:		DS.L PTRLEN	; LONG RawDrvr({int, long} *) Raw-Driver (Eject) für Mac
-MacSysX_Daemon:			DS.L PTRLEN	; Aufruf für den mmx-Daemon
-MacSysX_Yield:			DS.L 1		; Aufruf für Rechenzeit abgeben
-MacSys_OldHdr:			DS.L 49		; Kompatibilität mit Behnes
+MacSysX_rawdrvr:		DS.L PTRLEN	; LONG RawDrvr({int, long} *) Raw-Driver (Eject) f√ºr Mac
+MacSysX_Daemon:			DS.L PTRLEN	; Aufruf f√ºr den mmx-Daemon
+MacSysX_Yield:			DS.L 1		; Aufruf f√ºr Rechenzeit abgeben
+MacSys_OldHdr:			DS.L 49		; Kompatibilit√§t mit Behnes
 MacSysX_sizeof:
 
 	TEXT
@@ -843,11 +843,11 @@ struct MacXSysHdr
 {
 	// Atari -> Mac
 	uint32_t	MacSys_magic;		// ist 'MagC'
-	uint32_t	MacSys_len;			// Länge der Struktur
+	uint32_t	MacSys_len;			// L√§nge der Struktur
 	uint32_t	MacSys_syshdr;		// Adresse des Atari-Syshdr
-	uint32_t	MacSys_keytabs;		// 5*128 Bytes für Tastaturtabellen
+	uint32_t	MacSys_keytabs;		// 5*128 Bytes f√ºr Tastaturtabellen
 	uint32_t	MacSys_mem_root;	// Speicherlisten
-	uint32_t	MacSys_act_pd;		// Zeiger auf aktuellen Prozeû
+	uint32_t	MacSys_act_pd;		// Zeiger auf aktuellen Proze√ü
 	uint32_t	MacSys_act_appl;	// Zeiger auf aktuelle Task
 	uint32_t	MacSys_verAtari;	// Versionsnummer MagicMacX.OS
 	//Mac -> Atari
@@ -857,12 +857,12 @@ struct MacXSysHdr
 	CMagiC_CPPCCallback	MacSys_init;	// Wird beim Warmstart des Atari aufgerufen
 	CMagiC_CPPCCallback	MacSys_biosinit;	// nach Initialisierung aufrufen
 	CMagiC_CPPCCallback	MacSys_VdiInit;	// nach Initialisierung des VDI aufrufen
-	uint32_t	MacSys_pixmap;		// 68k-Zeiger, Daten fürs VDI
+	uint32_t	MacSys_pixmap;		// 68k-Zeiger, Daten f√ºrs VDI
 	uint32_t	MacSys_pMMXCookie;	// 68k-Zeiger auf MgMx-Cookie
 	CXCmd_CPPCCallback	MacSys_Xcmd;	// XCMD-Kommandos
 	void		*MacSys_PPCAddr;	// tats. PPC-Adresse von 68k-Adresse 0
 	void		*MacSys_VideoAddr;	// tats. PPC-Adresse des Bildschirmspeichers
-	CMagiC_CPPCCallback	MacSys_Exec68k;	// hier kann der PPC-Callback 68k-Code ausführen
+	CMagiC_CPPCCallback	MacSys_Exec68k;	// hier kann der PPC-Callback 68k-Code ausf√ºhren
 	void		*MacSys_gettime;	// LONG GetTime(void) Datum und Uhrzeit ermitteln
 	void		*MacSys_settime;	// void SetTime(LONG *time) Datum/Zeit setzen
 	void		*MacSys_Setpalette;	// void Setpalette( int ptr[16] )
@@ -871,42 +871,42 @@ struct MacXSysHdr
 	void		*MacSys_VgetRGB;	// void VgetRGB( WORD index, WORD count, LONG *array )
 	void		*MacSys_syshalt;	// SysHalt( char *str ) "System halted"
 	void		*MacSys_syserr;		// SysErr( void ) Bomben
-	void		*MacSys_coldboot;	// ColdBoot(void) Kaltstart ausführen
+	void		*MacSys_coldboot;	// ColdBoot(void) Kaltstart ausf√ºhren
 	void		*MacSys_exit;		// Exit(void) beenden
-	void		*MacSys_debugout;	// MacPuts( char *str ) fürs Debugging
+	void		*MacSys_debugout;	// MacPuts( char *str ) f√ºrs Debugging
 	void		*MacSys_error;		// d0 = -1: kein Grafiktreiber
-	void		*MacSys_prtos;		// Bcostat(void) für PRT
-	void		*MacSys_prtin;		// Cconin(void) für PRT
-	void		*MacSys_prtout;		// Cconout( void *params ) für PRT
+	void		*MacSys_prtos;		// Bcostat(void) f√ºr PRT
+	void		*MacSys_prtin;		// Cconin(void) f√ºr PRT
+	void		*MacSys_prtout;		// Cconout( void *params ) f√ºr PRT
 	void		*MacSys_prtouts;	// LONG PrtOuts({char *buf, LONG count}) String auf Drucker
-	void		*MacSys_serconf;	// Rsconf( void *params ) für ser1
-	void		*MacSys_seris;		// Bconstat(void) für ser1 (AUX)
-	void		*MacSys_seros;		// Bcostat(void) für ser1
-	void		*MacSys_serin;		// Cconin(void) für ser1
-	void		*MacSys_serout;		// Cconout( void *params ) für ser1
-	void		*MacSys_SerOpen;	// Serielle Schnittstelle öffnen
-	void		*MacSys_SerClose;	// Serielle Schnittstelle schließen
+	void		*MacSys_serconf;	// Rsconf( void *params ) f√ºr ser1
+	void		*MacSys_seris;		// Bconstat(void) f√ºr ser1 (AUX)
+	void		*MacSys_seros;		// Bcostat(void) f√ºr ser1
+	void		*MacSys_serin;		// Cconin(void) f√ºr ser1
+	void		*MacSys_serout;		// Cconout( void *params ) f√ºr ser1
+	void		*MacSys_SerOpen;	// Serielle Schnittstelle √∂ffnen
+	void		*MacSys_SerClose;	// Serielle Schnittstelle schlie√üen
 	void		*MacSys_SerRead;	// Lesen(buffer, len) => gelesene Zeichen
 	void		*MacSys_SerWrite;	// Schreiben(buffer, len) => geschriebene Zeichen
 	void		*MacSys_SerStat;	// Lese-/Schreibstatus
-	void		*MacSys_SerIoctl;	// Ioctl-Aufrufe für serielle Schnittstelle
+	void		*MacSys_SerIoctl;	// Ioctl-Aufrufe f√ºr serielle Schnittstelle
 	CMagiC_CPPCCallback	MacSys_GetKeybOrMouse;	// Wird im Interrupt 6 aufgerufen
 	void		*MacSys_dos_macfn;	// DosFn({int,void*} *) DOS-Funktionen 0x60..0xfe
 	uint32_t	MacSys_xfs_version;
 	uint32_t	MacSys_xfs_flags;
-	CMacXFS_CPPCCallback	MacSys_xfs;	// Routine für das XFS
-	CMacXFS_CPPCCallback	MacSys_xfs_dev;	//  Zugehöriger Dateitreiber
+	CMacXFS_CPPCCallback	MacSys_xfs;	// Routine f√ºr das XFS
+	CMacXFS_CPPCCallback	MacSys_xfs_dev;	//  Zugeh√∂riger Dateitreiber
 	CMacXFS_CPPCCallback	MacSys_drv2devcode;	// umrechnen Laufwerk->Devicenummer
-	CMacXFS_CPPCCallback	MacSys_rawdrvr;	// LONG RawDrvr({int, long} *) Raw-Driver (Eject) für Mac
-	CMagiC_CPPCCallback	MacSys_Daemon;	// Aufruf für den mmx-Daemon
+	CMacXFS_CPPCCallback	MacSys_rawdrvr;	// LONG RawDrvr({int, long} *) Raw-Driver (Eject) f√ºr Mac
+	CMagiC_CPPCCallback	MacSys_Daemon;	// Aufruf f√ºr den mmx-Daemon
 	void		*MacSys_Yield;		// Rechenzeit abgeben
-	OldMmSysHdr	MacSys_OldHdr;		// für Kompatibilität mit Behnes VDI
+	OldMmSysHdr	MacSys_OldHdr;		// f√ºr Kompatibilit√§t mit Behnes VDI
 };
 
 struct MagiC_SA
 {
 	uint32_t	_ATARI_sa_handler;	// 0x00: Signalhandler
-	uint32_t	_ATARI_sa_sigextra;	// 0x04: OR-Maske bei Ausführung des Signals
+	uint32_t	_ATARI_sa_sigextra;	// 0x04: OR-Maske bei Ausf√ºhrung des Signals
 	uint16_t	_ATARI_sa_flags;
 };
 
@@ -918,7 +918,7 @@ struct MagiC_FH
 
 struct MagiC_ProcInfo
 {
-	uint32_t	pr_magic;			/* magischer Wert, ähnlich wie bei MiNT */
+	uint32_t	pr_magic;			/* magischer Wert, √§hnlich wie bei MiNT */
 	uint16_t	pr_ruid;			/* "real user ID" */
 	uint16_t	pr_rgid;			/* "real group ID" */
 	uint16_t	pr_euid;			/* "effective user ID" */
@@ -932,18 +932,18 @@ struct MagiC_ProcInfo
 	MagiC_SA	pr_sigdata[32];
 	uint32_t	pr_usrva;			/* "User"-Wert (ab 9/96)	*/
 	uint32_t	pr_memlist;			/* Tabelle der "shared memory blocks" */
-	char		pr_fname[128];		/* Pfad der zugehörigen PRG-Datei */
-	char		pr_cmdlin[128];		/* Ursprüngliche Kommandozeile */
+	char		pr_fname[128];		/* Pfad der zugeh√∂rigen PRG-Datei */
+	char		pr_cmdlin[128];		/* Urspr√ºngliche Kommandozeile */
 	uint16_t	pr_flags;			/* Bit 0: kein Eintrag in u:\proc */
 									/* Bit 1: durch Pfork() erzeugt */
-	uint8_t	pr_procname[10];		/* Prozeßname für u:\proc\ ohne Ext. */
+	uint8_t	pr_procname[10];		/* Proze√üname f√ºr u:\proc\ ohne Ext. */
 	uint16_t	pr_bconmap;			/* z.Zt. unbenutzt */
 	MagiC_FH	pr_hndm6;			/* Handle -6: unbenutzt */
 	MagiC_FH	pr_hndm5;			/* Handle -5: unbenutzt */
-	MagiC_FH	pr_hndm4;			/* Handle -4: standardmäßig NUL: */
-	MagiC_FH	pr_hndm3;			/* Handle -3: standardmäßig PRN: */
-	MagiC_FH	pr_hndm2;			/* Handle -2: standardmäßig AUX: */
-	MagiC_FH	pr_hndm1;			/* Handle -1: standardmäßig CON: */
+	MagiC_FH	pr_hndm4;			/* Handle -4: standardm√§√üig NUL: */
+	MagiC_FH	pr_hndm3;			/* Handle -3: standardm√§√üig PRN: */
+	MagiC_FH	pr_hndm2;			/* Handle -2: standardm√§√üig AUX: */
+	MagiC_FH	pr_hndm1;			/* Handle -1: standardm√§√üig CON: */
 	MagiC_FH	pr_handle[32];		/* Handles 0..31 */
 };
 
@@ -952,34 +952,34 @@ struct MagiC_PD
 	uint32_t	p_lowtpa;		/* 0x00: Beginn TPA, des BP selbst */
 	uint32_t	p_hitpa;		/* 0x04: zeigt 1 Byte hinter TPA */
 	uint32_t	p_tbase;		/* 0x08: Beginn des TEXT - Segments */
-	uint32_t	p_tlen;			/* 0x0c: Länge  des TEXT - Segments */
+	uint32_t	p_tlen;			/* 0x0c: L√§nge  des TEXT - Segments */
 	uint32_t	p_dbase;		/* 0x10: Beginn des DATA - Segments */
-	uint32_t	p_dlen;			/* 0x14: Länge  des DATA - Segments */
+	uint32_t	p_dlen;			/* 0x14: L√§nge  des DATA - Segments */
 	uint32_t	p_bbase;		/* 0x18: Beginn des BSS  - Segments */
-	uint32_t	p_blen;			/* 0x1c: Länge  des BSS  - Segments */
+	uint32_t	p_blen;			/* 0x1c: L√§nge  des BSS  - Segments */
 	uint32_t	p_dta;			/* 0x20: Aktueller DTA- Puffer */
 	uint32_t	p_parent;		/* 0x24: Zeiger auf BP des Parent */
-	uint16_t	p_procid;		/* 0x28: Prozeß- ID */
+	uint16_t	p_procid;		/* 0x28: Proze√ü- ID */
 	uint16_t	p_status;		/* 0x2a: ab MagiC 5.04 */
 	uint32_t	p_env;			/* 0x2c: Zeiger auf Environment */
 	uint8_t		p_devx[6];		/* 0x30: std-Handle <=> phs. Handle */
 	uint8_t		p_flags;		/* 0x36: Bit 0: Pdomain (MiNT:1/TOS:0) */
 	uint8_t		p_defdrv;		/* 0x37: Default- Laufwerk */
-	uint8_t		p_res3[8];		/* 0x38: Terminierungskontext für ACC */
+	uint8_t		p_res3[8];		/* 0x38: Terminierungskontext f√ºr ACC */
 	uint8_t		p_drvx[32];		/* 0x40: Tabelle: Default-Path-Hdl. */
 	uint32_t	p_procdata;		/* 0x60: Zeiger auf PROCDATA */
-	uint16_t	p_umask;		/* 0x64: umask für Unix-Dateisysteme */
-	uint16_t	p_procgroup;	/* 0x66: Prozeûgruppe (ab 6.10.96) */
+	uint16_t	p_umask;		/* 0x64: umask f√ºr Unix-Dateisysteme */
+	uint16_t	p_procgroup;	/* 0x66: Proze√ügruppe (ab 6.10.96) */
 	uint32_t	p_mem;			/* 0x68: soviel Speicher darf ich holen */
 	uint32_t	p_context;		/* 0x6c: unter MAGIX statt p_reg benutzt */
 	uint32_t	p_mflags;		/* 0x70: Bit 2: Malloc aus AltRAM erlaubt */
-	uint32_t	p_app;			/* 0x74: APPL, die den Prozeß gestartet	hat (main thread) */
+	uint32_t	p_app;			/* 0x74: APPL, die den Proze√ü gestartet	hat (main thread) */
 	uint32_t	p_ssp;			/* 0x78: ssp bei Start des Prozesses */
-	uint32_t	p_reg;			/* 0x7c: für Kompatibilität mit TOS */
+	uint32_t	p_reg;			/* 0x7c: f√ºr Kompatibilit√§t mit TOS */
 	uint8_t		p_cmdlin[128];	/* 0x80: Kommandozeile */
 };
 
-/* Werte für ap_status */
+/* Werte f√ºr ap_status */
 
 enum MagiC_APP_STATUS
 {
@@ -994,49 +994,49 @@ struct MagiC_APP
 {
 	uint32_t  ap_next;			// Verkettungszeiger
 	uint16_t  ap_id;			// Application-ID
-	uint16_t  ap_parent;		// tatsächliche parent-ID
+	uint16_t  ap_parent;		// tats√§chliche parent-ID
 	uint16_t  ap_parent2;		// ggf. die ap_id des VT52, dorthin ->CH_EXIT
 	uint16_t  ap_type;			// 0 = Main Thread/1 = Thread/2 = Signal Handler
-	uint32_t  ap_oldsigmask;	// Alte Signalmaske (für Signal-Handler)
+	uint32_t  ap_oldsigmask;	// Alte Signalmaske (f√ºr Signal-Handler)
 	uint32_t  ap_sigthr;		// Haupt-Thread: Zeiger auf aktiven Signalhandler
 								// Signalhandler: Zeiger auf vorherigen oder NULL
-	uint16_t  ap_srchflg;		// für appl_search
-	uint32_t  ap_menutree;		// Menübaum
-	uint32_t  ap_attached;		// NULL oder Liste fÅr menu_attach()
+	uint16_t  ap_srchflg;		// f√ºr appl_search
+	uint32_t  ap_menutree;		// Men√ºbaum
+	uint32_t  ap_attached;		// NULL oder Liste f√ºr menu_attach()
 	uint32_t  ap_desktree;		// Desktop-Hintergrund
 	uint16_t  ap_1stob;			//  dazu erstes Objekt
 	uint8_t   ap_dummy1[2];		// zwei Leerzeichen vor ap_name
 	uint8_t   ap_name[8];		// Name (8 Zeichen mit trailing blanks)
 	uint8_t   ap_dummy2[2];		// Leerstelle und ggf. Ausblendzeichen
-	uint8_t   ap_dummy3;		// Nullbyte für EOS
+	uint8_t   ap_dummy3;		// Nullbyte f√ºr EOS
 	uint8_t   ap_status;		// APSTAT_...
 	uint16_t  ap_hbits;			// eingetroffene Events
 	uint16_t  ap_rbits;			// erwartete Events
 	uint32_t  ap_evparm;		// Event-Daten, z.B. <pid> oder msg-Puffer
-	uint32_t  ap_nxttim;		// Nächste auf Timer wartende APP
+	uint32_t  ap_nxttim;		// N√§chste auf Timer wartende APP
 	uint32_t  ap_ms;			// Timer
-	uint32_t  ap_nxtalrm;		// Nächste auf Alarm wartende APP
+	uint32_t  ap_nxtalrm;		// N√§chste auf Alarm wartende APP
 	uint32_t  ap_alrmms;		// Alarm
 	uint16_t  ap_isalarm;		// Flag
-	uint32_t  ap_nxtsem;		// Nächste auf Semaphore wartende APP
+	uint32_t  ap_nxtsem;		// N√§chste auf Semaphore wartende APP
 	uint32_t  ap_semaph;		// auf diese Semaphore warten wir
-	uint16_t  ap_unselcnt;		// Länge der Tabelle ap_unselx
-	uint32_t  ap_unselx;		// Tabelle für evnt_(m)IO
-	uint32_t  ap_evbut;			// für evnt_button
-	uint32_t  ap_mgrect1;		// für evnt_mouse
-	uint32_t  ap_mgrect2;		// für evnt_mouse
-	uint16_t  ap_kbbuf[8];		// Puffer für 8 Tasten
-	uint16_t  ap_kbhead;		// Nächstes zu lesendes Zeichen
-	uint16_t  ap_kbtail;		// Nächstes zu schreibendes Zeichen
+	uint16_t  ap_unselcnt;		// L√§nge der Tabelle ap_unselx
+	uint32_t  ap_unselx;		// Tabelle f√ºr evnt_(m)IO
+	uint32_t  ap_evbut;			// f√ºr evnt_button
+	uint32_t  ap_mgrect1;		// f√ºr evnt_mouse
+	uint32_t  ap_mgrect2;		// f√ºr evnt_mouse
+	uint16_t  ap_kbbuf[8];		// Puffer f√ºr 8 Tasten
+	uint16_t  ap_kbhead;		// N√§chstes zu lesendes Zeichen
+	uint16_t  ap_kbtail;		// N√§chstes zu schreibendes Zeichen
 	uint16_t  ap_kbcnt;			// Anzahl Zeichen im Puffer
-	uint16_t  ap_len;			// Message- Pufferlänge
+	uint16_t  ap_len;			// Message- Pufferl√§nge
 	uint8_t   ap_buf[0x300];	// Message- Puffer (768 Bytes = 48 Nachrichten)
-	uint16_t  ap_critic;			// Zähler für "kritische Phase"
+	uint16_t  ap_critic;		// Z√§hler f√ºr "kritische Phase"
 	uint8_t   ap_crit_act;		// Bit 0: killed
 								// Bit 1: stopped
 								// Bit 2: Signale testen
 	uint8_t   ap_stpsig;		// Flag "durch Signal gestoppt"
-	uint32_t  ap_sigfreeze;		// Signalhandler für SIGFREEZE
+	uint32_t  ap_sigfreeze;		// Signalhandler f√ºr SIGFREEZE
 	uint16_t  ap_recogn;		// Bit 0: verstehe AP_TERM
 	uint32_t  ap_flags;			// Bit 0: will keinen prop. AES-Zeichensatz
 	uint16_t  ap_doex;
@@ -1046,7 +1046,7 @@ struct MagiC_APP
 	uint32_t  ap_ldpd;			// PD des Loader-Prozesses
 	uint32_t  ap_env;			// Environment oder NULL
 	uint32_t  ap_xtail;			// Erw. Kommandozeile (> 128 Bytes) od. NULL
-	uint32_t  ap_thr_usp;		// usp für Threads
+	uint32_t  ap_thr_usp;		// usp f√ºr Threads
 	uint32_t  ap_memlimit;
 	uint32_t  ap_nice;			// z.Zt. unbenutzt
 	uint8_t   ap_cmd[128];		// Programmpfad
@@ -1058,7 +1058,7 @@ struct MagiC_APP
 	uint32_t  ap_ssp;
 	uint32_t  ap_pd;
 	uint32_t  ap_etvterm;
-	uint32_t  ap_stkchk;		// magisches Wort für Stacküberprüfung
+	uint32_t  ap_stkchk;		// magisches Wort f√ºr Stack√ºberpr√ºfung
 	uint8_t   ap_stack[0];		// Stack
 };
 

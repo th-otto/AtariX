@@ -18,7 +18,7 @@
 
 /*
 *
-* Enthält alles, was mit der Atari-Maus zu tun hat
+* Enth√§lt alles, was mit der Atari-Maus zu tun hat
 *
 */
 
@@ -40,9 +40,9 @@ class CMagiCMouse
 	~CMagiCMouse();
 	// Initialisierung
 	void Init(unsigned char *pLineAVars, Point PtPos);
-	// Neue Mausposition übergeben
+	// Neue Mausposition √ºbergeben
 	bool SetNewPosition(Point PtPos);
-	// Neuen Maustastenstatus übergeben
+	// Neuen Maustastenstatus √ºbergeben
 	bool SetNewButtonState(unsigned int NumOfButton, bool bIsDown);
 	// packet abholen
 	bool GetNewPositionAndButtonState(char packet[3]);

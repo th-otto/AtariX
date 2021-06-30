@@ -18,7 +18,7 @@
 
 /*
 *
-* Enthält alle benötigten Routinen aus MoreFilesExtras.h
+* Enth√§lt alle ben√∂tigten Routinen aus MoreFilesExtras.h
 *
 */
 

@@ -18,7 +18,7 @@
 
 /*
 *
-* EnthŠlt alles, was mit der Atari-Tastatur zu tun hat
+* EnthÃ¤lt alles, was mit der Atari-Tastatur zu tun hat
 *
 */
 
@@ -66,24 +66,24 @@ const unsigned char CMagiCKeyboard::s_convtab[128] =
 	5,		// 21: 4
 	7,		// 22: 6
 	6,		// 23: 5
-	13,		// 24: « (deadkey!)
+	13,		// 24: Â´ (deadkey!)
 	10,		// 25: 9
 	8,		// 26: 7
-	12,		// 27: §
+	12,		// 27: ÃŸ
 	9,		// 28: 8
 	11,		// 29: 0
 	27,		// 30: +
 	24,		// 31: o
 	22,		// 32: u
-	26,		// 33: Ÿ
+	26,		// 33: Ã¼
 	23,		// 34: i
 	25,		// 35: p
 	28,		// 36: Return
 	38,		// 37: l
 	36,		// 38: j
-	40,		// 39: Š
+	40,		// 39: Ã¤
 	37,		// 40: k
-	39,		// 41: š
+	39,		// 41: Ã¶
 	41,		// 42: #
 	51,		// 43: ,
 	53,		// 44: -
@@ -223,7 +223,7 @@ CMagiCKeyboard::CMagiCKeyboard()
 	{
 		if	(pKCHR[24] == '\0')	// wenn "dead key"
 		{
-			pKCHR[24] = '«';
+			pKCHR[24] = 0xab;
 			DebugInfo("Tastaturtabelle gepatcht");
 		}
 		if	(pKCHR[10] == '\0')	// wenn "dead key"
@@ -232,7 +232,7 @@ CMagiCKeyboard::CMagiCKeyboard()
 			DebugInfo("Tastaturtabelle gepatcht");
 		}
 		nKCHRtables--;
-		pKCHR += 128;		// nŠchste Tabelle
+		pKCHR += 128;		// nÃ¤chste Tabelle
 	}
 #endif
 }
@@ -343,7 +343,7 @@ unsigned char CMagiCKeyboard::SdlScanCode2AtariScanCode(int s)
 
 		case SDL_SCANCODE_SEMICOLON:	return ATARI_KBD_SCANCODE_SEMICOLON;
 		case SDL_SCANCODE_APOSTROPHE:	return ATARI_KBD_SCANCODE_APOSTROPHE;
-		case SDL_SCANCODE_GRAVE:		return ATARI_KBD_SCANCODE_GRAVE;	// holds '^' and '¡' on a German keyboard
+		case SDL_SCANCODE_GRAVE:		return ATARI_KBD_SCANCODE_GRAVE;	// holds '^' and 'Â°' on a German keyboard
 		case SDL_SCANCODE_NONUSHASH: 	return ATARI_KBD_SCANCODE_GRAVE;
 
 		case SDL_SCANCODE_COMMA:		return ATARI_KBD_SCANCODE_COMMA;
@@ -452,13 +452,13 @@ unsigned char CMagiCKeyboard::GetModifierScanCode(UInt32 modifiers, bool *bAutoB
 	UInt32 mask = 0;
 
 
-	// €nderungen zu bisher gesendetem Status durch XOR berechnen
+	// Ã„nderungen zu bisher gesendetem Status durch XOR berechnen
 
 	diffmod = modifiers ^ m_modifiers;
 	if	(!diffmod)
 		return(0);
 
-	// Alle Bits auf Unterschiede prŸfen
+	// Alle Bits auf Unterschiede prÃ¼fen
 
 	for	(pmask = s_modconvtab; pmask < s_modconvtab+16; pmask += 2)
 	{
@@ -484,7 +484,7 @@ unsigned char CMagiCKeyboard::GetModifierScanCode(UInt32 modifiers, bool *bAutoB
 		m_modifiers |= mask;
 		}
 	else	{
-		if	(!(*bAutoBreak))	// FŸr CapsLock wird der Break-Code automatisch generiert
+		if	(!(*bAutoBreak))	// FÃ¼r CapsLock wird der Break-Code automatisch generiert
 			ret |= 0x80;
 		m_modifiers &= ~mask;
 		}

@@ -18,7 +18,7 @@
 
 /*
 *
-* Serielle Schnittstelle für MagicMacX
+* Serielle Schnittstelle f√ºr MagicMacX
 *
 */
 
@@ -40,9 +40,9 @@ class CMagiCSerial
 	~CMagiCSerial();
 	// Initialisierung
 	UInt32 Open(const char *BsdPath);
-	// Schließen
+	// Schlie√üen
 	UInt32 Close();
-	// Geöffnet?
+	// Ge√∂ffnet?
 	bool IsOpen();
 	// Ausgabe
 	UInt32 Write(unsigned int cnt, const char *pBuffer);
@@ -81,11 +81,11 @@ class CMagiCSerial
 
 	// wartet, bis der Ausgabepuffer geleert ist.
 	UInt32 Drain(void);
-	// löscht Ein-/Ausgangspuffer
+	// l√∂scht Ein-/Ausgangspuffer
 	UInt32 Flush(bool bInputBuffer, bool bOutputBuffer);
 
    private:
-   	// Unix-Dateideskriptor für Modem
+   	// Unix-Dateideskriptor f√ºr Modem
    	int m_fd;
 	// Eingangspuffer
 #ifndef USE_SERIAL_SELECT
