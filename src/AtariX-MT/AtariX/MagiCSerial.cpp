@@ -36,6 +36,9 @@
 //#define DEBUG_VERBOSE
 #endif
 
+#undef MIN
+#define MIN(a,b) ((a<b) ? (a) : (b))
+
 // statische Attribute
 
 #define ISPEED_ALWAYS_EQUAL_OSPEED	1
@@ -213,7 +216,7 @@ UInt32 CMagiCSerial::Read(unsigned int cnt, char *pBuffer)
 	int nBytesRead = 0;
 
 #ifndef USE_SERIAL_SELECT
-	nBytesRead = (int) min(m_InBufFill, cnt);
+	nBytesRead = (int) MIN(m_InBufFill, cnt);
 	if	(nBytesRead)
 	{
 		memcpy(pBuffer, m_InBuffer, (size_t) nBytesRead);

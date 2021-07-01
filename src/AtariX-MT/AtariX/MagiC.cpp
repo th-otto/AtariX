@@ -40,6 +40,9 @@
 #include <time.h>
 #include <sys/time.h>
 
+#undef MIN
+#define MIN(a,b) ((a<b) ? (a) : (b))
+
 // Schalter
 
 #ifdef _DEBUG
@@ -2976,7 +2979,7 @@ uint32_t CMagiC::AtariVsetRGB(uint32_t params, unsigned char *AdrOffset68k)
 
 	// durchlaufe alle zu ändernden Farben
 	pColourTable = pTheMagiC->m_pMagiCScreen->m_pColourTable;
-	j = min(MAGIC_COLOR_TABLE_LEN, index + cnt);
+	j = MIN(MAGIC_COLOR_TABLE_LEN, index + cnt);
 	for	(i = index, pColourTable += index;
 		i < j;
 		i++, pValues += 4,pColourTable++)
@@ -3023,7 +3026,7 @@ uint32_t CMagiC::AtariVgetRGB(uint32_t params, unsigned char *AdrOffset68k)
 
 	// durchlaufe alle zu ändernden Farben
 	pColourTable = pTheMagiC->m_pMagiCScreen->m_pColourTable;
-	j = min(MAGIC_COLOR_TABLE_LEN, index + cnt);
+	j = MIN(MAGIC_COLOR_TABLE_LEN, index + cnt);
 	for	(i = index, pColourTable += index;
 		i < j;
 		i++, pValues++, pColourTable++)

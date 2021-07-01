@@ -34,8 +34,6 @@
 
 // Schalter
 
-#define min(a,b) ((a<b) ? (a) : (b))
-#define max(a,b) ((a>b) ? (a) : (b))
 #define MAX_ATARIMEMSIZE	(2U*1024U*1024U*1024U)		// 2 Gigabytes
 
 
