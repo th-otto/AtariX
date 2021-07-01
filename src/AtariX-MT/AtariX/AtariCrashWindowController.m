@@ -132,8 +132,8 @@ static void Exc2Str(UInt16 exc, char *s)
 }
 
 
-#define SET_REGISTER_TO_GUI(theValue, theNs, theFormat, theOutlet) \
-sprintf(buf, theFormat, theValue); \
+#define SET_REGISTER_TO_GUI(theValue, theNs, theOutlet) \
+sprintf(buf, "%08lx", (unsigned long)(theValue)); \
 NSString *theNs = [NSString stringWithCString:buf encoding:NSISOLatin1StringEncoding]; \
 [theOutlet setStringValue:theNs];
 
@@ -171,7 +171,7 @@ NSString *theNs = [NSString stringWithCString:buf encoding:NSISOLatin1StringEnco
 	
 	if	((EmuReg_exc == 2) || (EmuReg_exc == 3))
 	{
-		sprintf(buf, "0x%08lx (%s)", EmuReg_ErrAddr, AccessMode);
+		sprintf(buf, "0x%08lx (%s)", (unsigned long)EmuReg_ErrAddr, AccessMode);
 	}
 	else
 	{
@@ -182,28 +182,28 @@ NSString *theNs = [NSString stringWithCString:buf encoding:NSISOLatin1StringEnco
 
 	// Atari registers
 
-	SET_REGISTER_TO_GUI(EmuReg_pc,  npc,  "0x%08lx", outletRegPC)
-	SET_REGISTER_TO_GUI(EmuReg_pc - (EmuReg_pd + 256),  nrpc,  "0x%08lx", outletRegRelPC)
-	SET_REGISTER_TO_GUI(EmuReg_sr,  nsr,  "0x%04x",  outletRegSR)
-	SET_REGISTER_TO_GUI(EmuReg_usp, nusp, "0x%08lx", outletRegUSP)
+	SET_REGISTER_TO_GUI(EmuReg_pc,  npc,  outletRegPC)
+	SET_REGISTER_TO_GUI(EmuReg_pc - (EmuReg_pd + 256),  nrpc, outletRegRelPC)
+	SET_REGISTER_TO_GUI(EmuReg_sr,  nsr,  outletRegSR)
+	SET_REGISTER_TO_GUI(EmuReg_usp, nusp, outletRegUSP)
 
-	SET_REGISTER_TO_GUI(EmuReg_Dx[0], nD0, "0x%08lx", outletRegD0)
-	SET_REGISTER_TO_GUI(EmuReg_Dx[1], nD1, "0x%08lx", outletRegD1)
-	SET_REGISTER_TO_GUI(EmuReg_Dx[2], nD2, "0x%08lx", outletRegD2)
-	SET_REGISTER_TO_GUI(EmuReg_Dx[3], nD3, "0x%08lx", outletRegD3)
-	SET_REGISTER_TO_GUI(EmuReg_Dx[4], nD4, "0x%08lx", outletRegD4)
-	SET_REGISTER_TO_GUI(EmuReg_Dx[5], nD5, "0x%08lx", outletRegD5)
-	SET_REGISTER_TO_GUI(EmuReg_Dx[6], nD6, "0x%08lx", outletRegD6)
-	SET_REGISTER_TO_GUI(EmuReg_Dx[7], nD7, "0x%08lx", outletRegD7)
+	SET_REGISTER_TO_GUI(EmuReg_Dx[0], nD0, outletRegD0)
+	SET_REGISTER_TO_GUI(EmuReg_Dx[1], nD1, outletRegD1)
+	SET_REGISTER_TO_GUI(EmuReg_Dx[2], nD2, outletRegD2)
+	SET_REGISTER_TO_GUI(EmuReg_Dx[3], nD3, outletRegD3)
+	SET_REGISTER_TO_GUI(EmuReg_Dx[4], nD4, outletRegD4)
+	SET_REGISTER_TO_GUI(EmuReg_Dx[5], nD5, outletRegD5)
+	SET_REGISTER_TO_GUI(EmuReg_Dx[6], nD6, outletRegD6)
+	SET_REGISTER_TO_GUI(EmuReg_Dx[7], nD7, outletRegD7)
 
-	SET_REGISTER_TO_GUI(EmuReg_Ax[0], nA0, "0x%08lx", outletRegA0)
-	SET_REGISTER_TO_GUI(EmuReg_Ax[1], nA1, "0x%08lx", outletRegA1)
-	SET_REGISTER_TO_GUI(EmuReg_Ax[2], nA2, "0x%08lx", outletRegA2)
-	SET_REGISTER_TO_GUI(EmuReg_Ax[3], nA3, "0x%08lx", outletRegA3)
-	SET_REGISTER_TO_GUI(EmuReg_Ax[4], nA4, "0x%08lx", outletRegA4)
-	SET_REGISTER_TO_GUI(EmuReg_Ax[5], nA5, "0x%08lx", outletRegA5)
-	SET_REGISTER_TO_GUI(EmuReg_Ax[6], nA6, "0x%08lx", outletRegA6)
-	SET_REGISTER_TO_GUI(EmuReg_Ax[7], nA7, "0x%08lx", outletRegA7)
+	SET_REGISTER_TO_GUI(EmuReg_Ax[0], nA0, outletRegA0)
+	SET_REGISTER_TO_GUI(EmuReg_Ax[1], nA1, outletRegA1)
+	SET_REGISTER_TO_GUI(EmuReg_Ax[2], nA2, outletRegA2)
+	SET_REGISTER_TO_GUI(EmuReg_Ax[3], nA3, outletRegA3)
+	SET_REGISTER_TO_GUI(EmuReg_Ax[4], nA4, outletRegA4)
+	SET_REGISTER_TO_GUI(EmuReg_Ax[5], nA5, outletRegA5)
+	SET_REGISTER_TO_GUI(EmuReg_Ax[6], nA6, outletRegA6)
+	SET_REGISTER_TO_GUI(EmuReg_Ax[7], nA7, outletRegA7)
 
 /*
 	sprintf(buf, "0x%08lx", EmuReg_pc);

@@ -378,7 +378,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_M && driveNo != ATARI_DRIVE_U && driveNo <= ATARI_DRIVE_Z)
 	{
 		NSOpenPanel *chooser = [NSOpenPanel openPanel];
-		NSString *myTitle = [NSString stringWithFormat:@"Choose Path for Virtual Atari Drive %c:", driveNo + 'A'];
+		NSString *myTitle = [NSString stringWithFormat:@"Choose Path for Virtual Atari Drive %c:", (int)driveNo + 'A'];
 		chooser.title = myTitle;
 		chooser.canChooseFiles = NO;
 		//	[DirectoryChooser setCanChooseFiles:NO];	// equivalent
@@ -386,10 +386,10 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 		chooser.canCreateDirectories = YES;
 		chooser.allowsMultipleSelection = NO;
 		NSInteger ret = [chooser runModal];
-		printf("%s() : runModal() -> %d\n", __FUNCTION__, ret);
+		printf("%s() : runModal() -> %d\n", __FUNCTION__, (int)ret);
 		if (ret == NSFileHandlingPanelOKButton)
 		{
-			printf("%s() File Chooser exited with OK, change drive %c:\n", __FUNCTION__, driveNo + 'A');
+			printf("%s() File Chooser exited with OK, change drive %c:\n", __FUNCTION__, (int)driveNo + 'A');
 			NSArray *urls = chooser.URLs;
 			// das geht nicht, und NSString bleibt eine URL?!?
 			NSURL *pathUrl = urls.lastObject;
@@ -402,7 +402,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 	}
 	else
 	{
-		printf("%s() : invalid selected drive %d\n", __FUNCTION__, driveNo);
+		printf("%s() : invalid selected drive %d\n", __FUNCTION__, (int)driveNo);
 	}
 }
 
@@ -427,7 +427,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 	}
 	else
 	{
-		printf("%s() : invalid selected drive %d\n", __FUNCTION__, driveNo);
+		printf("%s() : invalid selected drive %d\n", __FUNCTION__, (int)driveNo);
 	}
 }
 
@@ -444,7 +444,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 	NSInteger driveNo = outletAtariDrivesTableView.selectedRow;
 	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_M && driveNo != ATARI_DRIVE_U && driveNo <= ATARI_DRIVE_Z)
 	{
-		printf("%s() : selected drive %d\n", __FUNCTION__, driveNo);
+		printf("%s() : selected drive %d\n", __FUNCTION__, (int)driveNo);
 		id theValue;
 		theValue = [m_AtariDrivesUrlDict objectForKey:ATARI_DRIVE_STR(driveNo)];
 		if (theValue == nil)
@@ -464,7 +464,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 	}
 	else
 	{
-		printf("%s() : invalid selected drive %d\n", __FUNCTION__, driveNo);
+		printf("%s() : invalid selected drive %d\n", __FUNCTION__, (int)driveNo);
 		// disable buttons
 		[outletAtariDrivePathSelect setEnabled:NO];
 		[outletAtariDriveRemove setEnabled:NO];

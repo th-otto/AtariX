@@ -427,7 +427,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	chooser.allowsMultipleSelection = NO;
 	NSInteger ret = [chooser runModal];
 
-	DebugInfo("%s() : runModal() -> %d", __FUNCTION__, ret);
+	DebugInfo("%s() : runModal() -> %d", __FUNCTION__, (int)ret);
 
 	if (ret == NSFileHandlingPanelOKButton)
 	{
