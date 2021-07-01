@@ -37,6 +37,8 @@
 #include "missing.h"
 #include "_fcntl.h"
 #include "s_endian.h"
+#include <time.h>
+#include <sys/time.h>
 
 // Schalter
 
@@ -2870,23 +2872,19 @@ uint32_t CMagiC::AtariGettime(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
-#if 0
-	DateTimeRec dtr;
-
-	GetTime (&dtr);
-	return (dtr.second>>1) + (dtr.minute<<5) + ((unsigned short)dtr.hour<<11) + (((uint32_t)dtr.day)<<16) + (((uint32_t)dtr.month)<<21) + ((((uint32_t)dtr.year)-1980)<<25);
-#endif
-
-	CFAbsoluteTime at = CFAbsoluteTimeGetCurrent();
-	CFTimeZoneRef tz = CFTimeZoneCopyDefault();
-	CFGregorianDate d = CFAbsoluteTimeGetGregorianDate(at, tz);
-	CFRelease(tz);
-	return (((unsigned) d.second) >> 1) +
-		   (d.minute << 5) +
-		   ((unsigned short) d.hour << 11) +
-		   (((uint32_t) d.day) << 16) +
-		   (((uint32_t) d.month) << 21) +
-		   ((((uint32_t) d.year) - 1980) << 25);
+	struct timeval tv;
+	time_t t;
+	struct tm tm;
+	
+	gettimeofday(&tv, NULL);
+	t = tv.tv_sec;
+	tm = *localtime(&t);
+	return (((unsigned) tm.tm_sec) >> 1) +
+		   (tm.tm_min << 5) +
+		   ((unsigned short) tm.tm_hour << 11) +
+		   (((uint32_t) tm.tm_mday) << 16) +
+		   (((uint32_t) (tm.tm_mon + 1)) << 21) +
+		   ((((uint32_t) tm.tm_year) + 1900 - 1980) << 25);
 }
 
 
@@ -2901,18 +2899,22 @@ uint32_t CMagiC::AtariSettime(uint32_t params, unsigned char *AdrOffset68k)
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
 	uint32_t time;
-	DateTimeRec dtr;
-
+	struct timeval tv;
+	struct tm tm;
 
 	time = be32_to_cpu(*((uint32_t *) params));
-	dtr.second = (short) ((time&31)<<1);
-	dtr.minute = (short) ((time>>5)&63);
-	dtr.hour = (short) ((time>>11)&31);
-	dtr.day = (short) ((time>>16)&31);
-	dtr.month = (short) ((time>>21)&15);
-	dtr.year = (short) ((time>>25)+1980);
-	SetTime(&dtr);
-	return(0);
+	tm.tm_sec = (short) ((time&31)<<1);
+	tm.tm_min = (short) ((time>>5)&63);
+	tm.tm_hour = (short) ((time>>11)&31);
+	tm.tm_mday = (short) ((time>>16)&31);
+	tm.tm_mon = (short) ((time>>21)&15) - 1;
+	tm.tm_year = (short) ((time>>25)+1980)-1900;
+	tm.tm_isdst = -1;
+	tv.tv_sec = mktime(&tm);
+	tv.tv_usec = 0;
+	settimeofday(&tv, NULL);
+
+	return 0;
 }
 
 
