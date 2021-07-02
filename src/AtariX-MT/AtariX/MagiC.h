@@ -76,6 +76,19 @@ class CMagiC
    	// Typdefinitionen
    	#pragma options align=packed
 
+	static uint32_t thunk_AtariInit(uint32_t params, unsigned char *AdrOffset68k);
+	static uint32_t thunk_AtariBIOSInit(uint32_t params, unsigned char *AdrOffset68k);
+	static uint32_t thunk_AtariVdiInit(uint32_t params, unsigned char *AdrOffset68k);
+	static uint32_t thunk_AtariExec68k(uint32_t params, unsigned char *AdrOffset68k);
+	static uint32_t thunk_AtariGetKeyboardOrMouseData(uint32_t params, unsigned char *AdrOffset68k);
+	static uint32_t thunk_MmxDaemon(uint32_t params, unsigned char *AdrOffset68k);
+	static uint32_t thunk_XFSFunctions(uint32_t params, unsigned char *AdrOffset68k);
+	static uint32_t thunk_XFSDevFunctions(uint32_t params, unsigned char *AdrOffset68k);
+	static uint32_t thunk_Drv2DevCode(uint32_t params, unsigned char *AdrOffset68k);
+	static uint32_t thunk_RawDrvr(uint32_t params, unsigned char *AdrOffset68k);
+	static uint32_t thunk_XCmdCommand(uint32_t params, unsigned char *AdrOffset68k);
+	CXCmd *m_pXCmd;
+
 	void UpdateAtariDoubleBuffer(void);
 
 	struct Atari68kData
@@ -107,6 +120,7 @@ class CMagiC
 	uint32_t AtariExec68k( uint32_t params, unsigned char *AdrOffset68k );
 	uint32_t OpenSerialBIOS(void);
 	static void SendMessageToMainThread( bool bAsync, uint32_t command );
+	static uint32_t AtariEnosys( uint32_t params, unsigned char *AdrOffset68k );
 	static uint32_t AtariDOSFn( uint32_t params, unsigned char *AdrOffset68k );
 	static uint32_t AtariGettime( uint32_t params, unsigned char *AdrOffset68k );
 	static uint32_t AtariSettime( uint32_t params, unsigned char *AdrOffset68k );

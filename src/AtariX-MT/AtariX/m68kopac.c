@@ -4,6 +4,7 @@
 
 #include "m68kcpu.h"
 #include <stddef.h>
+#include "natfeat.h"
 
 /* ======================================================================== */
 /* ========================= INSTRUCTION HANDLERS ========================= */
@@ -8500,44 +8501,29 @@ void m68k_op_callm_32_pcix(void)
 }
 
 
-/* MagicMacX specific */
 void m68k_op_call_emu_proc(void)
 {
 	unsigned a0, a1;
-	unsigned char *p;
-	typedef unsigned tfHostCall(unsigned a1, unsigned char *emubase);
-	tfHostCall *proc;
+	uint32_t *p;
 
 	a0 = REG_A[0];	/* hopefully in host's endianess mode */
 	a1 = REG_A[1];
-	p = sBaseAddr + a0;		/* address in host's address range */
-	/* geht nicht: */
-	/* proc = *((tfHostCall *)(p)); */
-	a0 = *((unsigned *) (p + 0));
-	proc = (tfHostCall *) a0;
+	p = (uint32_t *)(sBaseAddr + a0);		/* address in host's address range */
 	/* call host function. Put return value into d0 (all in host endian-mode) */
-	REG_D[0] = proc(a1, sBaseAddr);
+	REG_D[0] = cmagic_hostcall(*p, a1, sBaseAddr);
 }
 
 
 void m68k_op_call_emu_cproc(void)
 {
 	unsigned a0, a1;
-	unsigned char *p;
-	unsigned self;
-	typedef unsigned tfHostCallCpp(unsigned self, unsigned a1, unsigned char *emubase);
-	tfHostCallCpp *proc;
+	uint32_t *p;
 
 	a0 = REG_A[0];	/* hopefully in host's endianess mode */
 	a1 = REG_A[1];
-	p = sBaseAddr + a0;		/* address in host's address range */
-	/* geht nicht: */
-	/* proc = *((tfHostCallCpp *)(p)); */
-	a0 = *((unsigned *) (p + 0));
-	proc = (tfHostCallCpp *) a0;
-	self = *((unsigned *) (p + 12));
+	p = (uint32_t *)(sBaseAddr + a0);		/* address in host's address range */
 	/* call host function. Put return value into d0 (all in host endian-mode) */
-	REG_D[0] = proc(self, a1, sBaseAddr);
+	REG_D[0] = cmagic_hostcall(*p, a1, sBaseAddr);
 }
 
 

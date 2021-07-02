@@ -35,10 +35,12 @@
 
 #include "m68k.h"
 #include <limits.h>
+#include <stdint.h>
 
 #if M68K_EMULATE_ADDRESS_ERROR
 #include <setjmp.h>
 #endif /* M68K_EMULATE_ADDRESS_ERROR */
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -1593,7 +1595,7 @@ INLINE void m68ki_stack_frame_buserr_new(uint sr)
 	else
 	{
 		uint32 pc = REG_PC;
-		uint32 vector = 2;		// bus error
+		uint32 vector = 2;		/* bus error */
 
 		/* INTERNAL REGISTER */
 		m68ki_push_16(0);
@@ -2066,6 +2068,9 @@ INLINE void m68ki_check_interrupts(void)
 		m68ki_exception_interrupt(CPU_INT_LEVEL>>8);
 }
 
+
+/* MagicMacX specific */
+uint32_t cmagic_hostcall(uint32_t func, uint32_t params, unsigned char *AdrOffset68k);
 
 #ifdef __cplusplus
 }

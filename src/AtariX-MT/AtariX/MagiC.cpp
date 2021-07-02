@@ -104,6 +104,72 @@ static uint32_t p68k_ScreenDriver = 0;
 #include "VDI_PPC.c.h"
 #endif
 
+enum
+{
+	MacSys_enosys,       // index 0 reserved to catch errors
+
+/*
+ * ordinary C function callbacks that are provided by the emulator to the kernel
+ */
+    MacSys_gettime,    	 // LONG GetTime(void) Datum und Uhrzeit ermitteln
+    MacSys_settime,      // void SetTime(LONG *time) Datum/Zeit setzen
+    MacSys_Setpalette,   // void Setpalette( int ptr[16] )
+    MacSys_Setcolor,     // int Setcolor( int nr, int val )
+    MacSys_VsetRGB,      // void VsetRGB( WORD index, WORD count, LONG *array )
+    MacSys_VgetRGB,      // void VgetRGB( WORD index, WORD count, LONG *array )
+    MacSys_syshalt,      // SysHalt( char *str ) "System halted"
+    MacSys_syserr,       // SysErr( void ) Bomben
+	MacSys_coldboot,     // ColdBoot(void) Kaltstart ausführen
+    MacSys_exit,         // Exit(void) beenden
+    MacSys_debugout,     // MacPuts( char *str ) fürs Debugging
+    MacSys_error,        // d0 = -1: kein Grafiktreiber
+    MacSys_prtos,        // Bcostat(void) für PRT
+    MacSys_prtin,        // Cconin(void) für PRT
+    MacSys_prtout,       // Cconout( void *params ) für PRT
+    MacSys_prtouts,      // LONG PrtOuts({char *buf, LONG count}) String auf Drucker
+    MacSys_serconf,      // Rsconf( void *params ) für ser1
+    MacSys_seris,        // Bconstat(void) für ser1 (AUX)
+    MacSys_seros,        // Bcostat(void) für ser1
+    MacSys_serin,        // Cconin(void) für ser1
+    MacSys_serout,       // Cconout( void *params ) für ser1
+    MacSys_SerOpen,      // Serielle Schnittstelle öffnen
+    MacSys_SerClose,     // Serielle Schnittstelle schließen
+    MacSys_SerRead,      // Lesen(buffer, len) => gelesene Zeichen
+    MacSys_SerWrite,     // Schreiben(buffer, len) => geschriebene Zeichen
+    MacSys_SerStat,      // Lese-/Schreibstatus
+    MacSys_SerIoctl,     // Ioctl-Aufrufe für serielle Schnittstelle
+    MacSys_dos_macfn,    // DosFn({int,void*} *) DOS-Funktionen 0x60..0xfe
+    MacSys_Yield,		 // Rechenzeit abgeben
+
+/*
+ * member functions of CMagiC
+ */
+	MacSys_init,
+	MacSys_biosinit,
+	MacSys_VdiInit,
+	MacSys_Exec68k,
+	MacSys_GetKeybOrMouse,
+	MacSys_Daemon,
+
+/*
+ * member functions of CMacXFS
+ */
+	MacSys_xfs,
+	MacSys_xfs_dev,
+	MacSys_drv2devcode,
+	MacSys_rawdrvr,
+	
+/*
+ * member functions of CXCmd
+ */
+	MacSys_Xcmd,
+
+/* number of functions */	
+	C_callback_NUM
+};
+
+typedef uint32_t (*C_callback_func)(uint32_t params, unsigned char *AdrOffset68k);
+static C_callback_func g_callbacks[C_callback_NUM];
 
 /**********************************************************************
  *
@@ -964,7 +1030,7 @@ OSErr CMagiC::LoadReloc
 		}
 	}
 
-	if	(err)
+	if (err)
 	{
 		DebugError("CMagiC::LoadReloc() - Kann Datei nicht öffnen");
 /*
@@ -1238,6 +1304,59 @@ void CMagiC::DumpAtariMem(const char *filename)
 #endif
 
 
+
+/**********************************************************************
+ * Member function wrappers
+ **********************************************************************/
+
+uint32_t CMagiC::thunk_AtariInit(uint32_t params, unsigned char *AdrOffset68k)
+{
+	return pTheMagiC->AtariInit(params, AdrOffset68k);
+}
+uint32_t CMagiC::thunk_AtariBIOSInit(uint32_t params, unsigned char *AdrOffset68k)
+{
+	return pTheMagiC->AtariBIOSInit(params, AdrOffset68k);
+}
+uint32_t CMagiC::thunk_AtariVdiInit(uint32_t params, unsigned char *AdrOffset68k)
+{
+	return pTheMagiC->AtariVdiInit(params, AdrOffset68k);
+}
+uint32_t CMagiC::thunk_AtariExec68k(uint32_t params, unsigned char *AdrOffset68k)
+{
+	return pTheMagiC->AtariExec68k(params, AdrOffset68k);
+}
+uint32_t CMagiC::thunk_AtariGetKeyboardOrMouseData(uint32_t params, unsigned char *AdrOffset68k)
+{
+	return pTheMagiC->AtariGetKeyboardOrMouseData(params, AdrOffset68k);
+}
+uint32_t CMagiC::thunk_MmxDaemon(uint32_t params, unsigned char *AdrOffset68k)
+{
+	return pTheMagiC->MmxDaemon(params, AdrOffset68k);
+}
+
+uint32_t CMagiC::thunk_XFSFunctions(uint32_t params, unsigned char *AdrOffset68k)
+{
+	return pTheMagiC->m_MacXFS.XFSFunctions(params, AdrOffset68k);
+}
+uint32_t CMagiC::thunk_XFSDevFunctions(uint32_t params, unsigned char *AdrOffset68k)
+{
+	return pTheMagiC->m_MacXFS.XFSDevFunctions(params, AdrOffset68k);
+}
+uint32_t CMagiC::thunk_Drv2DevCode(uint32_t params, unsigned char *AdrOffset68k)
+{
+	return pTheMagiC->m_MacXFS.Drv2DevCode(params, AdrOffset68k);
+}
+uint32_t CMagiC::thunk_RawDrvr(uint32_t params, unsigned char *AdrOffset68k)
+{
+	return pTheMagiC->m_MacXFS.RawDrvr(params, AdrOffset68k);
+}
+
+uint32_t CMagiC::thunk_XCmdCommand(uint32_t params, unsigned char *AdrOffset68k)
+{
+	return pTheMagiC->m_pXCmd->Command(params, AdrOffset68k);
+}
+
+
 /**********************************************************************
 *
 * Initialisierung
@@ -1378,7 +1497,7 @@ Assign more memory to the application using the Finder dialogue "Information"!
 		goto err_inv_os;
 	}
 
-	assert(sizeof(CMagiC_CPPCCallback) == 16);
+	assert(sizeof(C_callback_CPP) == 16);
 
 	if	(be32_to_cpu(pMacXSysHdr->MacSys_len) != sizeof(*pMacXSysHdr))
 	{
@@ -1398,64 +1517,61 @@ Reinstall the application.
 		return(1);
 	}
 
+	/*
+	 * set callbacks for kernel
+	 */
+	m_pXCmd = pXCmd;
+#define SetThunk(a,b) { g_callbacks[a] = b; pMacXSysHdr->a = a; }
+#define SetThunkCPP(a,b) { g_callbacks[a] = b; pMacXSysHdr->a.func = a; }
+	g_callbacks[MacSys_enosys] = AtariEnosys;
+
 	pMacXSysHdr->MacSys_verMac = cpu_to_be32(10);
 	pMacXSysHdr->MacSys_cpu = cpu_to_be16(20);		// 68020
 	pMacXSysHdr->MacSys_fpu = cpu_to_be16(0);		// keine FPU
-	pMacXSysHdr->MacSys_init.m_Callback = &CMagiC::AtariInit;
-	pMacXSysHdr->MacSys_init.m_thisptr = this;
-	pMacXSysHdr->MacSys_biosinit.m_Callback = &CMagiC::AtariBIOSInit;
-	pMacXSysHdr->MacSys_biosinit.m_thisptr = this;
-	pMacXSysHdr->MacSys_VdiInit.m_Callback = &CMagiC::AtariVdiInit;
-	pMacXSysHdr->MacSys_VdiInit.m_thisptr = this;
-	pMacXSysHdr->MacSys_Exec68k.m_Callback = &CMagiC::AtariExec68k;
-	pMacXSysHdr->MacSys_Exec68k.m_thisptr = this;
+	SetThunkCPP(MacSys_init, thunk_AtariInit);
+	SetThunkCPP(MacSys_biosinit, thunk_AtariBIOSInit);
+	SetThunkCPP(MacSys_VdiInit, thunk_AtariVdiInit);
+	SetThunkCPP(MacSys_Exec68k, thunk_AtariExec68k);
 	pMacXSysHdr->MacSys_pixmap = cpu_to_be32((uint32_t)((char *)&pAtari68kData->m_PixMap - (char *)m_RAM68k));
 	pMacXSysHdr->MacSys_pMMXCookie = cpu_to_be32((uint32_t)((char *)&pAtari68kData->m_CookieData - (char *)m_RAM68k));
-	pMacXSysHdr->MacSys_Xcmd.m_Callback = &CXCmd::Command;
-	pMacXSysHdr->MacSys_Xcmd.m_thisptr = pXCmd;
+	SetThunkCPP(MacSys_Xcmd, thunk_XCmdCommand);
 	pMacXSysHdr->MacSys_PPCAddr = cpu_to_be32((uint32_t) (uintptr_t) m_RAM68k);
 	pMacXSysHdr->MacSys_VideoAddr = cpu_to_be32(m_pMagiCScreen->m_PixMap.baseAddr32);
-	pMacXSysHdr->MacSys_gettime = (void *) AtariGettime;
-	pMacXSysHdr->MacSys_settime = (void *) AtariSettime;
-	pMacXSysHdr->MacSys_Setpalette = (void *) AtariSetpalette;
-	pMacXSysHdr->MacSys_Setcolor = (void *) AtariSetcolor;
-	pMacXSysHdr->MacSys_VsetRGB = (void *) AtariVsetRGB;
-	pMacXSysHdr->MacSys_VgetRGB = (void *) AtariVgetRGB;
-	pMacXSysHdr->MacSys_syshalt = (void *) AtariSysHalt;
-	pMacXSysHdr->MacSys_syserr = (void *) AtariSysErr;
-	pMacXSysHdr->MacSys_coldboot = (void *) AtariColdBoot;
-	pMacXSysHdr->MacSys_exit = (void *) AtariExit;
-	pMacXSysHdr->MacSys_debugout = (void *) AtariDebugOut;
-	pMacXSysHdr->MacSys_error = (void *) AtariError;
-	pMacXSysHdr->MacSys_prtos = (void *) AtariPrtOs;
-	pMacXSysHdr->MacSys_prtin = (void *) AtariPrtIn;
-	pMacXSysHdr->MacSys_prtout = (void *) AtariPrtOut;
-	pMacXSysHdr->MacSys_prtouts = (void *) AtariPrtOutS;
-	pMacXSysHdr->MacSys_serconf = (void *) AtariSerConf;
-	pMacXSysHdr->MacSys_seris = (void *) AtariSerIs;
-	pMacXSysHdr->MacSys_seros = (void *) AtariSerOs;
-	pMacXSysHdr->MacSys_serin = (void *) AtariSerIn;
-	pMacXSysHdr->MacSys_serout = (void *) AtariSerOut;
-	pMacXSysHdr->MacSys_SerOpen = (void *) AtariSerOpen;
-	pMacXSysHdr->MacSys_SerClose = (void *) AtariSerClose;
-	pMacXSysHdr->MacSys_SerRead = (void *) AtariSerRead;
-	pMacXSysHdr->MacSys_SerWrite = (void *) AtariSerWrite;
-	pMacXSysHdr->MacSys_SerStat = (void *) AtariSerStat;
-	pMacXSysHdr->MacSys_SerIoctl = (void *) AtariSerIoctl;
-	pMacXSysHdr->MacSys_GetKeybOrMouse.m_Callback = &CMagiC::AtariGetKeyboardOrMouseData;
-	pMacXSysHdr->MacSys_GetKeybOrMouse.m_thisptr = this;
-	pMacXSysHdr->MacSys_dos_macfn = (void *) AtariDOSFn;
-	pMacXSysHdr->MacSys_xfs.m_Callback = &CMacXFS::XFSFunctions;
-	pMacXSysHdr->MacSys_xfs.m_thisptr = &m_MacXFS;
-	pMacXSysHdr->MacSys_xfs_dev.m_Callback = &CMacXFS::XFSDevFunctions;
-	pMacXSysHdr->MacSys_xfs_dev.m_thisptr = &m_MacXFS;
-	pMacXSysHdr->MacSys_drv2devcode.m_Callback = &CMacXFS::Drv2DevCode;
-	pMacXSysHdr->MacSys_drv2devcode.m_thisptr = &m_MacXFS;
-	pMacXSysHdr->MacSys_rawdrvr.m_Callback = &CMacXFS::RawDrvr;
-	pMacXSysHdr->MacSys_rawdrvr.m_thisptr = &m_MacXFS;
-	pMacXSysHdr->MacSys_Daemon.m_Callback = &CMagiC::MmxDaemon;
-	pMacXSysHdr->MacSys_Daemon.m_thisptr = this;
-	pMacXSysHdr->MacSys_Yield = (void *) AtariYield;
+	SetThunk(MacSys_gettime, AtariGettime);
+	SetThunk(MacSys_settime, AtariSettime);
+	SetThunk(MacSys_Setpalette, AtariSetpalette);
+	SetThunk(MacSys_Setcolor, AtariSetcolor);
+	SetThunk(MacSys_VsetRGB, AtariVsetRGB);
+	SetThunk(MacSys_VgetRGB, AtariVgetRGB);
+	SetThunk(MacSys_syshalt, AtariSysHalt);
+	SetThunk(MacSys_syserr, AtariSysErr);
+	SetThunk(MacSys_coldboot, AtariColdBoot);
+	SetThunk(MacSys_exit, AtariExit);
+	SetThunk(MacSys_debugout, AtariDebugOut);
+	SetThunk(MacSys_error, AtariError);
+	SetThunk(MacSys_prtos, AtariPrtOs);
+	SetThunk(MacSys_prtin, AtariPrtIn);
+	SetThunk(MacSys_prtout, AtariPrtOut);
+	SetThunk(MacSys_prtouts, AtariPrtOutS);
+	SetThunk(MacSys_serconf, AtariSerConf);
+	SetThunk(MacSys_seris, AtariSerIs);
+	SetThunk(MacSys_seros, AtariSerOs);
+	SetThunk(MacSys_serin, AtariSerIn);
+	SetThunk(MacSys_serout, AtariSerOut);
+	SetThunk(MacSys_SerOpen, AtariSerOpen);
+	SetThunk(MacSys_SerClose, AtariSerClose);
+	SetThunk(MacSys_SerRead, AtariSerRead);
+	SetThunk(MacSys_SerWrite, AtariSerWrite);
+	SetThunk(MacSys_SerStat, AtariSerStat);
+	SetThunk(MacSys_SerIoctl, AtariSerIoctl);
+	SetThunkCPP(MacSys_GetKeybOrMouse, thunk_AtariGetKeyboardOrMouseData);
+	SetThunk(MacSys_dos_macfn, AtariDOSFn);
+	SetThunkCPP(MacSys_xfs, thunk_XFSFunctions);
+	SetThunkCPP(MacSys_xfs_dev, thunk_XFSDevFunctions);
+	SetThunkCPP(MacSys_drv2devcode, thunk_Drv2DevCode);
+	SetThunkCPP(MacSys_rawdrvr, thunk_RawDrvr);
+	SetThunkCPP(MacSys_Daemon, thunk_MmxDaemon);
+	SetThunk(MacSys_Yield, AtariYield);
 
 	// ssp nach Reset
 	*((uint32_t *)(m_RAM68k + 0)) = cpu_to_be32(512*1024);		// Stack auf 512k
@@ -3234,6 +3350,37 @@ uint32_t CMagiC::AtariExit(uint32_t params, unsigned char *AdrOffset68k)
 		DebugInfo("### VideoRamWriteCounter(%2d) = %d", i, WriteCounters[i]);
 #endif
 #endif
+	return(0);
+}
+
+/**********************************************************************
+*
+* Perform Callbacks
+*
+**********************************************************************/
+uint32_t cmagic_hostcall(uint32_t func, uint32_t params, unsigned char *AdrOffset68k)
+{
+	C_callback_func proc;
+
+	if (func >= C_callback_NUM)
+		func = MacSys_enosys;
+	proc = g_callbacks[func];
+	return proc(params, AdrOffset68k);
+}
+
+
+/**********************************************************************
+*
+* Callback des Emulators: illegal function call
+*
+**********************************************************************/
+
+uint32_t CMagiC::AtariEnosys(uint32_t params, unsigned char *AdrOffset68k)
+{
+#pragma unused(params)
+#pragma unused(AdrOffset68k)
+	MyAlert(ALRT_ILLEGAL_FUNC, kAlertStopAlert);
+	pTheMagiC->StopExec();	// fatal error for execution thread
 	return(0);
 }
 

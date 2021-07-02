@@ -50,15 +50,16 @@
 
 // Alerts
 
-#define ALRT_NO_VIDEO_DRIVER		200
-#define ALRT_NO_MAGICMAC_OS		201
-#define ALRT_NOT_ENOUGH_MEM		202
-#define ALRT_INVALID_MAGICMAC_OS	203
-#define ALRT_RESTART_APPLICATION		204
-#define ALRT_QUIT_INSTANTLY			205
-#define ALRT_INVALID_MONITOR		206
-//#define ALRT_CLASSIC_OS_REQUIRED		207
-//#define ALRT_OSX_REQUIRED			208
-#define ALRT_DEMO				209
-#define ALRT_MIN_ATARI_SCREEN_SIZE	210
-#define ALRT_DISPLAY_CHANGED	211
+#define ALRT_NO_VIDEO_DRIVER            200
+#define ALRT_NO_MAGICMAC_OS             201
+#define ALRT_NOT_ENOUGH_MEM             202
+#define ALRT_INVALID_MAGICMAC_OS        203
+#define ALRT_RESTART_APPLICATION        204
+#define ALRT_QUIT_INSTANTLY             205
+#define ALRT_INVALID_MONITOR            206
+//#define ALRT_CLASSIC_OS_REQUIRED      207
+//#define ALRT_OSX_REQUIRED             208
+#define ALRT_DEMO                       209
+#define ALRT_MIN_ATARI_SCREEN_SIZE      210
+#define ALRT_DISPLAY_CHANGED            211
+#define ALRT_ILLEGAL_FUNC               212

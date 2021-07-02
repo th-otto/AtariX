@@ -2793,7 +2793,7 @@ void m68k_op_pflush_32(void)
 {
 	if(CPU_TYPE_IS_040_PLUS(CPU_TYPE))
 	{
-		// Nothing to do, unless address translation cache is emulated
+		/* Nothing to do, unless address translation cache is emulated */
 		return;
 	}
 	m68ki_exception_illegal();

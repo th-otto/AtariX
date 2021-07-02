@@ -619,49 +619,25 @@ struct strXCMD
 };
 
 
-/*
-struct CPPCCallback
-{
-	uint32_t (*Callback)(void *params1, void *params2, unsigned char *AdrOffset68k);
-	void *params1;
-};
-*/
-
 class CMagiC;
-struct CMagiC_CPPCCallback
-{
-	typedef uint32_t (CMagiC::*CMagiC_PPCCallback)(uint32_t params, unsigned char *AdrOffset68k);
-	CMagiC_PPCCallback m_Callback;
-#if defined(__GNUC__)
-	uint32_t dummy;
-#endif
-	CMagiC *m_thisptr;
-};
-
 class CMacXFS;
-struct CMacXFS_CPPCCallback
-{
-	typedef int32_t (CMacXFS::*CMacXFS_PPCCallback)(uint32_t params, unsigned char *AdrOffset68k);
-	CMacXFS_PPCCallback m_Callback;
-#if defined(__GNUC__)
-	uint32_t dummy;
-#endif
-	CMacXFS *m_thisptr;
-};
-
 class CXCmd;
-struct CXCmd_CPPCCallback
-{
-	typedef int32_t (CXCmd::*CXCmd_PPCCallback)(uint32_t params, unsigned char *AdrOffset68k);
-	CXCmd_PPCCallback m_Callback;		// gcc: 2 words, mwc: 3 words
-#if defined(__GNUC__)
-	uint32_t dummy;
-#endif
-	CXCmd *m_thisptr;
-};
 
-typedef uint32_t (*PPCCallback)(uint32_t params, unsigned char *AdrOffset68k);
-//typedef uint32_t (CMagiC::*PPCCallback)(void *params, unsigned char *AdrOffset68k);
+/*
+ * This used to be a structure with a member function pointer,
+ * and a this pointer.
+ * That does not work reliable however, and needs ugly casts
+ * and thunking in 64-Bit mode.
+ * We use just a function index now, but keep the size the same as before,
+ * so kernels are unaffected.
+ */
+typedef struct _C_callback_CPP
+{
+	uint32_t func;
+	uint32_t unused1;
+	uint32_t unused2;
+	uint32_t unused3;
+} C_callback_CPP;
 
 /*
  * This must match the PixMap definition in
@@ -849,6 +825,10 @@ MACRO	MACPPCE
 #endif
 
 
+
+typedef uint32_t C_callback_index;
+
+
 struct MacXSysHdr
 {
 	// Atari -> Mac
@@ -864,52 +844,52 @@ struct MacXSysHdr
 	uint32_t	MacSys_verMac;		// Versionsnummer der Struktur
 	uint16_t	MacSys_cpu;			// CPU (20 = 68020, 30=68030, 40=68040)
 	uint16_t	MacSys_fpu;			// FPU (0=nix,4=68881,6=68882,8=68040)
-	CMagiC_CPPCCallback	MacSys_init;	// Wird beim Warmstart des Atari aufgerufen
-	CMagiC_CPPCCallback	MacSys_biosinit;	// nach Initialisierung aufrufen
-	CMagiC_CPPCCallback	MacSys_VdiInit;	// nach Initialisierung des VDI aufrufen
+	C_callback_CPP	MacSys_init;	// Wird beim Warmstart des Atari aufgerufen
+	C_callback_CPP	MacSys_biosinit;	// nach Initialisierung aufrufen
+	C_callback_CPP	MacSys_VdiInit;	// nach Initialisierung des VDI aufrufen
 	uint32_t	MacSys_pixmap;		// 68k-Zeiger, Daten fürs VDI
 	uint32_t	MacSys_pMMXCookie;	// 68k-Zeiger auf MgMx-Cookie
-	CXCmd_CPPCCallback	MacSys_Xcmd;	// XCMD-Kommandos
+	C_callback_CPP	MacSys_Xcmd;	// XCMD-Kommandos
 	uint32_t	MacSys_PPCAddr;		// tats. PPC-Adresse von 68k-Adresse 0 (was only valid for ppc32 - DO NOT USE)
 	uint32_t	MacSys_VideoAddr;	// tats. PPC-Adresse des Bildschirmspeichers (was only valid for ppc32 - DO NOT USE)
-	CMagiC_CPPCCallback	MacSys_Exec68k;	// hier kann der PPC-Callback 68k-Code ausführen
-	void		*MacSys_gettime;	// LONG GetTime(void) Datum und Uhrzeit ermitteln
-	void		*MacSys_settime;	// void SetTime(LONG *time) Datum/Zeit setzen
-	void		*MacSys_Setpalette;	// void Setpalette( int ptr[16] )
-	void		*MacSys_Setcolor;	// int Setcolor( int nr, int val )
-	void		*MacSys_VsetRGB;	// void VsetRGB( WORD index, WORD count, LONG *array )
-	void		*MacSys_VgetRGB;	// void VgetRGB( WORD index, WORD count, LONG *array )
-	void		*MacSys_syshalt;	// SysHalt( char *str ) "System halted"
-	void		*MacSys_syserr;		// SysErr( void ) Bomben
-	void		*MacSys_coldboot;	// ColdBoot(void) Kaltstart ausführen
-	void		*MacSys_exit;		// Exit(void) beenden
-	void		*MacSys_debugout;	// MacPuts( char *str ) fürs Debugging
-	void		*MacSys_error;		// d0 = -1: kein Grafiktreiber
-	void		*MacSys_prtos;		// Bcostat(void) für PRT
-	void		*MacSys_prtin;		// Cconin(void) für PRT
-	void		*MacSys_prtout;		// Cconout( void *params ) für PRT
-	void		*MacSys_prtouts;	// LONG PrtOuts({char *buf, LONG count}) String auf Drucker
-	void		*MacSys_serconf;	// Rsconf( void *params ) für ser1
-	void		*MacSys_seris;		// Bconstat(void) für ser1 (AUX)
-	void		*MacSys_seros;		// Bcostat(void) für ser1
-	void		*MacSys_serin;		// Cconin(void) für ser1
-	void		*MacSys_serout;		// Cconout( void *params ) für ser1
-	void		*MacSys_SerOpen;	// Serielle Schnittstelle öffnen
-	void		*MacSys_SerClose;	// Serielle Schnittstelle schließen
-	void		*MacSys_SerRead;	// Lesen(buffer, len) => gelesene Zeichen
-	void		*MacSys_SerWrite;	// Schreiben(buffer, len) => geschriebene Zeichen
-	void		*MacSys_SerStat;	// Lese-/Schreibstatus
-	void		*MacSys_SerIoctl;	// Ioctl-Aufrufe für serielle Schnittstelle
-	CMagiC_CPPCCallback	MacSys_GetKeybOrMouse;	// Wird im Interrupt 6 aufgerufen
-	void		*MacSys_dos_macfn;	// DosFn({int,void*} *) DOS-Funktionen 0x60..0xfe
+	C_callback_CPP	MacSys_Exec68k;	// hier kann der PPC-Callback 68k-Code ausführen
+	C_callback_index  MacSys_gettime;	// LONG GetTime(void) Datum und Uhrzeit ermitteln
+	C_callback_index  MacSys_settime;	// void SetTime(LONG *time) Datum/Zeit setzen
+	C_callback_index  MacSys_Setpalette;// void Setpalette( int ptr[16] )
+	C_callback_index  MacSys_Setcolor;	// int Setcolor( int nr, int val )
+	C_callback_index  MacSys_VsetRGB;	// void VsetRGB( WORD index, WORD count, LONG *array )
+	C_callback_index  MacSys_VgetRGB;	// void VgetRGB( WORD index, WORD count, LONG *array )
+	C_callback_index  MacSys_syshalt;	// SysHalt( char *str ) "System halted"
+	C_callback_index  MacSys_syserr;	// SysErr( void ) Bomben
+	C_callback_index  MacSys_coldboot;	// ColdBoot(void) Kaltstart ausführen
+	C_callback_index  MacSys_exit;		// Exit(void) beenden
+	C_callback_index  MacSys_debugout;	// MacPuts( char *str ) fürs Debugging
+	C_callback_index  MacSys_error;		// d0 = -1: kein Grafiktreiber
+	C_callback_index  MacSys_prtos;		// Bcostat(void) für PRT
+	C_callback_index  MacSys_prtin;		// Cconin(void) für PRT
+	C_callback_index  MacSys_prtout;	// Cconout( void *params ) für PRT
+	C_callback_index  MacSys_prtouts;	// LONG PrtOuts({char *buf, LONG count}) String auf Drucker
+	C_callback_index  MacSys_serconf;	// Rsconf( void *params ) für ser1
+	C_callback_index  MacSys_seris;		// Bconstat(void) für ser1 (AUX)
+	C_callback_index  MacSys_seros;		// Bcostat(void) für ser1
+	C_callback_index  MacSys_serin;		// Cconin(void) für ser1
+	C_callback_index  MacSys_serout;	// Cconout( void *params ) für ser1
+	C_callback_index  MacSys_SerOpen;	// Serielle Schnittstelle öffnen
+	C_callback_index  MacSys_SerClose;	// Serielle Schnittstelle schließen
+	C_callback_index  MacSys_SerRead;	// Lesen(buffer, len) => gelesene Zeichen
+	C_callback_index  MacSys_SerWrite;	// Schreiben(buffer, len) => geschriebene Zeichen
+	C_callback_index  MacSys_SerStat;	// Lese-/Schreibstatus
+	C_callback_index  MacSys_SerIoctl;	// Ioctl-Aufrufe für serielle Schnittstelle
+	C_callback_CPP	MacSys_GetKeybOrMouse;	// Wird im Interrupt 6 aufgerufen
+	C_callback_index  MacSys_dos_macfn;	// DosFn({int,void*} *) DOS-Funktionen 0x60..0xfe
 	uint32_t	MacSys_xfs_version;
 	uint32_t	MacSys_xfs_flags;
-	CMacXFS_CPPCCallback	MacSys_xfs;	// Routine für das XFS
-	CMacXFS_CPPCCallback	MacSys_xfs_dev;	//  Zugehöriger Dateitreiber
-	CMacXFS_CPPCCallback	MacSys_drv2devcode;	// umrechnen Laufwerk->Devicenummer
-	CMacXFS_CPPCCallback	MacSys_rawdrvr;	// LONG RawDrvr({int, long} *) Raw-Driver (Eject) für Mac
-	CMagiC_CPPCCallback	MacSys_Daemon;	// Aufruf für den mmx-Daemon
-	void		*MacSys_Yield;		// Rechenzeit abgeben
+	C_callback_CPP	MacSys_xfs;	// Routine für das XFS
+	C_callback_CPP	MacSys_xfs_dev;	//  Zugehöriger Dateitreiber
+	C_callback_CPP	MacSys_drv2devcode;	// umrechnen Laufwerk->Devicenummer
+	C_callback_CPP	MacSys_rawdrvr;	// LONG RawDrvr({int, long} *) Raw-Driver (Eject) für Mac
+	C_callback_CPP	MacSys_Daemon;	// Aufruf für den mmx-Daemon
+	C_callback_index  MacSys_Yield;		// Rechenzeit abgeben
 	OldMmSysHdr	MacSys_OldHdr;		// für Kompatibilität mit Behnes VDI
 };
 

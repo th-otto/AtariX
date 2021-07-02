@@ -85,6 +85,13 @@ DialogItemIndex MyAlert(SInt16 alertID, AlertType alertType)
 		case ALRT_DISPLAY_CHANGED:
 			break;
 
+		case ALRT_ILLEGAL_FUNC:
+			msgtxt = "Illegal function call";
+			inftxt = "The atari kernel issued an illegal function call.\n"
+			         "Maybe the kernel is damaged.\n"
+			         "Emulation will be stopped.";
+			break;
+
 		default:
 			break;
 	}

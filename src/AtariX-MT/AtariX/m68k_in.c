@@ -218,15 +218,15 @@ void m68ki_build_opcode_table(void)
 				m68ki_instruction_jump_table[instr] = ostruct->opcode_handler;
 				for(k=0;k<NUM_CPU_TYPES;k++)
 					m68ki_cycles[k][instr] = ostruct->cycles[k];
-				// For all shift operations with known shift distance (encoded in instruction word)
+				/* For all shift operations with known shift distance (encoded in instruction word) */
 				if((instr & 0xf000) == 0xe000 && (!(instr & 0x20)))
 				{
-					// On the 68000 and 68010 shift distance affect execution time.
-					// Add the cycle cost of shifting; 2 times the shift distance
+					/* On the 68000 and 68010 shift distance affect execution time. */
+					/* Add the cycle cost of shifting; 2 times the shift distance */
 					cycle_cost = ((((i-1)&7)+1)<<1);
 					m68ki_cycles[0][instr] += cycle_cost;
 					m68ki_cycles[1][instr] += cycle_cost;
-					// On the 68020 shift distance does not affect execution time
+					/* On the 68020 shift distance does not affect execution time */
 					m68ki_cycles[2][instr] += 0;
 				}
 			}
@@ -3269,19 +3269,13 @@ M68KMAKE_OP(callm, 32, ., .)
 M68KMAKE_OP(call_emu_proc, 0, ., .)
 {
 	unsigned a0, a1;
-	unsigned char *p;
-	typedef unsigned tfHostCall(unsigned a1, unsigned char *emubase);
-	tfHostCall *proc;
+	uint32_t *p;
 
 	a0 = REG_A[0];	/* hopefully in host's endianess mode */
 	a1 = REG_A[1];
-	p = sBaseAddr + a0;		/* address in host's address range */
-	/* geht nicht: */
-	/* proc = *((tfHostCall *)(p)); */
-	a0 = *((unsigned *) (p + 0));
-	proc = (tfHostCall *) a0;
+	p = (uint32_t *)(sBaseAddr + a0);		/* address in host's address range */
 	/* call host function. Put return value into d0 (all in host endian-mode) */
-	REG_D[0] = proc(a1, sBaseAddr);
+	REG_D[0] = cmagic_hostcall(*p, a1, sBaseAddr);
 }
 
 
@@ -3289,21 +3283,13 @@ M68KMAKE_OP(call_emu_proc, 0, ., .)
 M68KMAKE_OP(call_emu_cproc, 0, ., .)
 {
 	unsigned a0, a1;
-	unsigned char *p;
-	unsigned self;
-	typedef unsigned tfHostCallCpp(unsigned self, unsigned a1, unsigned char *emubase);
-	tfHostCallCpp *proc;
+	uint32_t *p;
 
 	a0 = REG_A[0];	/* hopefully in host's endianess mode */
 	a1 = REG_A[1];
-	p = sBaseAddr + a0;		/* address in host's address range */
-	/* geht nicht: */
-	/* proc = *((tfHostCallCpp *)(p)); */
-	a0 = *((unsigned *) (p + 0));
-	proc = (tfHostCallCpp *) a0;
-	self = *((unsigned *) (p + 12));
+	p = (uint32_t *)(sBaseAddr + a0);		/* address in host's address range */
 	/* call host function. Put return value into d0 (all in host endian-mode) */
-	REG_D[0] = proc(self, a1, sBaseAddr);
+	REG_D[0] = cmagic_hostcall(*p, a1, sBaseAddr);
 }
 
 
@@ -8423,7 +8409,7 @@ M68KMAKE_OP(pflush, 32, ., .)
 {
 	if(CPU_TYPE_IS_040_PLUS(CPU_TYPE))
 	{
-		// Nothing to do, unless address translation cache is emulated
+		/* Nothing to do, unless address translation cache is emulated */
 		return;
 	}
 	m68ki_exception_illegal();
