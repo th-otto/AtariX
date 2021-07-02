@@ -2900,13 +2900,13 @@ uint32_t CMagiC::AtariGettime(uint32_t params, unsigned char *AdrOffset68k)
 
 uint32_t CMagiC::AtariSettime(uint32_t params, unsigned char *AdrOffset68k)
 {
-#pragma unused(params)
-#pragma unused(AdrOffset68k)
 	uint32_t time;
 	struct timeval tv;
 	struct tm tm;
+	uint32_t *ptime;
 
-	time = be32_to_cpu(*((uint32_t *) params));
+	ptime = (uint32_t *)(AdrOffset68k + params);
+	time = be32_to_cpu(*ptime);
 	tm.tm_sec = (short) ((time&31)<<1);
 	tm.tm_min = (short) ((time>>5)&63);
 	tm.tm_hour = (short) ((time>>11)&31);
