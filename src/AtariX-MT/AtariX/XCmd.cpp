@@ -625,7 +625,7 @@ static void DebugPrintSymbolsInPefLib(CFragConnectionID id, long nSymbols)
 static void DebugPrintSymbolsInCFPlugIn(MagicMacXPluginInterfaceStruct *pInterface, UInt32 nSymbols)
 {
 	tfXCMDFunction *pFn;
-	UInt32 i;
+	uint32_t i;
 	const char *s;
 
 
@@ -796,7 +796,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 			DebugPrintSymbolsInCFPlugIn(pInterface, ulNumOfSym);
 		}
 
-		*pNumOfSymbols = (int32_t) NumOfSymbols;
+		*pNumOfSymbols = NumOfSymbols;
 	}
 
 	return(err);

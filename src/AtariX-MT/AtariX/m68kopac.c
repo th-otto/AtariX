@@ -4,7 +4,6 @@
 
 #include "m68kcpu.h"
 #include <stddef.h>
-#include "natfeat.h"
 
 /* ======================================================================== */
 /* ========================= INSTRUCTION HANDLERS ========================= */
@@ -8501,6 +8500,7 @@ void m68k_op_callm_32_pcix(void)
 }
 
 
+/* MagicMacX specific */
 void m68k_op_call_emu_proc(void)
 {
 	unsigned a0, a1;

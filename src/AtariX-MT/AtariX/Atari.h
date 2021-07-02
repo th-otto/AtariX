@@ -663,9 +663,14 @@ struct CXCmd_CPPCCallback
 typedef uint32_t (*PPCCallback)(uint32_t params, unsigned char *AdrOffset68k);
 //typedef uint32_t (CMagiC::*PPCCallback)(void *params, unsigned char *AdrOffset68k);
 
+/*
+ * This must match the PixMap definition in
+ * https://github.com/th-otto/MagicMac/blob/master/kernel/vdi/include/pixmap.inc
+ * as used in MVDI.
+ */
 typedef struct
 {
-	uint8_t			*baseAddr;		/* pointer to pixels */
+	uint32_t		baseAddr32;		/* pointer to pixels */
 	uint16_t		rowBytes;		/* offset to next line */
 //	Rect			bounds;			/* encloses bitmap */
 	uint16_t bounds_top;			/* oberste Zeile */
@@ -682,7 +687,7 @@ typedef struct
 	uint16_t			cmpCount;	/* # components in pixel */
 	uint16_t			cmpSize;	/* # bits per component */
 	uint32_t			planeBytes;	/* offset to next plane */
-	uint8_t           *pmTable;		/* color map for this pixMap (definiert CtabHandle), in fact of type CTabHandle */
+	uint32_t			pmTable32;  /* color map for this pixMap (definiert CtabHandle), in fact of type CTabHandle */
 	uint32_t			pmReserved;	/* for future use. MUST BE 0 */
 } MXVDI_PIXMAP;
 
@@ -757,7 +762,11 @@ struct MgMxCookieData
 	uint32_t	mgmx_daemon;		// Routine für den "mmx.prg"-Hintergrundprozeß
 };
 
+#if 0
 /*
+ * This must match the structure definition in
+ * https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxker.inc
+ */
 PTRLEN	EQU	4		; Zeiger auf Elementfunktion braucht 4 Zeiger
 
 	OFFSET
@@ -837,7 +846,8 @@ MACRO	MACPPC
 MACRO	MACPPCE
 		DC.W $00c1
 		ENDM
-*/
+#endif
+
 
 struct MacXSysHdr
 {
@@ -860,8 +870,8 @@ struct MacXSysHdr
 	uint32_t	MacSys_pixmap;		// 68k-Zeiger, Daten fürs VDI
 	uint32_t	MacSys_pMMXCookie;	// 68k-Zeiger auf MgMx-Cookie
 	CXCmd_CPPCCallback	MacSys_Xcmd;	// XCMD-Kommandos
-	void		*MacSys_PPCAddr;	// tats. PPC-Adresse von 68k-Adresse 0
-	void		*MacSys_VideoAddr;	// tats. PPC-Adresse des Bildschirmspeichers
+	uint32_t	MacSys_PPCAddr;		// tats. PPC-Adresse von 68k-Adresse 0 (was only valid for ppc32 - DO NOT USE)
+	uint32_t	MacSys_VideoAddr;	// tats. PPC-Adresse des Bildschirmspeichers (was only valid for ppc32 - DO NOT USE)
 	CMagiC_CPPCCallback	MacSys_Exec68k;	// hier kann der PPC-Callback 68k-Code ausführen
 	void		*MacSys_gettime;	// LONG GetTime(void) Datum und Uhrzeit ermitteln
 	void		*MacSys_settime;	// void SetTime(LONG *time) Datum/Zeit setzen

@@ -197,7 +197,7 @@ typedef struct _mx_fd {
 	struct MXFSDD
 	{
 		int32_t dirID;
-		short vRefNum;
+		int16_t vRefNum;
 	};
 
    	#pragma options align=reset

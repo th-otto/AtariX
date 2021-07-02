@@ -88,16 +88,16 @@ int GuiMyAlert(const char *msg_text, const char *info_text, int nButtons)
 
 void GuiAtariCrash
 (
-	UInt16 exc,
-	UInt32 ErrAddr,
+	uint16_t exc,
+	uint32_t ErrAddr,
 	const char *AccessMode,
-	UInt32 pc,
-	UInt16 sr,
-	UInt32 usp,
-	const UInt32 *pDx,
-	const UInt32 *pAx,
+	uint32_t pc,
+	uint16_t sr,
+	uint32_t usp,
+	const uint32_t *pDx,
+	const uint32_t *pAx,
 	const char *ProcPath,
-	UInt32 pd
+	uint32_t pd
 )
 {
 	// We create a lock and pass it to the dialog, so that we can wait for the dialog to finish,

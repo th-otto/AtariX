@@ -98,16 +98,16 @@ DialogItemIndex MyAlert(SInt16 alertID, AlertType alertType)
 	return 0;
 }
 void Send68kExceptionData(
-						 UInt16 exc,
-						 UInt32 ErrAddr,
-						 char *AccessMode,
-						 UInt32 pc,
-						 UInt16 sr,
-						 UInt32 usp,
-						 UInt32 *pDx,
-						 UInt32 *pAx,
+						 uint16_t exc,
+						 uint32_t ErrAddr,
+						 const char *AccessMode,
+						 uint32_t pc,
+						 uint16_t sr,
+						 uint32_t usp,
+						 uint32_t *pDx,
+						 uint32_t *pAx,
 						 const char *ProcPath,
-						 UInt32 pd)
+						 uint32_t pd)
 {
 	GuiAtariCrash(exc, ErrAddr, AccessMode, pc, sr, usp, pDx, pAx, ProcPath, pd);
 }

@@ -150,14 +150,14 @@ void EmulationRunner::Config
 	else
 		Globals.s_Preferences.m_atariScreenColourMode = atariScreenMode16M;
 
-	DebugTrace("%s(): atariScreenColourMode (%u)", __func__, atariScreenColourMode);
+	DebugInfo("%s(): atariScreenColourMode (%u)", __func__, atariScreenColourMode);
 
 	m_atariScreenStretchX = atariScreenStretchX;
 	m_atariScreenStretchY = atariScreenStretchY;
-	DebugTrace("%s(): atariHideHostMouse(%u) -- ignored, because unreliable in SDL", __func__, atariHideHostMouse);
+	DebugInfo("%s(): atariHideHostMouse(%u) -- ignored, because unreliable in SDL", __func__, atariHideHostMouse);
 //	m_atariHideHostMouse  = atariHideHostMouse;
 
-	if ((atariPrintCommand) && strlen(atariPrintCommand) < 255)
+	if (atariPrintCommand && strlen(atariPrintCommand) < 255)
 	{
 		strcpy(Globals.s_Preferences.m_szPrintingCommand, atariPrintCommand);
 	}
@@ -907,7 +907,9 @@ void EmulationRunner::_OpenWindow(void)
 	
 	MXVDI_PIXMAP *pixmap = &m_EmulatorScreen.m_PixMap;
 	
-	pixmap->baseAddr      = (uint8_t *) m_sdl_atari_surface->pixels;		// target address, filled in by emulator
+	/* dont worry about the ugly casts here; that member is unused in the emulator */
+	pixmap->baseAddr32    = (uint32_t) (uintptr_t)m_sdl_atari_surface->pixels;		// target address, filled in by emulator
+	m_EmulatorScreen.hostScreen = m_sdl_atari_surface->pixels; /* Hack Hack Hack */
 	pixmap->rowBytes      = m_sdl_atari_surface->pitch | 0x8000;	// 0x4000 and 0x8000 are flags
 	pixmap->bounds_top    = 0;
 	pixmap->bounds_left   = 0;
@@ -921,8 +923,8 @@ void EmulationRunner::_OpenWindow(void)
     pixmap->cmpCount      = cmpCount;					// components: 3 = red, green, blue, 1 = monochrome
     pixmap->cmpSize       = cmpSize;					// True colour: 8 bits per component
 	pixmap->planeBytes    = planeBytes;					// offset to next plane
-	pixmap->pmTable       = NULL;
-	pixmap->pmReserved    = NULL;
+	pixmap->pmTable32     = 0;
+	pixmap->pmReserved    = 0;
 
 	DebugTrace("%s() =>", __func__);
 }

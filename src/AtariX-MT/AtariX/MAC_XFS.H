@@ -29,7 +29,9 @@
 
 #ifndef __MWERKS__
 
+#if 0
 typedef unsigned long OSType;
+#endif
 
 typedef struct
 {

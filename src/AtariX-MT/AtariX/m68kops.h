@@ -8,6 +8,10 @@
 /* ======================================================================== */
 
 
+/* MagicMacX specific */
+void m68k_op_call_emu_proc(void);
+void m68k_op_call_emu_cproc(void);
+
 void m68k_op_1010(void);
 void m68k_op_1111(void);
 void m68k_op_abcd_8_rr(void);
@@ -471,8 +475,6 @@ void m68k_op_callm_32_aw(void);
 void m68k_op_callm_32_al(void);
 void m68k_op_callm_32_pcdi(void);
 void m68k_op_callm_32_pcix(void);
-void m68k_op_call_emu_proc(void);
-void m68k_op_call_emu_cproc(void);
 void m68k_op_cas_8_ai(void);
 void m68k_op_cas_8_pi(void);
 void m68k_op_cas_8_pi7(void);
