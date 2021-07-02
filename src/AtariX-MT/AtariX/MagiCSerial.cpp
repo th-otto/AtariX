@@ -422,7 +422,7 @@ UInt32 CMagiCSerial::Config(
 #if ISPEED_ALWAYS_EQUAL_OSPEED
 		gActualTTYAttrs.c_ospeed = gActualTTYAttrs.c_ispeed;
 #endif
-		DebugInfo("   ispeed = %u, ospeed = %u", gActualTTYAttrs.c_ispeed, gActualTTYAttrs.c_ospeed);
+		DebugInfo("   ispeed = %lu, ospeed = %lu", (unsigned long)gActualTTYAttrs.c_ispeed, (unsigned long)gActualTTYAttrs.c_ospeed);
 		bSet = true;
 	}
 
@@ -434,7 +434,7 @@ UInt32 CMagiCSerial::Config(
 #if ISPEED_ALWAYS_EQUAL_OSPEED
 		gActualTTYAttrs.c_ispeed = gActualTTYAttrs.c_ospeed;
 #endif
-		DebugInfo("   ispeed = %u, ospeed = %u", gActualTTYAttrs.c_ispeed, gActualTTYAttrs.c_ospeed);
+		DebugInfo("   ispeed = %lu, ospeed = %lu", (unsigned long)gActualTTYAttrs.c_ispeed, (unsigned long)gActualTTYAttrs.c_ospeed);
 		bSet = true;
 	}
 
@@ -494,7 +494,7 @@ UInt32 CMagiCSerial::Config(
 		{
 			gActualTTYAttrs.c_cflag &= ~(PARENB);
 		}
-		DebugInfo("   parity enable = %u", gActualTTYAttrs.c_cflag & PARENB);
+		DebugInfo("   parity enable = %lu", (unsigned long)gActualTTYAttrs.c_cflag & PARENB);
 		bSet = true;
 	}
 
@@ -514,7 +514,7 @@ UInt32 CMagiCSerial::Config(
 		{
 			gActualTTYAttrs.c_cflag &= ~(PARODD);
 		}
-		DebugInfo("   parity odd = %u", gActualTTYAttrs.c_cflag & PARODD);
+		DebugInfo("   parity odd = %lu", (unsigned long)gActualTTYAttrs.c_cflag & PARODD);
 		bSet = true;
 	}
 

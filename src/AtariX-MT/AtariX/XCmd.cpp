@@ -118,7 +118,7 @@ int CXCmd::Init(void)
 	m_XCMDFolderSpec.name[0] = 0;
 	if (err || !isDir)
 	{
-		DebugError("CXCmd::Init() -- Verzeichnis \"pPreload-XCMDs\" nicht gefunden", err);
+		DebugError("CXCmd::Init() -- Verzeichnis \"pPreload-XCMDs\" nicht gefunden");
 		m_XCMDFolderSpec.vRefNum = 0;
 		m_XCMDFolderSpec.parID = 0;
 		if	(!err)
@@ -264,10 +264,10 @@ OSErr CXCmd::Load(FSSpec *pSpec, CFragConnectionID* pConnectionId)
 	Ptr mainAddr;
 	Str255 errMessage;
 	OSErr err;
-	UInt32 LenDF;
+	uint32_t LenDF;
 
 
-	DebugInfo(" CXCmd::Load(FSSpec *) -- Lade XCMD mit dem Dateinamen \"%#s\"", pSpec->name);
+	DebugInfo(" CXCmd::Load(FSSpec *) -- Lade XCMD mit dem Dateinamen \"%s\"", pSpec->name + 1);
 
 	// Dateilänge ermitteln
 
@@ -281,11 +281,11 @@ OSErr CXCmd::Load(FSSpec *pSpec, CFragConnectionID* pConnectionId)
 
 	// Bibliothek laden
 
-	LenDF = (UInt32) pb.hFileInfo.ioFlLgLen;
+	LenDF = (uint32_t) pb.hFileInfo.ioFlLgLen;
 	err = GetDiskFragment(
 			pSpec,				// const FSSpec *       fileSpec,
-			0,					//  UInt32               offset,
-			LenDF,				// UInt32               length,
+			0,					//  uint32_t               offset,
+			LenDF,				// uint32_t               length,
 			NULL,					// ConstStr63Param      fragName,         /* can be NULL */
 			kPrivateCFragCopy,		// CFragLoadOptions     options,
 	  		pConnectionId,			// CFragConnectionID *  connID,
@@ -318,7 +318,7 @@ OSErr CXCmd::Load(ConstStr63Param libName, CFragConnectionID* pConnectionId)
 	OSErr err;
 
 
-	DebugInfo("CXCmd::Load(ConstStr63Param *) -- Lade XCMD mit dem Bibliotheknamen \"%#s\"", libName);
+	DebugInfo("CXCmd::Load(ConstStr63Param *) -- Lade XCMD mit dem Bibliotheknamen \"%s\"", libName + 1);
 
 #if TARGET_RT_MAC_MACHO
 	FSSpec Spec;
@@ -338,7 +338,7 @@ OSErr CXCmd::Load(ConstStr63Param libName, CFragConnectionID* pConnectionId)
 
 	// 1. Versuch: Dateiname = Bibliotheksname mit Endung ".lib" bzw. gegebener Endung
 	C2P(buf);
-	DebugInfo(" CXCmd::Load(ConstStr63Param *) -- Mache FSSpec mit dem Dateinamen \"%#s\"", buf);
+	DebugInfo(" CXCmd::Load(ConstStr63Param *) -- Mache FSSpec mit dem Dateinamen \"%s\"", buf + 1);
 	err = FSMakeFSSpec(
 			CGlobals::s_ProcDir.vRefNum,
 			CGlobals::s_ExecutableDirID,		// suche mitten im Bundle, da, wo die exe liegt
@@ -349,7 +349,7 @@ OSErr CXCmd::Load(ConstStr63Param libName, CFragConnectionID* pConnectionId)
 	{
 		strcpy(t, ".Shlb");
 		C2P(buf);
-		DebugInfo(" CXCmd::Load(ConstStr63Param *) -- Mache FSSpec mit dem Dateinamen \"%#s\"", buf);
+		DebugInfo(" CXCmd::Load(ConstStr63Param *) -- Mache FSSpec mit dem Dateinamen \"%s\"", buf + 1);
 		err = FSMakeFSSpec(
 				CGlobals::s_ProcDir.vRefNum,
 				CGlobals::s_ExecutableDirID,		// suche mitten im Bundle, da, wo die exe liegt
@@ -557,7 +557,7 @@ OSErr CXCmd::LoadPlugin
 void *CXCmd::NewGlue
 (
 	void *pCFragPtr,
-	UInt32 XCmdDescriptor,
+	uint32_t XCmdDescriptor,
 	CFragSymbolClass symclass
 )
 {
@@ -618,11 +618,11 @@ static void DebugPrintSymbolsInPefLib(CFragConnectionID id, long nSymbols)
 				&symClass				// CFragSymbolClass *symClass
 				);
 		if	(!err)
-			DebugInfo("CXCmd::Command() --    Symbol \"%#s\", Klasse %d",
-							str, (int) symClass);
+			DebugInfo("CXCmd::Command() --    Symbol \"%s\", Klasse %d",
+							str + 1, (int) symClass);
 	}
 }
-static void DebugPrintSymbolsInCFPlugIn(MagicMacXPluginInterfaceStruct *pInterface, UInt32 nSymbols)
+static void DebugPrintSymbolsInCFPlugIn(MagicMacXPluginInterfaceStruct *pInterface, uint32_t nSymbols)
 {
 	tfXCMDFunction *pFn;
 	uint32_t i;
@@ -666,10 +666,10 @@ OSErr CXCmd::OnCommandLoadLibrary
 	MagicMacXPluginInterfaceStruct *pInterface;
 	const char *pPluginName;
 	const char *pPluginCreator;
-	UInt32 ulPluginVersionMajor;
-	UInt32 ulPluginVersionMinor;
+	uint32_t ulPluginVersionMajor;
+	uint32_t ulPluginVersionMinor;
 	char szSearchPath[256];
-	UInt32 ulNumOfSym;
+	uint32_t ulNumOfSym;
 
 
 	DebugInfo("CXCmd::OnCommandLoadLibrary(\"%s\") by %s", szLibName, (bIsPath) ? "path" : "name");
@@ -811,7 +811,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 
 OSErr CXCmd::OnCommandUnloadLibrary
 (
-	UInt32 XCmdDescriptor
+	uint32_t XCmdDescriptor
 )
 {
 	enRunTimeFormat type;
@@ -866,11 +866,11 @@ OSErr CXCmd::OnCommandUnloadLibrary
 
 OSErr CXCmd::OnCommandFindSymbol
 (
-	UInt32 XCmdDescriptor,
+	uint32_t XCmdDescriptor,
 	char *pSymName,
-	UInt32 SymIndex,
+	uint32_t SymIndex,
 	unsigned char *pSymClass,
-	UInt32 *pSymbolAddress
+	void **pSymbolAddress
 )
 {
 	enRunTimeFormat type;
@@ -891,7 +891,7 @@ OSErr CXCmd::OnCommandFindSymbol
 #endif
 	if	(XCmdDescriptor > MAX_PLUGINS)
 	{
-		DebugError("CXCmd::OnCommandFindSymbol()-- illegal Descriptor", SymIndex);
+		DebugError("CXCmd::OnCommandFindSymbol()-- illegal Descriptor %u", (unsigned int)SymIndex);
 		return(fnfErr);
 	}
 	type = s_Plugins[XCmdDescriptor].RunTimeFormat;
@@ -925,14 +925,14 @@ OSErr CXCmd::OnCommandFindSymbol
 		{
 			*pSymClass = (unsigned char) symClass;
 #if TARGET_RT_MAC_MACHO
-			*pSymbolAddress = (uint32_t) NewGlue(ptr, XCmdDescriptor, symClass);
+			*pSymbolAddress = (void *) NewGlue(ptr, XCmdDescriptor, symClass);
 #else
-			*pSymbolAddress = (UInt32) ptr;
+			*pSymbolAddress = ptr;
 #endif
 		}
 		else
 		{
-			*pSymbolAddress = (UInt32) 0;
+			*pSymbolAddress = 0;
 		}
 	}
 	else
@@ -953,13 +953,13 @@ OSErr CXCmd::OnCommandFindSymbol
 
 		if	(pFn)
 		{
-			*pSymbolAddress = (UInt32) pFn;
+			*pSymbolAddress = (void *) pFn;
 			*pSymClass =  kCodeCFragSymbol;
 			err = noErr;
 		}
 		else
 		{
-			*pSymbolAddress = (UInt32) 0;
+			*pSymbolAddress = 0;
 			err = fnfErr;
 		}
 	}
@@ -1028,7 +1028,7 @@ int32_t CXCmd::Command(uint32_t params, unsigned char *AdrOffset68k)
 					pCmd->m_12_13.m_Name,
 					0xffffffff,
 					&pCmd->m_12_13.m_SymClass,
-					(UInt32 *) &pCmd->m_12_13.m_SymPtr);
+					&pCmd->m_12_13.m_SymPtr);
 			ret = 0;
 			break;
 
@@ -1038,7 +1038,7 @@ int32_t CXCmd::Command(uint32_t params, unsigned char *AdrOffset68k)
 					pCmd->m_12_13.m_Name,
 					(UInt32) pCmd->m_12_13.m_Index,
 					&pCmd->m_12_13.m_SymClass,
-					(UInt32 *) &pCmd->m_12_13.m_SymPtr);
+					&pCmd->m_12_13.m_SymPtr);
 			ret = 0;
 			break;
 

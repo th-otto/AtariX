@@ -109,7 +109,7 @@ int CGlobals::Init(void)
 								NULL
 								);
 		CFRelease(theString);
-		DebugInfo("CGlobals::Init() -- URLRef for kernel = 0x%08x", s_MagiCKernelUrl);
+		DebugInfo("CGlobals::Init() -- URLRef for kernel = %p", (void *)s_MagiCKernelUrl);
 	}
 //	const char *s = (const char *) s_atariRootfsPathUrl;
 
@@ -130,7 +130,7 @@ int CGlobals::Init(void)
 							 NULL
 							 );
 	CFRelease(theString);
-	DebugInfo("CGlobals::Init() -- URLRef for rootfs = 0x%08x", s_rootfsUrl);
+	DebugInfo("CGlobals::Init() -- URLRef for rootfs = %p", (void *)s_rootfsUrl);
 
 	/*
 	 * Get Unix path for Atari Clipboard file

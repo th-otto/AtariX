@@ -612,7 +612,7 @@ struct strXCMD
 			uint32_t m_Index;		// ->	Index (Kommando 13)
 			char m_Name[256];		// ->	Symbolname (Kommando 12)
 									// <-	Symbolname (Kommando 13)
-			uint32_t m_SymPtr;		// <-	Zeiger auf Symbol
+			void *m_SymPtr;			// <-	Zeiger auf Symbol
 			uint8_t m_SymClass;		// <-	Symboltyp
 		} m_12_13;
 	};

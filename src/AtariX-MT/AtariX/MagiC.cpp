@@ -186,7 +186,7 @@ static const char *AtariAddr2Description(uint32_t addr)
 {
 	// Rechne ST-Adresse in TT-Adresse um
 
-	if	((addr >= 0xff0000) && (addr < 0xffffff))
+	if	(addr >= 0xff0000 && addr < 0xffffff)
 		addr |= 0xff000000;
 
 	if	(addr == 0xffff8201)
@@ -209,8 +209,8 @@ static const char *AtariAddr2Description(uint32_t addr)
 	if	(addr == 0xfffffa11)
 		return("MFP: ISRB (Interrupt-in-service B)");
 
-	if	((addr >= 0xfffffa40) && (addr < 0xfffffa54))
-		return("MC68881");
+	if	(addr >= 0xfffffa40 && addr < 0xfffffa54)
+		return("SFP004");
 
 	return("?");
 }
@@ -241,7 +241,7 @@ m68k_addr_type m68k_read_memory_8(m68k_addr_type address)
 		if	(!Name)
 			Name = "<unknown>";
 
-		DebugError("CMagiC::ReadByte(adr = 0x%08lx) --- Busfehler (%s) durch Prozeß %s", address, AtariAddr2Description(address), Name);
+		DebugError("CMagiC::ReadByte(adr = 0x%08lx) --- Busfehler (%s) durch Prozeß %s", (unsigned long)address, AtariAddr2Description(address), Name);
 /*
 		if	(address == 0xfffffa11)
 		{
@@ -290,7 +290,7 @@ m68k_addr_type m68k_read_memory_16(m68k_addr_type address)
 		if	(!Name)
 			Name = "<unknown>";
 
-		DebugError("CMagiC::ReadWord(adr = 0x%08lx) --- Busfehler (%s) durch Prozeß %s", address, AtariAddr2Description(address), Name);
+		DebugError("CMagiC::ReadWord(adr = 0x%08lx) --- Busfehler (%s) durch Prozeß %s", (unsigned long)address, AtariAddr2Description(address), Name);
 		pTheMagiC->SendBusError(address, "read word");
 		return(0xffff);		// eigentlich Busfehler
 	}
@@ -330,7 +330,7 @@ m68k_addr_type m68k_read_memory_32(m68k_addr_type address)
 		CMagiC::GetActAtariPrg(&Name, &act_pd);
 		if	(!Name)
 			Name = "<unknown>";
-		DebugError("CMagiC::ReadLong(adr = 0x%08lx) --- Busfehler bei Prozeß %s", address, Name);
+		DebugError("CMagiC::ReadLong(adr = 0x%08lx) --- Busfehler (%s) durch Prozeß %s", (unsigned long)address, AtariAddr2Description(address), Name);
 		return(0xffffffff);		// eigentlich Busfehler
 	}
 }
@@ -382,7 +382,7 @@ void m68k_write_memory_8(m68k_addr_type address, m68k_data_type value)
 		if	(!Name)
 			Name = "<unknown>";
 
-		DebugError("CMagiC::WriteByte(adr = 0x%08lx, dat = 0x%02hx) --- Busfehler (%s) durch Prozeß %s", address, (UInt8) value, AtariAddr2Description(address), Name);
+		DebugError("CMagiC::WriteByte(adr = 0x%08lx, dat = 0x%02hx) --- Busfehler (%s) durch Prozeß %s", (unsigned long)address, (unsigned short)(unsigned char) value, AtariAddr2Description(address), Name);
 
 		if	((address == 0xffff8201) || (address == 0xffff8203) || (address == 0xffff820d))
 		{
@@ -447,7 +447,7 @@ void m68k_write_memory_16(m68k_addr_type address, m68k_data_type value)
 		if	(!Name)
 			Name = "<unknown>";
 
-		DebugError("CMagiC::WriteWord(adr = 0x%08lx, dat = 0x%04hx) --- Busfehler(%s) durch Prozeß %s", address, (uint16_t) value, AtariAddr2Description(address), Name);
+		DebugError("CMagiC::WriteWord(adr = 0x%08lx, dat = 0x%04hx) --- Busfehler (%s) durch Prozeß %s", (unsigned long)address, (uint16_t) value, AtariAddr2Description(address), Name);
 		pTheMagiC->SendBusError(address, "write word");
 	}
 }
@@ -817,7 +817,7 @@ void m68k_write_memory_32(m68k_addr_type address, m68k_data_type value)
 		if	(!Name)
 			Name = "<unknown>";
 
-		DebugError("CMagiC::WriteLong(adr = 0x%08lx, dat = 0x%08lx) --- Busfehler (%s) durch Prozeß %s", address, value, AtariAddr2Description(address), Name);
+		DebugError("CMagiC::WriteLong(adr = 0x%08lx, dat = 0x%08lx) --- Busfehler (%s) durch Prozeß %s", (unsigned long)address, (unsigned long)value, AtariAddr2Description(address), Name);
 		pTheMagiC->SendBusError(address, "write long");
 	}
 }
@@ -992,9 +992,9 @@ Reinstall the application.
 		goto exitReloc;
 	}
 
-	DebugInfo("CMagiC::LoadReloc() - Length TEXT = %ld", be32_to_cpu(exehead.tlen));
-	DebugInfo("CMagiC::LoadReloc() - Length DATA = %ld", be32_to_cpu(exehead.dlen));
-	DebugInfo("CMagiC::LoadReloc() - Length BSS = %ld", be32_to_cpu(exehead.blen));
+	DebugInfo("CMagiC::LoadReloc() - Length TEXT = %ld", (long)be32_to_cpu(exehead.tlen));
+	DebugInfo("CMagiC::LoadReloc() - Length DATA = %ld", (long)be32_to_cpu(exehead.dlen));
+	DebugInfo("CMagiC::LoadReloc() - Length BSS = %ld", (long)be32_to_cpu(exehead.blen));
 
 	codlen = be32_to_cpu(exehead.tlen) + be32_to_cpu(exehead.dlen);
 	if	(be32_to_cpu(exehead.blen) & 1)
@@ -1044,9 +1044,9 @@ Reinstall the application.
 	bp->p_dta   = cpu_to_be32(bp->p_cmdline - m_RAM68k);
 	bp->p_parent= 0;
 
-	DebugInfo("CMagiC::LoadReloc() - Startadresse Atari = 0x%08lx (host)", m_RAM68k);
-	DebugInfo("CMagiC::LoadReloc() - Speichergröße Atari = 0x%08lx (= %lu kBytes)", m_RAM68ksize, m_RAM68ksize >> 10);
-	DebugInfo("CMagiC::LoadReloc() - Ladeadresse des Systems (TEXT) = 0x%08lx (68k)", be32_to_cpu(bp->p_tbase));
+	DebugInfo("CMagiC::LoadReloc() - Startadresse Atari = %p (host)", m_RAM68k);
+	DebugInfo("CMagiC::LoadReloc() - Speichergröße Atari = 0x%08lx (= %lu kBytes)", (unsigned long)m_RAM68ksize, (unsigned long)m_RAM68ksize >> 10);
+	DebugInfo("CMagiC::LoadReloc() - Ladeadresse des Systems (TEXT) = 0x%08lx (68k)", (unsigned long)be32_to_cpu(bp->p_tbase));
 
 	#if defined(_DEBUG_BASEPAGE)
 	{
@@ -1334,7 +1334,7 @@ Assign more memory to the application using the Finder dialogue "Information"!
 
 	// 68k Speicherbegrenzungen ausrechnen
 	Adr68kVideo = m_RAM68ksize;
-	DebugInfo("68k-Videospeicher beginnt bei 68k-Adresse 0x%08x und ist %u Bytes groß.", Adr68kVideo, m_Video68ksize);
+	DebugInfo("68k-Videospeicher beginnt bei 68k-Adresse 0x%08x und ist %zu Bytes groß.", Adr68kVideo, m_Video68ksize);
 	Adr68kVideoEnd = Adr68kVideo + m_Video68ksize;
 	m_pFgBuffer = (unsigned char *) m_pMagiCScreen->hostScreen;
 
@@ -1362,7 +1362,7 @@ Assign more memory to the application using the Finder dialogue "Information"!
 	#endif
 
 	DebugInfo("CMagiC::Init() - Adresse Basepage des Systems = 0x%08lx (68k)", AtariMemtop + sizeof(Atari68kData));
-	DebugInfo("CMagiC::Init() - Adresse Atari68kData = 0x%08lx (68k)", AtariMemtop);
+	DebugInfo("CMagiC::Init() - Adresse Atari68kData = 0x%08lx (68k)", (unsigned long)AtariMemtop);
 
 	// neue Daten
 
@@ -1382,7 +1382,7 @@ Assign more memory to the application using the Finder dialogue "Information"!
 
 	if	(be32_to_cpu(pMacXSysHdr->MacSys_len) != sizeof(*pMacXSysHdr))
 	{
-		DebugError("CMagiC::Init() - Strukturlänge stimmt nicht (Header: %u Bytes, Soll: %u Bytes)", pMacXSysHdr->MacSys_len, sizeof(*pMacXSysHdr));
+		DebugError("CMagiC::Init() - Strukturlänge stimmt nicht (Header: %lu Bytes, Soll: %lu Bytes)", (unsigned long)pMacXSysHdr->MacSys_len, (unsigned long)sizeof(*pMacXSysHdr));
 		err_inv_os:
 /*
 Die Datei "MagicMacX.OS" ist defekt oder gehört zu einer anderen Programmversion als der Emulator.
@@ -1564,18 +1564,18 @@ Reinstall the application.
 
 void CMagiC::UpdateAtariDoubleBuffer(void)
 {
-	DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideoAddr =0x%08x", m_pFgBuffer);
+	DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideoAddr =%p", (void *)m_pFgBuffer);
 	HostVideoAddr = m_pFgBuffer;
 
 #if 0
 	if	(m_pBgBuffer)
 	{
-		DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideo2Addr =0x%08x", m_pBgBuffer);
+		DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideo2Addr =%p", (void *)m_pBgBuffer);
 		HostVideo2Addr = m_pBgBuffer;
 	}
 	else
 	{
-		DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideo2Addr =0x%08x", m_pFgBuffer);
+		DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideo2Addr =%p", (void *)m_pFgBuffer);
 		HostVideo2Addr = m_pFgBuffer;
 	}
 #endif
@@ -3151,7 +3151,7 @@ uint32_t CMagiC::AtariSysErr(uint32_t params, unsigned char *AdrOffset68k)
 	GetActAtariPrg(&AtariPrgFname, &act_pd);
 	m68k_pc = be32_to_cpu(*((uint32_t *) (AdrOffset68k + proc_stk + 2)));
 
-	DebugInfo("CMagiC::AtariSysErr() -- act_pd = 0x%08lx", act_pd);
+	DebugInfo("CMagiC::AtariSysErr() -- act_pd = 0x%08lx", (unsigned long)act_pd);
 	DebugInfo("CMagiC::AtariSysErr() -- Prozeßpfad = %s", (AtariPrgFname) ? AtariPrgFname : "<unknown>");
 #if defined(_DEBUG)
 	if (m68k_pc < pTheMagiC->m_RAM68ksize - 8)
@@ -3590,7 +3590,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 				// Eingabegeschwindigkeit festlegen
 				NewBaudrate = be32_to_cpu(*((uint32_t *) (AdrOffset68k + be32_to_cpu(theSerConfParm->parm))));
 				bSet = ((int) NewBaudrate != -1) && (NewBaudrate != 0);
-				DebugInfo("CMagiC::AtariSerConf() -- Fcntl(%s, %d)", (be16_to_cpu(theSerConfParm->cmd) == TIOCIBAUD) ? "TIOCIBAUD" : "TIOCOBAUD", NewBaudrate);
+				DebugInfo("CMagiC::AtariSerConf() -- Fcntl(%s, %ld)", (be16_to_cpu(theSerConfParm->cmd) == TIOCIBAUD) ? "TIOCIBAUD" : "TIOCOBAUD", NewBaudrate);
 
 				if	(be16_to_cpu(theSerConfParm->cmd) == TIOCIBAUD)
 					ret = pTheSerial->Config(
@@ -4207,7 +4207,7 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 			// Eingabegeschwindigkeit festlegen
 			NewBaudrate = be32_to_cpu(*((uint32_t *) (AdrOffset68k + be32_to_cpu(theSerIoctlParm->parm))));
 			bSet = ((int) NewBaudrate != -1) && (NewBaudrate != 0);
-			DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(%s, %d)", (be16_to_cpu(theSerIoctlParm->cmd) == TIOCIBAUD) ? "TIOCIBAUD" : "TIOCOBAUD", NewBaudrate);
+			DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(%s, %ld)", (be16_to_cpu(theSerIoctlParm->cmd) == TIOCIBAUD) ? "TIOCIBAUD" : "TIOCOBAUD", NewBaudrate);
 
 			if	(be16_to_cpu(theSerIoctlParm->cmd) == TIOCIBAUD)
 				ret = pTheSerial->Config(

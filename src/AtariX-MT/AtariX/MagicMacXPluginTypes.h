@@ -67,9 +67,9 @@ typedef struct _MagicMacXPluginInterfaceStruct
 			void *pThis,
 			const char **pName,
 			const char **pCreator,
-			UInt32 *pVersionMajor,
-			UInt32 *pVersionMinor,
-			UInt32 *pNumOfSymbols);
+			uint32_t *pVersionMajor,
+			uint32_t *pVersionMinor,
+			uint32_t *pNumOfSymbols);
 	tfXCMDFunction *(*GetFunctionByName)(void *pThis, const char *pFnNam);
-	tfXCMDFunction *(*GetFunctionByIndex)(void *pThis, UInt32 Fn, const char **pFnName);
+	tfXCMDFunction *(*GetFunctionByIndex)(void *pThis, uint32_t Fn, const char **pFnName);
 } MagicMacXPluginInterfaceStruct;

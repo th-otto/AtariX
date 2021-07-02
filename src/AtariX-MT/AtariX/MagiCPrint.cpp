@@ -141,7 +141,7 @@ UInt32 CMagiCPrint::Write(const unsigned char *pBuf, UInt32 cnt)
 		if	(m_PrintFile <= 0)
 		{
 			m_PrintFile = 0;
-			DebugError("CMagiCPrint::Write() --- error creating file", strerror(errno));
+			DebugError("CMagiCPrint::Write() --- error creating file: %s", strerror(errno));
 			return(0);		// Fehler
 		}
 		bTempFileCreated = true;

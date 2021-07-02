@@ -89,13 +89,13 @@ class CXCmd
 				bool bIsPath,
 				uint32_t *pDescriptor,
 				int32_t *pNumOfSymbols);
-	OSErr OnCommandUnloadLibrary(UInt32 XCmdDescriptor);
+	OSErr OnCommandUnloadLibrary(uint32_t XCmdDescriptor);
 	OSErr OnCommandFindSymbol(
-				UInt32 XCmdDescriptor,
+				uint32_t XCmdDescriptor,
 				char *pSymName,
-				UInt32 SymNumber,
+				uint32_t SymNumber,
 				unsigned char *pSymClass,
-				UInt32 *pSymbolAddress
+				void **pSymbolAddress
 				);
    	OSErr Preload(void);
    	void InitXCMD(CFragConnectionID ConnectionId);
@@ -105,7 +105,7 @@ class CXCmd
    	struct XCmdInfo m_XCmdPlugInInfo;	// Info-Struktur geht an MachO PlugIns
 	FSSpec m_XCMDFolderSpec;
 #if TARGET_RT_MAC_MACHO
-	void *NewGlue(void *pCFragPtr, UInt32 XCmdDescriptor, CFragSymbolClass symclass);
+	void *NewGlue(void *pCFragPtr, uint32_t XCmdDescriptor, CFragSymbolClass symclass);
 #endif
 };
 #endif

@@ -35,12 +35,12 @@
 extern "C" {
 #endif
 	void _DebugInit(const char *DebugFileName);
-	void _DebugTrace(const char *format, ...);
-	void _DebugInfo(const char *format, ...);
-	void _DebugWarning(const char *format, ...);
-	void _DebugError(const char *format, ...);
+	void _DebugTrace(const char *format, ...) __attribute__((format(printf, 1, 2)));
+	void _DebugInfo(const char *format, ...) __attribute__((format(printf, 1, 2)));
+	void _DebugWarning(const char *format, ...) __attribute__((format(printf, 1, 2)));
+	void _DebugError(const char *format, ...) __attribute__((format(printf, 1, 2)));
 	
-	void _DebugPrint(const char *head, const char *format, va_list arglist);
+	void _DebugPrint(const char *head, const char *format, va_list arglist) __attribute__((format(printf, 2, 0)));
 #ifdef __cplusplus
 }
 #endif

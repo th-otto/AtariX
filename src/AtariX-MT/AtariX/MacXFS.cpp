@@ -1674,7 +1674,7 @@ int32_t CMacXFS::_snext(uint16_t drv, MAC_DTA *dta)
 
 		if (pb.hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias)
 		{
-			DebugInfo("CMacXFS::_snext() -- dereference Alias", atariname);
+			DebugInfo("CMacXFS::_snext() -- dereference Alias %s", atariname);
 
 			/* FSSpec erstellen und Alias dereferenzieren	*/
 			/* ----------------------------------------	*/
