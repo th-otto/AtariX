@@ -67,7 +67,6 @@ class CMagiC
 	void ChangeXFSDrive(short drvNr);
 	static void GetActAtariPrg(const char **pName, uint32_t *pact_pd);
 	bool m_bEmulatorIsRunning;
-	bool m_bAtariWasRun;
 	bool m_bShutdown;
 	void DumpAtariMem(const char *filename);
 

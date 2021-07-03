@@ -932,7 +932,6 @@ CMagiC::CMagiC()
 	pTheSerial = &m_MagiCSerial;
 	pThePrint = &m_MagiCPrint;
 	pTheMagiC = this;
-	m_bAtariWasRun = false;
 	m_bBIOSSerialUsed = false;
 	m_bScreenBufferChanged = false;
 	m_bEmulatorIsRunning = false;
@@ -1926,8 +1925,6 @@ int CMagiC::CreateThread( void )
 
 void CMagiC::StartExec( void )
 {
-	m_bAtariWasRun = true;
-
 	m_bCanRun = true;		// darf laufen
 	m_AtariKbData[0] = 0;		// kbshift löschen
 	m_AtariKbData[1] = 0;		// kbrepeat löschen
@@ -2104,11 +2101,6 @@ OSStatus CMagiC::EmuThread( void )
 			}
 			m_bInterruptMouseKeyboardPending = false;
 
-#if 0
-			errl = MPResetEvent(			// kein "pending kb interrupt"
-					m_InterruptEventsId,
-					EMU_INTPENDING_KBMOUSE);
-#endif
 			OS_ExitCriticalRegion(m_KbCriticalRegionId);
 #ifdef _DEBUG_KB_CRITICAL_REGION
 			DebugInfo("CMagiC::EmuThread() --- Exited critical region m_KbCriticalRegionId");
@@ -2127,11 +2119,6 @@ OSStatus CMagiC::EmuThread( void )
 		if	(m_bInterrupt200HzPending)
 		{
 			m_bInterrupt200HzPending = false;
-/*
-			errl = MPResetEvent(			// kein "pending kb interrupt"
-					m_InterruptEventsId,
-					EMU_INTPENDING_200HZ);
-*/
 			m_bInterruptPending = true;
 			m_bWaitEmulatorForIRQCallback = true;
 #if defined(USE_ASGARD_PPC_68K_EMU)
@@ -2155,11 +2142,6 @@ OSStatus CMagiC::EmuThread( void )
 		if	(m_bInterruptVBLPending)
 		{
 			m_bInterruptVBLPending = false;
-/*
-			errl = MPResetEvent(			// kein "pending kb interrupt"
-					m_InterruptEventsId,
-					EMU_INTPENDING_VBL);
-*/
 			m_bInterruptPending = true;
 			m_bWaitEmulatorForIRQCallback = true;
 #if defined(USE_ASGARD_PPC_68K_EMU)
@@ -2184,13 +2166,12 @@ OSStatus CMagiC::EmuThread( void )
 		{
 			m_MagiCPrint.ClosePrinterFile();
 		}
-	}	// for
+	}
 
 
   end_of_thread:
 
 	// Main Task mitteilen, daß der Emulator-Thread beendet wurde
-	pTheMagiC->m_bAtariWasRun = false;
 //	SendMessageToMainThread(true, kHICommandQuit);		// veraltet?
 
 	m_bEmulatorIsRunning = false;
@@ -2781,7 +2762,6 @@ int CMagiC::SendHz200( void )
 
 				// Emulator-Thread anhalten
 				pTheMagiC->m_bCanRun = false;
-				//	pTheMagiC->m_bAtariWasRun = false;	(entf. 4.11.07)
 				
 				// setze mir selbst einen Event zum Beenden (4.11.07)
 				OS_SetEvent(
@@ -3393,7 +3373,6 @@ uint32_t CMagiC::AtariExit(uint32_t params, unsigned char *AdrOffset68k)
 
 	// Emulator-Thread anhalten
 	pTheMagiC->m_bCanRun = false;
-//	pTheMagiC->m_bAtariWasRun = false;	(entf. 4.11.07)
 
 	// setze mir selbst einen Event zum Beenden (4.11.07)
 	OS_SetEvent(
@@ -4673,13 +4652,6 @@ uint32_t CMagiC::AtariYield(uint32_t params, unsigned char *AdrOffset68k)
 		return(0);
 	}
 
-/*
-	if	(EventFlags & EMU_EVNT_TERM)
-	{
-		DebugInfo("CMagiC::EmuThread() -- normaler Abbruch");
-		break;	// normaler Abbruch, Thread-Ende
-	}
-*/
 	return(0);
 }
 
