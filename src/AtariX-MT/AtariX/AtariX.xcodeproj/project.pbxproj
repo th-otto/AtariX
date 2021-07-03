@@ -28,7 +28,6 @@
 		AD3E85A5143E50F90054D0E8 /* Preferences.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A3143E50F90054D0E8 /* Preferences.cpp */; };
 		AD3E85A8143E51170054D0E8 /* FullPath.c in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A6143E51170054D0E8 /* FullPath.c */; };
 		AD3E85AA143E591A0054D0E8 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD3E85A9143E591A0054D0E8 /* CoreServices.framework */; };
-		AD3E85AF143E5DF50054D0E8 /* MachOCFMGlue.c in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85AD143E5DF50054D0E8 /* MachOCFMGlue.c */; };
 		AD42AFBD1572794F00F7B76E /* rootfs-common in Resources */ = {isa = PBXBuildFile; fileRef = AD42AFBC1572794F00F7B76E /* rootfs-common */; };
 		AD5F11981572401100F8BE63 /* rootfs in Resources */ = {isa = PBXBuildFile; fileRef = AD5F11961572401100F8BE63 /* rootfs */; };
 		AD60906B15A38E5D0073E842 /* atarix.xib in Resources */ = {isa = PBXBuildFile; fileRef = AD60906D15A38E5D0073E842 /* atarix.xib */; };
@@ -117,8 +116,6 @@
 		AD3E85A9143E591A0054D0E8 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = ../../../../../../System/Library/Frameworks/CoreServices.framework; sourceTree = "<group>"; };
 		AD3E85AB143E59700054D0E8 /* Atari.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Atari.h; sourceTree = "<group>"; };
 		AD3E85AC143E5CC80054D0E8 /* resource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = resource.h; sourceTree = "<group>"; };
-		AD3E85AD143E5DF50054D0E8 /* MachOCFMGlue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MachOCFMGlue.c; sourceTree = "<group>"; };
-		AD3E85AE143E5DF50054D0E8 /* MachOCFMGlue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MachOCFMGlue.h; sourceTree = "<group>"; };
 		AD42AFBC1572794F00F7B76E /* rootfs-common */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "rootfs-common"; sourceTree = "<group>"; };
 		AD5F1156157237F600F8BE63 /* AtariX_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AtariX_Prefix.pch; sourceTree = "<group>"; };
 		AD5F119515723E4500F8BE63 /* AtariX-Application copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "AtariX-Application copy-Info.plist"; sourceTree = "<group>"; };
@@ -320,8 +317,6 @@
 				AD3E85A4143E50F90054D0E8 /* Preferences.h */,
 				AD3E85A3143E50F90054D0E8 /* Preferences.cpp */,
 				AD3E85AC143E5CC80054D0E8 /* resource.h */,
-				AD3E85AE143E5DF50054D0E8 /* MachOCFMGlue.h */,
-				AD3E85AD143E5DF50054D0E8 /* MachOCFMGlue.c */,
 				AD6D7DFE143FA90C00575FB1 /* missing.cpp */,
 				AD6D7E00143FA92400575FB1 /* missing.h */,
 			);
@@ -500,7 +495,6 @@
 				AD3E85A5143E50F90054D0E8 /* Preferences.cpp in Sources */,
 				8CEB9A4C2162EE3A00EF9EEB /* maptab.c in Sources */,
 				AD3E85A8143E51170054D0E8 /* FullPath.c in Sources */,
-				AD3E85AF143E5DF50054D0E8 /* MachOCFMGlue.c in Sources */,
 				AD6D7DFF143FA90C00575FB1 /* missing.cpp in Sources */,
 				AD0936E21440B537006D73E9 /* gui.m in Sources */,
 				AD0792A31461EBCD0043E0F6 /* PreferencesWindowController.m in Sources */,

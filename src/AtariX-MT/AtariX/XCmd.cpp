@@ -23,8 +23,8 @@
 */
 
 // System-Header
-#include <Carbon/Carbon.h>
-#include <machine/endian.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <dlfcn.h>
 #include <stdlib.h>
 #include <string.h>
 // Programm-Header
@@ -36,16 +36,11 @@
 
 extern "C" {
 #include "MyMoreFiles.h"
-#if TARGET_RT_MAC_MACHO
-#include "MachOCFMGlue.h"
-#endif
 }
 // Schalter
 
-#if TARGET_RT_MAC_MACHO
 // Tabelle der geladenen Plugins
 CXCmd::tsLoadedPlugin CXCmd::s_Plugins[MAX_PLUGINS];
-#endif
 
 
 /**********************************************************************
@@ -56,18 +51,13 @@ CXCmd::tsLoadedPlugin CXCmd::s_Plugins[MAX_PLUGINS];
 
 CXCmd::CXCmd()
 {
-	m_XCMDFolderSpec.vRefNum = 0;
-	m_XCMDFolderSpec.parID = 0;
+	m_XCMDFolderSpec = 0;
 
 	// Diese Struktur geht an CFM/PEF PlugIns
 
 	m_XCmdInfo.xcmd_Length = sizeof(m_XCmdInfo);
 	m_XCmdInfo.xcmd_Version = 0;
-#if TARGET_RT_MAC_MACHO
-	m_XCmdInfo.xcmd_Callback = (XCmdCallbackFunctionProcType *) CFMFunctionPointerForMachOFunctionPointer((void *) Callback);
-#else
 	m_XCmdInfo.xcmd_Callback = Callback;
-#endif
 
 	// Diese Struktur geht an MachO PlugIns
 
@@ -97,7 +87,8 @@ CXCmd::~CXCmd()
 
 int CXCmd::Init(void)
 {
-	OSErr err;
+	OSErr err = 0;
+#ifdef NOTYET
 	Boolean isDir;
 
 	err = FSMakeFSSpec(
@@ -125,8 +116,9 @@ int CXCmd::Init(void)
 			err = dirNFErr;
 		return(err);
 	}
+#endif
 
-	if (m_XCMDFolderSpec.parID)
+	if (m_XCMDFolderSpec)
 		err = Preload();
 
 	return(err);
@@ -141,6 +133,7 @@ int CXCmd::Init(void)
 
 OSErr CXCmd::Preload(void)
 {
+#ifdef NOTYET
 	CFragConnectionID ConnectionId;
 	short	index;
 	OSErr	err, err2;
@@ -180,9 +173,10 @@ OSErr CXCmd::Preload(void)
 		}
 
 		(void) Load(&spec, &ConnectionId);
-	};
+	}
+#endif
 
-	return(0);
+	return 0;
 }
 
 
@@ -222,84 +216,22 @@ int CXCmd::Callback(uint32_t cmd, void *pParm)
 *
 **********************************************************************/
 
-void CXCmd::InitXCMD(CFragConnectionID ConnectionId)
+void CXCmd::InitXCMD(struct tsLoadedPlugin *plugin)
 {
-	OSErr err;
+#ifdef NOTYET
 	XCmdInitFunctionProcType *MyFunctionProcPtr;
 
 
-	DebugInfo("CXCmd::InitXCMD()");
+	DebugTrace("CXCmd::InitXCMD()");
 
-	err = FindSymbol
-			(
-			ConnectionId,					// CFragConnectionID connID
-			XCMD_INIT_FN_NAME,				// ConstStr255Param symName
-			(Ptr *) &MyFunctionProcPtr,			// Ptr *symAddr
-			NULL							// CFragSymbolClass *symClass
-			);
+	MyFunctionProcPtr = (XCmdInitFunctionProcType *)dlsym(plugin->handle, XCMD_INIT_FN_NAME);
 
-	if	(!err)
+	if (MyFunctionProcPtr != 0)
 	{
-#if TARGET_RT_MAC_MACHO
-		XCmdInitFunctionProcType *p = (XCmdInitFunctionProcType *) MachOFunctionPointerForCFMFunctionPointer((void *) MyFunctionProcPtr);
-		(void) (*p)(&m_XCmdInfo);
-		DisposeMachOFunctionPointer((void *) p);
-#else
 		(void) (*MyFunctionProcPtr)(&m_XCmdInfo);
-#endif
 		DebugInfo("CXCmd::InitXCMD() -- Initialisierungsfunktion aufgerufen");
 	}
-}
-
-
-/**********************************************************************
-*
-* XCmd über FSSpec laden
-*
-**********************************************************************/
-
-OSErr CXCmd::Load(FSSpec *pSpec, CFragConnectionID* pConnectionId)
-{
-	CInfoPBRec pb;
-	Ptr mainAddr;
-	Str255 errMessage;
-	OSErr err;
-	uint32_t LenDF;
-
-
-	DebugInfo(" CXCmd::Load(FSSpec *) -- Lade XCMD mit dem Dateinamen \"%s\"", pSpec->name + 1);
-
-	// Dateilänge ermitteln
-
-	pb.hFileInfo.ioVRefNum = pSpec -> vRefNum;
-	pb.hFileInfo.ioNamePtr = pSpec -> name;
-	pb.hFileInfo.ioFDirIndex = 0;
-	pb.hFileInfo.ioDirID = pSpec -> parID;
-	err = PBGetCatInfoSync (&pb);
-	if	(err)
-		return(err);
-
-	// Bibliothek laden
-
-	LenDF = (uint32_t) pb.hFileInfo.ioFlLgLen;
-	err = GetDiskFragment(
-			pSpec,				// const FSSpec *       fileSpec,
-			0,					//  uint32_t               offset,
-			LenDF,				// uint32_t               length,
-			NULL,					// ConstStr63Param      fragName,         /* can be NULL */
-			kPrivateCFragCopy,		// CFragLoadOptions     options,
-	  		pConnectionId,			// CFragConnectionID *  connID,
-			&mainAddr,				//  Ptr *                mainAddr,
-	 		errMessage				// Str255               errMessage)
-			);
-
- 	P2C(errMessage);
-	DebugInfo("CXCmd::Load() -- GetDiskFragment => %d,%s", err, errMessage+1);
-
-	if	(!err)
-		InitXCMD(*pConnectionId);
-
-	return(err);
+#endif
 }
 
 
@@ -309,72 +241,21 @@ OSErr CXCmd::Load(FSSpec *pSpec, CFragConnectionID* pConnectionId)
 *
 **********************************************************************/
 
-OSErr CXCmd::Load(ConstStr63Param libName, CFragConnectionID* pConnectionId)
+OSErr CXCmd::Load(const char *libName, struct tsLoadedPlugin *plugin)
 {
-#if !TARGET_RT_MAC_MACHO
-	Ptr mainAddr;
-	Str255 errMessage;
-#endif
-	OSErr err;
+	void *handle;
 
+	DebugInfo("CXCmd::Load() -- Lade XCMD mit dem Bibliotheknamen \"%s\"", libName);
 
-	DebugInfo("CXCmd::Load(ConstStr63Param *) -- Lade XCMD mit dem Bibliotheknamen \"%s\"", libName + 1);
+	handle = dlopen(libName, RTLD_LAZY);
 
-#if TARGET_RT_MAC_MACHO
-	FSSpec Spec;
-	unsigned char buf[256];
-	pstrcpy(buf, libName);			// kopiere Pascal-String
-	P2C(buf);					// mit '\0' abschließen
-	char *s = (char *) (buf+1);
-	bool bExt;
-	char *t;
-	t = strrchr(s, '.');
-	bExt = (t != NULL);
-	if	(!t)
+	if (handle == 0)
 	{
-		t = s + strlen(s);
-		strcpy(t, ".lib");
+		DebugInfo(" CXCmd::Load() -- GetSharedLibrary => %s", dlerror());
+		return fnfErr;
 	}
 
-	// 1. Versuch: Dateiname = Bibliotheksname mit Endung ".lib" bzw. gegebener Endung
-	C2P(buf);
-	DebugInfo(" CXCmd::Load(ConstStr63Param *) -- Mache FSSpec mit dem Dateinamen \"%s\"", buf + 1);
-	err = FSMakeFSSpec(
-			CGlobals::s_ProcDir.vRefNum,
-			CGlobals::s_ExecutableDirID,		// suche mitten im Bundle, da, wo die exe liegt
-			buf,
-			&Spec);
-	// 1. Versuch: Dateiname = Bibliotheksname mit Endung ".shlb", wenn keine Endung vorgegeben
-	if	((err) && (!bExt))
-	{
-		strcpy(t, ".Shlb");
-		C2P(buf);
-		DebugInfo(" CXCmd::Load(ConstStr63Param *) -- Mache FSSpec mit dem Dateinamen \"%s\"", buf + 1);
-		err = FSMakeFSSpec(
-				CGlobals::s_ProcDir.vRefNum,
-				CGlobals::s_ExecutableDirID,		// suche mitten im Bundle, da, wo die exe liegt
-				buf,
-				&Spec);
-	}
-	if	(!err)
-		err = Load(&Spec, pConnectionId);
-#else
-	err = GetSharedLibrary(
-		libName,						//  ConstStr63Param      libName,
-  		kPowerPCCFragArch,				// CFragArchitecture    archType,
-  		kPrivateCFragCopy,				// CFragLoadOptions     options,
-  		pConnectionId,					// CFragConnectionID *  connID,
-		&mainAddr,						//  Ptr *                mainAddr,
- 		errMessage						// Str255               errMessage)
- 		);
-
- 	P2C(errMessage);
-	DebugInfo(" CXCmd::Load() -- GetSharedLibrary => %d,%s", err, errMessage+1);
-	if	(!err)
-		InitXCMD(*pConnectionId);
-#endif
-
-	return(err);
+	return 0;
 }
 
 
@@ -388,8 +269,7 @@ OSErr CXCmd::LoadPlugin
 (
 	const char *pUnixPath,			// Plugin name or complete path
 	const char *SearchPath,			// path (e.g. "~/Library/MagicMacX/PlugIns")
-	CFPlugInRef *pPluginRef,
-	MagicMacXPluginInterfaceStruct **ppInterface
+	struct tsLoadedPlugin *plugin
 )
 {
 	char szPath[256];
@@ -454,11 +334,11 @@ OSErr CXCmd::LoadPlugin
 	}
 
 	CFShow(plugInURL);
-	*pPluginRef = CFPlugInCreate(NULL, plugInURL);
+	plugin->PluginRef = CFPlugInCreate(NULL, plugInURL);
 	CFRelease(plugInURL);
 	CFRelease(cpUnixPath);
 
-	if	(!*pPluginRef)
+	if	(plugin->PluginRef == 0)
 	{
 		DebugError("CXCmd::LoadPlugin() -- CFPlugInCreate() failed with path \"%s\"", szPath);
 		return(fnfErr);
@@ -472,7 +352,7 @@ OSErr CXCmd::LoadPlugin
 	// CFPlugInFindFactoriesForPlugInTypeInPlugIn
 	// Searches the given plug-in for factory functions capable of creating an instance of the given type.
 
-	CFArrayRef factories = CFPlugInFindFactoriesForPlugInTypeInPlugIn(kMagicMacXPluginTypeID, *pPluginRef);
+	CFArrayRef factories = CFPlugInFindFactoriesForPlugInTypeInPlugIn(kMagicMacXPluginTypeID, plugin->PluginRef);
 	if	((factories != NULL) && (CFArrayGetCount(factories) > 0))
 	{
 
@@ -499,8 +379,8 @@ OSErr CXCmd::LoadPlugin
 			{
 				DebugInfo("CXCmd::LoadPlugin() -- MagicMacX interface found.\n");
 
-				*ppInterface = interfaceTable[0];		// wir nehmen das erste Interface, das paßt
-				err = (*ppInterface)->PluginInit(*ppInterface, &m_XCmdPlugInInfo);
+				plugin->pInterface = interfaceTable[0];		// wir nehmen das erste Interface, das paßt
+				err = plugin->pInterface->PluginInit(plugin->pInterface, &m_XCmdPlugInInfo);
 				if (err)
 				{
 					DebugError("CXCmd::LoadPlugin() -- Error on PlugInInit()\n");
@@ -514,7 +394,7 @@ OSErr CXCmd::LoadPlugin
 				// Done with our interface.
 				// This causes the plug-in’s code to be unloaded.
 
-				//(*ppInterface)->Release(*ppInterface);
+				//plugin->pInterface->Release(plugin->pInterface);
 			}
 			else
 			{
@@ -549,80 +429,12 @@ OSErr CXCmd::LoadPlugin
 
 /**********************************************************************
 *
-* Erzeuge neuen Glue-Code für ein Symbol
-*
-**********************************************************************/
-
-#if TARGET_RT_MAC_MACHO
-void *CXCmd::NewGlue
-(
-	void *pCFragPtr,
-	uint32_t XCmdDescriptor,
-	CFragSymbolClass symclass
-)
-{
-	GlueCode *pGlueCode;
-
-	if	(symclass ==  kDataCFragSymbol)
-		return(pCFragPtr);
-	else
-	if	(symclass ==  kTVectorCFragSymbol /*kCodeCFragSymbol ???*/)
-	{
-		// neuen Eintrag für verkettete Liste erzeugen
-		pGlueCode = (GlueCode *) NewPtr(sizeof(GlueCode));
-		if	(!pGlueCode)
-		{
-			DebugError("CXCmd::NewGlue() -- zuwenig Speicher.");
-			return(0);
-		}
-//		pGlueCode->id = id;
-		pGlueCode->p = MachOFunctionPointerForCFMFunctionPointer(pCFragPtr);
-		// einhängen
-		pGlueCode->pNext = NULL;
-		s_Plugins[XCmdDescriptor].pGlueList = pGlueCode;
-		return(pGlueCode->p);
-	}
-	else
-	{
-		DebugWarning("CXCmd::NewGlue() -- unbekannte Symbolklasse %u.", symclass);
-		return(pCFragPtr);
-	}
-}
-#endif
-
-/**********************************************************************
-*
 * Debug-Funktion: Gib alle Symbole einer PEF/CFM-Bibliothek aus
 *
 **********************************************************************/
 
 #ifdef _DEBUG
-static void DebugPrintSymbolsInPefLib(CFragConnectionID id, long nSymbols)
-{
-	CFragSymbolClass symClass;
-	OSErr err;
-	Str255 str;
-	Ptr ptr;
-	long i;
-
-
-	DebugInfo("CXCmd::Command() -- Symbole:");
-	for	(i = 0; i < nSymbols; i++)
-	{
-		err = GetIndSymbol
-				(
-				id,					// CFragConnectionID connID
-				i,					// long symIndex,
-				str,					// Str255 symName
-				&ptr,					// Ptr *symAddr
-				&symClass				// CFragSymbolClass *symClass
-				);
-		if	(!err)
-			DebugInfo("CXCmd::Command() --    Symbol \"%s\", Klasse %d",
-							str + 1, (int) symClass);
-	}
-}
-static void DebugPrintSymbolsInCFPlugIn(MagicMacXPluginInterfaceStruct *pInterface, uint32_t nSymbols)
+static void DebugPrintSymbolsInPlugIn(MagicMacXPluginInterfaceStruct *pInterface, uint32_t nSymbols)
 {
 	tfXCMDFunction *pFn;
 	uint32_t i;
@@ -638,8 +450,7 @@ static void DebugPrintSymbolsInCFPlugIn(MagicMacXPluginInterfaceStruct *pInterfa
 	}
 }
 #else
-#define DebugPrintSymbols(id, n)
-#define DebugPrintSymbolsInCFPlugIn(p, n)
+#define DebugPrintSymbolsInPlugIn(p, n)
 #endif
 
 
@@ -657,13 +468,8 @@ OSErr CXCmd::OnCommandLoadLibrary
 	int32_t *pNumOfSymbols
 )
 {
-	Str255 str;
 	OSErr err;
-	FSSpec Spec;
 	uint32_t i;
-	enRunTimeFormat type;
-	long NumOfSymbols;
-	MagicMacXPluginInterfaceStruct *pInterface;
 	const char *pPluginName;
 	const char *pPluginCreator;
 	uint32_t ulPluginVersionMajor;
@@ -677,7 +483,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 	// suche freien Platz in Tabelle
 	for	(i = 0; i < MAX_PLUGINS; i++)
 	{
-		if	(s_Plugins[i].RunTimeFormat == eUnused)
+		if	(s_Plugins[i].handle == 0)
 			goto found;
 	}
 	return(mFulErr);
@@ -690,15 +496,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 		// Wird der Pfad angegeben, unterstützen wir nur CFM/PEF
 		//
 
-		c2pstrcpy(str, szLibName);
-		err = FSMakeFSSpec(
-				CGlobals::s_ProcDir.vRefNum,	// wird ignoriert, wenn Pfad vollständig
-				CGlobals::s_ProcDirID,		// wird ignoriert, wenn Pfad vollständig
-				str,
-				&Spec);
-		if	(!err)
-			err = Load(&Spec, &s_Plugins[i].ConnID);
-		type = ePEF;
+		err = Load(szLibName, &s_Plugins[i]);
 	}
 	else
 	{
@@ -710,8 +508,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 		err = LoadPlugin(
 				szLibName,
 				NULL,
-				&s_Plugins[i].PluginRef,
-				&pInterface);
+				&s_Plugins[i]);
 
 		//
 		// Wir probieren ein CFPlugIn (MachO-Bundle) von "~/Library/MagicMacX/PlugIns"
@@ -726,8 +523,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 			err = LoadPlugin(
 					szLibName,
 					szSearchPath,
-					&s_Plugins[i].PluginRef,
-					&pInterface);
+					&s_Plugins[i]);
 		}
 
 		//
@@ -738,19 +534,12 @@ OSErr CXCmd::OnCommandLoadLibrary
 			err = LoadPlugin(
 					szLibName,
 					"/System/Library/MagicMacX/PlugIns/",
-					&s_Plugins[i].PluginRef,
-					&pInterface);
+					&s_Plugins[i]);
 
-		if	(!err)
+		if	(err)
 		{
-			type = eMachO;
-		}
-		else
-		{
-			c2pstrcpy(str, szLibName);
-			err = Load(str, &s_Plugins[i].ConnID);
+			err = Load(szLibName, &s_Plugins[i]);
 			// typical error: cfragNoLibraryErr (-2804)
-			type = ePEF;
 		}
 	}
 
@@ -761,42 +550,27 @@ OSErr CXCmd::OnCommandLoadLibrary
 	}
 	else
 	{
-		s_Plugins[i].RunTimeFormat = type;
-		s_Plugins[i].pInterface = pInterface,
-		s_Plugins[i].pGlueList = NULL;
+		MagicMacXPluginInterfaceStruct *pInterface;
+		
+		pInterface = s_Plugins[i].pInterface;
 
 		*pXCmdDescriptor = i;
 
-		if	(type == ePEF)
-		{
-			CountSymbols(
-				s_Plugins[i].ConnID,
-				&NumOfSymbols);
+		pInterface->GetPluginInfo(
+					pInterface,
+					&pPluginName,
+					&pPluginCreator,
+					&ulPluginVersionMajor,
+					&ulPluginVersionMinor,
+					&ulNumOfSym);
 
-			// gib alle Symbole aus
-			#ifdef _DEBUG
-			DebugPrintSymbolsInPefLib(s_Plugins[i].ConnID, NumOfSymbols);
-			#endif
-		}
-		else
-		{
-			pInterface->GetPluginInfo(
-						pInterface,
-						&pPluginName,
-						&pPluginCreator,
-						&ulPluginVersionMajor,
-						&ulPluginVersionMinor,
-						&ulNumOfSym);
+		DebugInfo("CXCmd::OnCommandLoadLibrary() -- CFPlugIn geladen");
+		DebugInfo("CXCmd::OnCommandLoadLibrary() --  Name = %s", pPluginName);
+		DebugInfo("CXCmd::OnCommandLoadLibrary() --  Autor = %s", pPluginCreator);
+		DebugInfo("CXCmd::OnCommandLoadLibrary() --  Version %u.%u", ulPluginVersionMajor, ulPluginVersionMinor);
+		DebugPrintSymbolsInPlugIn(pInterface, ulNumOfSym);
 
-			NumOfSymbols = (long) ulNumOfSym;
-			DebugInfo("CXCmd::OnCommandLoadLibrary() -- CFPlugIn geladen");
-			DebugInfo("CXCmd::OnCommandLoadLibrary() --  Name = %s", pPluginName);
-			DebugInfo("CXCmd::OnCommandLoadLibrary() --  Autor = %s", pPluginCreator);
-			DebugInfo("CXCmd::OnCommandLoadLibrary() --  Version %u.%u", ulPluginVersionMajor, ulPluginVersionMinor);
-			DebugPrintSymbolsInCFPlugIn(pInterface, ulNumOfSym);
-		}
-
-		*pNumOfSymbols = NumOfSymbols;
+		*pNumOfSymbols = ulNumOfSym;
 	}
 
 	return(err);
@@ -814,47 +588,24 @@ OSErr CXCmd::OnCommandUnloadLibrary
 	uint32_t XCmdDescriptor
 )
 {
-	enRunTimeFormat type;
 	MagicMacXPluginInterfaceStruct *pInterface;
-
 
 	DebugInfo("CXCmd::OnCommandUnloadLibrary(%u)", XCmdDescriptor);
 
-	if	(XCmdDescriptor > MAX_PLUGINS)
-		return(fnfErr);
-	type = s_Plugins[XCmdDescriptor].RunTimeFormat;
-	if	(type == ePEF)
-	{
-#if TARGET_RT_MAC_MACHO
-		// gib allen Glue-Code frei
-		GlueCode *pG,**pGprev;
-		pG = s_Plugins[XCmdDescriptor].pGlueList;
-		pGprev = &s_Plugins[XCmdDescriptor].pGlueList;
-		while(pG)
-		{
-			DisposeMachOFunctionPointer(pG->p);
-			*pGprev = pG->pNext;
-			::DisposePtr((char *) pG);
-			pG = *pGprev;
-		}
-#endif
-		s_Plugins[XCmdDescriptor].RunTimeFormat = eUnused;
-		return(CloseConnection(&s_Plugins[XCmdDescriptor].ConnID));
-	}
-	else
-	if	(type == eMachO)
-	{
-		pInterface = s_Plugins[XCmdDescriptor].pInterface;
-		// Plugin freigeben
-		pInterface->Release(pInterface);
-		// nochmal (?) freigeben
-		CFRelease(s_Plugins[XCmdDescriptor].PluginRef);
-		// auch hier abmelden
-		s_Plugins[XCmdDescriptor].RunTimeFormat = eUnused;
-		return(noErr);
-	}
-	else
-		return(fnfErr);
+	if (XCmdDescriptor >= MAX_PLUGINS)
+		return fnfErr;
+	pInterface = s_Plugins[XCmdDescriptor].pInterface;
+	if (pInterface == 0)
+		return fnfErr;
+	// Plugin freigeben
+	pInterface->Release(pInterface);
+	// nochmal (?) freigeben
+	CFRelease(s_Plugins[XCmdDescriptor].PluginRef);
+	// auch hier abmelden
+	s_Plugins[XCmdDescriptor].PluginRef = 0;
+	s_Plugins[XCmdDescriptor].pInterface = 0;
+	s_Plugins[XCmdDescriptor].handle = 0;
+	return 0;
 }
 
 
@@ -873,12 +624,8 @@ OSErr CXCmd::OnCommandFindSymbol
 	void **pSymbolAddress
 )
 {
-	enRunTimeFormat type;
 	MagicMacXPluginInterfaceStruct *pInterface;
-	Str255 str;
-	Ptr ptr;
 	OSErr err;
-	CFragSymbolClass symClass;
 	const char *s;
 	tfXCMDFunction *pFn;
 
@@ -887,84 +634,37 @@ OSErr CXCmd::OnCommandFindSymbol
 	if	(SymIndex == 0xffffffff)
 		DebugInfo("CXCmd::OnCommandFindSymbol(\"%s\")", pSymName);
 	else
-		DebugInfo("CXCmd::OnCommandFindSymbol(%u)", SymIndex);
+		DebugInfo("CXCmd::OnCommandFindSymbol(%u)", (unsigned int)SymIndex);
 #endif
-	if	(XCmdDescriptor > MAX_PLUGINS)
+	if	(XCmdDescriptor >= MAX_PLUGINS)
 	{
 		DebugError("CXCmd::OnCommandFindSymbol()-- illegal Descriptor %u", (unsigned int)SymIndex);
 		return(fnfErr);
 	}
-	type = s_Plugins[XCmdDescriptor].RunTimeFormat;
-	if	(type == ePEF)
-	{
-		if	(SymIndex == 0xffffffff)
-		{
-			c2pstrcpy(str, pSymName);
-			err = FindSymbol
-					(
-					s_Plugins[XCmdDescriptor].ConnID,		// CFragConnectionID connID
-					str,							// ConstStr255Param symName
-					&ptr,							// Ptr *symAddr
-					&symClass						// CFragSymbolClass *symClass
-					);
-		}
-		else
-		{
-			err = GetIndSymbol
-					(
-					s_Plugins[XCmdDescriptor].ConnID,		// CFragConnectionID connID
-					(long) SymIndex,					// long symIndex,
-					str,							// Str255 symName
-					&ptr,							// Ptr *symAddr
-					&symClass						// CFragSymbolClass *symClass
-					);
-			p2cstrcpy(pSymName, str);
-		}
+	pInterface = s_Plugins[XCmdDescriptor].pInterface;
 
-		if	(!err)
-		{
-			*pSymClass = (unsigned char) symClass;
-#if TARGET_RT_MAC_MACHO
-			*pSymbolAddress = (void *) NewGlue(ptr, XCmdDescriptor, symClass);
-#else
-			*pSymbolAddress = ptr;
-#endif
-		}
-		else
-		{
-			*pSymbolAddress = 0;
-		}
+	if	(SymIndex == 0xffffffff)
+	{
+		pFn = pInterface->GetFunctionByName(pInterface, pSymName);
 	}
 	else
-	if	(type == eMachO)
 	{
-		pInterface = s_Plugins[XCmdDescriptor].pInterface;
-
-		if	(SymIndex == 0xffffffff)
-		{
-			pFn = pInterface->GetFunctionByName(pInterface, pSymName);
-		}
-		else
-		{
-			pFn = pInterface->GetFunctionByIndex(pInterface, SymIndex, &s);
-			if	(pFn)
-				strcpy(pSymName, s);
-		}
-
+		pFn = pInterface->GetFunctionByIndex(pInterface, SymIndex, &s);
 		if	(pFn)
-		{
-			*pSymbolAddress = (void *) pFn;
-			*pSymClass =  kCodeCFragSymbol;
-			err = noErr;
-		}
-		else
-		{
-			*pSymbolAddress = 0;
-			err = fnfErr;
-		}
+			strcpy(pSymName, s);
+	}
+
+	if	(pFn)
+	{
+		*pSymbolAddress = (void *) pFn;
+		*pSymClass =  kCodeCFragSymbol;
+		err = noErr;
 	}
 	else
+	{
+		*pSymbolAddress = 0;
 		err = fnfErr;
+	}
 
 #ifdef _DEBUG
 	if	(err)

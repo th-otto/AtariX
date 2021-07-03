@@ -32,23 +32,7 @@
 
 // Schalter
 
-#if TARGET_RT_MAC_MACHO
-struct GlueCode
-{
-	GlueCode *pNext;
-//	CFragConnectionID id;		// zugehörige Bibliothek
-	void *p;				// Zeiger auf MachO-Glue-Code
-};
-
-enum enRunTimeFormat
-{
-	eUnused = 0,
-	eMachO = 1,
-	ePEF = 2
-};
-
 #define MAX_PLUGINS	128		// maximum of plugins
-#endif
 
 class CXCmd
 {
@@ -60,30 +44,24 @@ class CXCmd
 	// initialisieren
 	int Init(void);
 	// XCmd laden
-	OSErr Load(FSSpec *pSpec, CFragConnectionID* pConnectionId);
-	OSErr Load(ConstStr63Param libName, CFragConnectionID* pConnectionId);
-	OSErr LoadPlugin(
-			const char *pPath,
-			const char *SearchPath,
-			CFPlugInRef *pRef,
-			MagicMacXPluginInterfaceStruct **ppInterface);
 	// die zentrale Kommandofunktion
 	int32_t Command(uint32_t params, unsigned char *AdrOffset68k);
 
    private:
-#if TARGET_RT_MAC_MACHO
 	struct tsLoadedPlugin
 	{
-		enRunTimeFormat RunTimeFormat;
-		// used for CFM/PEF
-		CFragConnectionID ConnID;
-		GlueCode *pGlueList;
-		// used for MachO
 		CFPlugInRef PluginRef;
+		void *handle;
 		MagicMacXPluginInterfaceStruct *pInterface;
 	};
 	static tsLoadedPlugin s_Plugins[MAX_PLUGINS];
-#endif
+
+	OSErr Load(const char *libName, struct tsLoadedPlugin *plugin);
+	OSErr LoadPlugin(
+			const char *pPath,
+			const char *SearchPath,
+			struct tsLoadedPlugin *plugin);
+
 	OSErr OnCommandLoadLibrary(
 				const char *szLibName,
 				bool bIsPath,
@@ -98,14 +76,11 @@ class CXCmd
 				void **pSymbolAddress
 				);
    	OSErr Preload(void);
-   	void InitXCMD(CFragConnectionID ConnectionId);
+   	void InitXCMD(struct tsLoadedPlugin *plugin);
    	static XCmdCallbackFunctionProcType Callback;
 
    	strXCmdInfo m_XCmdInfo;		// Info-Struktur geht an PEF/CFM PlugIns
    	struct XCmdInfo m_XCmdPlugInInfo;	// Info-Struktur geht an MachO PlugIns
-	FSSpec m_XCMDFolderSpec;
-#if TARGET_RT_MAC_MACHO
-	void *NewGlue(void *pCFragPtr, uint32_t XCmdDescriptor, CFragSymbolClass symclass);
-#endif
+	char *m_XCMDFolderSpec;
 };
 #endif

@@ -48,7 +48,7 @@ struct strXCmdInfo
 };
 
 // Diese Funktion wird von MagicMacX in jedem XCMD aufgerufen
-#define XCMD_INIT_FN_NAME "\pXCmdInit"
+#define XCMD_INIT_FN_NAME "XCmdInit"
 #define XCMD_INIT_FN XCmdInit
 
 typedef int (XCmdInitFunctionProcType) (struct strXCmdInfo *pInfo);
