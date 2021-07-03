@@ -39,6 +39,7 @@
 #include "s_endian.h"
 #include <time.h>
 #include <sys/time.h>
+#include "maptab.h"
 
 #undef MIN
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
@@ -3395,8 +3396,34 @@ uint32_t CMagiC::AtariDebugOut(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
-	DebugInfo("CMagiC::AtariDebugOut(%s)", AdrOffset68k + params);
-	return(0);
+#ifdef _DEBUG
+	unsigned char *atari_ptr = AdrOffset68k + params;
+	char buffer[2048];
+	int i;
+	unsigned short ch;
+	
+	for (i = 0; *atari_ptr != 0 && i < (int)sizeof(buffer) - 4; atari_ptr++)
+	{
+		ch = atari_to_utf16[*atari_ptr];
+		/* inplace variant of g_unichar_to_utf8, for speed */
+		if (ch < 0x80)
+		{
+			buffer[i++] = ch;
+		} else if (ch < 0x800)
+		{
+			buffer[i++] = ((ch >> 6) & 0x3f) | 0xc0;
+			buffer[i++] = (ch & 0x3f) | 0x80;
+		} else
+		{
+			buffer[i++] = ((ch >> 12) & 0x0f) | 0xe0;
+			buffer[i++] = ((ch >> 6) & 0x3f) | 0x80;
+			buffer[i++] = (ch & 0x3f) | 0x80;
+		}
+	}
+	buffer[i] = '\0';
+	DebugInfo("CMagiC::AtariDebugOut(%s)", buffer);
+#endif
+	return 0;
 }
 
 
