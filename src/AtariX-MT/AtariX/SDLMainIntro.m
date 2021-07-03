@@ -312,20 +312,20 @@ static void CustomApplicationMain (int argc, char **argv)
         return FALSE;
 
     temparg = [filename UTF8String];
-    arglen = SDL_strlen(temparg) + 1;
-    arg = (char *) SDL_malloc(arglen);
+    arglen = strlen(temparg) + 1;
+    arg = (char *) malloc(arglen);
     if (arg == NULL)
         return FALSE;
 
     newargv = (const char **) realloc(gArgv, sizeof (char *) * (gArgc + 2));
     if (newargv == NULL)
     {
-        SDL_free(arg);
+        free(arg);
         return FALSE;
     }
     gArgv = newargv;
 
-    SDL_strlcpy(arg, temparg, arglen);
+    strcpy(arg, temparg);
     gArgv[gArgc++] = arg;
     gArgv[gArgc] = NULL;
     return TRUE;
@@ -411,7 +411,7 @@ int main (int argc, const char **argv)
     /* This is passed if we are launched by double-clicking */
     if ((argc >= 2) && !strncmp (argv[1], "-psn", 4))
 	{
-        gArgv = (const char **) SDL_malloc(sizeof (char *) * 2);
+        gArgv = (const char **) malloc(sizeof (char *) * 2);
         gArgv[0] = argv[0];
         gArgv[1] = NULL;
         gArgc = 1;
@@ -421,7 +421,7 @@ int main (int argc, const char **argv)
 	{
         int i;
         gArgc = argc;
-        gArgv = (const char **) SDL_malloc(sizeof (char *) * (argc + 1));
+        gArgv = (const char **) malloc(sizeof (char *) * (argc + 1));
         for (i = 0; i <= argc; i++)
             gArgv[i] = argv[i];
         gFinderLaunch = NO;

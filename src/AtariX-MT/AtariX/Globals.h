@@ -84,16 +84,13 @@ class CGlobals
 				char *pBuf,
 				unsigned uBufLen);
 	static bool s_bRunning;
-	static ProcessInfoRec s_ProcessInfo;
 	// die ausführbare Datei
 	// der Ordner, in dem die ausführbare Datei bzw. das Bundle liegt
 	static FSSpec s_ProcDir;
 	static long s_ProcDirID;			// hier liegt das Bundle bzw. die PEF-Datei
 	static long s_ExecutableDirID;		// hier liegt die ausführbare Datei
-	// dasselbe, aber als Carbon-Pfad
-	static char s_ThisPathNameCarbon[256];
 	// nochmal dasselbe, aber als UNIX-Pfad (Versuch!)
-	static char s_ThisPathNameUnix[256];
+	static char s_ThisPathNameUnix[1024];
 	// Programmversion
 	static NumVersion s_ProgramVersion;
 	static CFURLRef s_MagiCKernelUrl;

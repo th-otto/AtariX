@@ -39,15 +39,19 @@ const char scrapFileName[] = "/GEMSYS/GEMSCRAP/SCRAP.TXT";
 
 
 bool CGlobals::s_bRunning;
-ProcessInfoRec CGlobals::s_ProcessInfo;
 uint8_t CGlobals::s_atariKernelPathUrl[1024];
 uint8_t CGlobals::s_atariRootfsPathUrl[1024];
 uint8_t CGlobals::s_atariScrapFileUnixPath[1024];
 FSSpec CGlobals::s_ProcDir;
 long CGlobals::s_ProcDirID;					// hier liegt das Bundle
-long CGlobals::s_ExecutableDirID;				// hier liegt die ausführbare Datei
-char CGlobals::s_ThisPathNameCarbon[256];
-char CGlobals::s_ThisPathNameUnix[256];
+long CGlobals::s_ExecutableDirID;		
+
+/*
+ * hier liegt die ausführbare Datei
+ * FIXME: only used by printing, for the temp print files
+ * FIXME2: there should be a better place for those files
+ */
+char CGlobals::s_ThisPathNameUnix[1024];
 
 NumVersion CGlobals::s_ProgramVersion;
 CFURLRef CGlobals::s_MagiCKernelUrl;
@@ -89,6 +93,7 @@ CGlobals::CGlobals()
 int CGlobals::Init(void)
 {
 	CFStringRef theString;
+	CFStringRef executableUrl;
 
 	if (s_atariKernelPathUrl[0])
 	{
@@ -111,7 +116,6 @@ int CGlobals::Init(void)
 		CFRelease(theString);
 		DebugInfo("CGlobals::Init() -- URLRef for kernel = %p", (void *)s_MagiCKernelUrl);
 	}
-//	const char *s = (const char *) s_atariRootfsPathUrl;
 
 	// convert UTF8 encoded byte array containing URL to CFString
 	theString = CFStringCreateWithBytes(
@@ -146,58 +150,18 @@ int CGlobals::Init(void)
 		DebugInfo("CClipboard::Mac2Atari() --- scrap file is \"%s\".\n", s_atariScrapFileUnixPath);
 	}
 
-	// Carbon-Pfad ermitteln
-
+	// determine path to executable
+	executableUrl = CFURLCopyFileSystemPath(CFBundleCopyExecutableURL(CFBundleGetMainBundle()), kCFURLPOSIXPathStyle);
+	CFStringGetCString(executableUrl, s_ThisPathNameUnix, sizeof(s_ThisPathNameUnix), kCFStringEncodingUTF8);
+	CFRelease(executableUrl);
 	{
-		Handle hFullPath;
-		short FullPathLen;
-		OSErr err2;
-
-		err2 = FSpGetFullPath(&s_ProcDir, &FullPathLen, &hFullPath);
-		if	((!err2) && (FullPathLen))
-		{
-			HLock(hFullPath);
-			if	(FullPathLen < 256)
-			{
-				memcpy(s_ThisPathNameCarbon, (const unsigned char *) (*hFullPath), FullPathLen);
-				s_ThisPathNameCarbon[FullPathLen] = '\0';
-				DebugInfo("CGlobals::Init() -- Fullpath (Carbon) = %s", s_ThisPathNameCarbon);
-			}
-			DisposeHandle(hFullPath);
-		}
-	}
-
-	// Berechne Unix-Pfad aus Carbon-Pfad (Versuch)
-
-	{
-		char *s;
-
-		s = strchr(s_ThisPathNameCarbon, ':');
-		if	(s)
-		{
-			if	(s_ProcDir.vRefNum == -100)
-			{
-				DebugInfo("CGlobals::Init() -- Boot-Volume");
-				s_ThisPathNameUnix[0] = '/';
-				strcpy(s_ThisPathNameUnix+1, s+1);
-			}
-			else
-			{
-				DebugInfo("CGlobals::Init() -- Nicht Boot-Volume");
-				strcpy(s_ThisPathNameUnix, "/Volumes/");
-				strcat(s_ThisPathNameUnix, s_ThisPathNameCarbon);
-			}
-
-			while((s = strchr(s_ThisPathNameUnix, ':')) != NULL)
-			{
-				*s = '/';
-			}
-
-			DebugInfo("CGlobals::Init() -- Fullpath (Unix) = %s", s_ThisPathNameUnix);
-		}
+		char *s = strrchr(s_ThisPathNameUnix, '/');
+		if (s)
+			s[0] = '\0';
 		else
-			DebugError("CGlobals::Init() -- falscher Pfad?");
+			strcpy(s_ThisPathNameUnix, "./");
 	}
+	DebugInfo("CGlobals::Init() -- Fullpath (Unix) = %s", s_ThisPathNameUnix);
 
 	// Ermittle den "CFBundleVersion"-Eintrag in der "Info.plist" (new style)
 
