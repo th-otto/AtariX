@@ -30,15 +30,6 @@
 
 // Schalter
 
-extern void GetExeLocation
-(
-	ProcessSerialNumber *pPsn,
-	ProcessInfoRec *pProcInfo,
-	FSSpec *pProcDirFsp,
-	long *pProc_dirID,
-	long *pExecutableDirID
-);
-
 extern pascal OSErr FSpResolveAlias (FSSpec *pSpec);
 
 extern pascal OSErr GetCatInfoNoName(
@@ -68,14 +59,6 @@ extern pascal OSErr DetermineVRefNum(
 			ConstStr255Param pathname,
 			short vRefNum,
 			short *realVRefNum);
-
-#if 0
-extern pascal OSErr GetParentID(
-			short vRefNum,
-			long dirID,
-			ConstStr255Param name,
-			long *parID);
-#endif
 
 extern pascal OSErr GetDirName(
 			short vRefNum,

@@ -31,74 +31,6 @@
 
 /**********************************************************************
 *
-* Ermittelt die dirID und die vRefnum des Verzeichnisses,
-* in dem die ausführbare Datei bzw. das Bundle liegt
-*
-* Im Fall "Bundle" wird der aktuelle Pfad auf dieses Verzeichnis
-* gesetzt.
-*
-**********************************************************************/
-
-void GetExeLocation
-(
-	ProcessSerialNumber *pPsn,
-	ProcessInfoRec *pProcInfo,
-	FSSpec *pProcDirFsp,
-	long *pProc_dirID,			// hier liegt das Bundle
-	long *pExecutableDirID		// hier liegt die ausgeführte Programmdatei
-)
-{
-	FSSpec FSpApp;
-	OSErr err;
-	OSStatus errs;
-	FSRef fsref;
-
-	// get process information
-
-	err = GetCurrentProcess (pPsn);
-	if	(err)
-		return;
-	pProcInfo->processInfoLength = sizeof (*pProcInfo);
-	pProcInfo->processName = nil;
-	pProcInfo->processAppSpec = &FSpApp;
-	err = GetProcessInformation (pPsn, pProcInfo);
-	if	(err)
-		return;
-	*pExecutableDirID = FSpApp.parID;
-
-	// get directory the executable resp. the bundle lies in
-
-#if TARGET_RT_MAC_MACHO
-	errs = GetProcessBundleLocation(pPsn, &fsref);
-	if	(err)
-		return;
-	// convert FSRef to FSSpec
-	err = FSGetCatalogInfo(
-			&fsref,
-			kFSCatInfoNone, // kFSCatInfoVolume+kFSCatInfoParentDirID,
-			NULL, //catalogInfo,
-			NULL,	// name
-			&FSpApp,
-			NULL		// FSRef *parent
-			);
-	if	(err)
-		return;
-
-	// make directory the executable resp. the bundle lies in as current directory
-
-	err = HSetVol(NULL, FSpApp.vRefNum, FSpApp.parID);
-	if	(err)
-		return;
-#endif
-	*pProc_dirID = FSpApp.parID;
-
-	// Der Pfad, in dem die ausgeführte Datei liegt
-	FSMakeFSSpec(FSpApp.vRefNum, *pProc_dirID, nil, pProcDirFsp);
-}
-
-
-/**********************************************************************
-*
 * Aus MM
 *
 * Prüft, ob die Datei ein Alias ist und löst den ggf. auf.
@@ -143,7 +75,7 @@ pascal OSErr GetCatInfoNoName(
 	pb->dirInfo.ioDrDirID = dirID;
 	error = PBGetCatInfoSync(pb);
 	pb->dirInfo.ioNamePtr = NULL;
-	return ( error );
+	return error;
 }
 
 
@@ -177,7 +109,7 @@ pascal OSErr GetDirectoryID(
 		}
 	}
 	
-	return ( error );
+	return error;
 }
 
 
@@ -222,7 +154,7 @@ pascal OSErr GetVolumeInfoNoName(
 	Str255 tempPathname;
 	OSErr error;
 	
-	/* Make sure pb parameter is not NULL */ 
+	/* Make sure pb parameter is not NULL */
 	if ( pb != NULL )
 	{
 		pb->volumeParam.ioVRefNum = vRefNum;
@@ -238,13 +170,13 @@ pascal OSErr GetVolumeInfoNoName(
 			pb->volumeParam.ioVolIndex = -1;	/* use ioNamePtr/ioVRefNum combination */
 		}
 		error = PBHGetVInfoSync(pb);
-		pb->volumeParam.ioNamePtr = NULL;	/* ioNamePtr may point to local	tempPathname, so don't return it */
+		pb->volumeParam.ioNamePtr = NULL;	/* ioNamePtr may point to local tempPathname, so don't return it */
 	}
 	else
 	{
 		error = paramErr;
 	}
-	return ( error );
+	return error;
 }
 
 
@@ -270,98 +202,6 @@ pascal OSErr DetermineVRefNum(
 	return ( error );
 }
 
-
-/**********************************************************************
-*
-* Aus "MoreFilesExtras"
-*
-**********************************************************************/
-#if 0
-pascal OSErr GetParentID(
-			short vRefNum,
-			long dirID,
-			ConstStr255Param name,
-			long *parID)
-{
-	CInfoPBRec pb;
-	Str31 tempName;
-	OSErr error;
-	short realVRefNum;
-	
-	/* Protection against File Sharing problem */
-	if ( (name == NULL) || (name[0] == 0) )
-	{
-		tempName[0] = 0;
-		pb.hFileInfo.ioNamePtr = tempName;
-		pb.hFileInfo.ioFDirIndex = -1;	/* use ioDirID */
-	}
-	else
-	{
-		pb.hFileInfo.ioNamePtr = (StringPtr)name;
-		pb.hFileInfo.ioFDirIndex = 0;	/* use ioNamePtr and ioDirID */
-	}
-	pb.hFileInfo.ioVRefNum = vRefNum;
-	pb.hFileInfo.ioDirID = dirID;
-	error = PBGetCatInfoSync(&pb);
-	if ( error == noErr )
-	{
-		/*
-		**	There's a bug in HFS where the wrong parent dir ID can be
-		**	returned if multiple separators are used at the end of a
-		**	pathname. For example, if the pathname:
-		**		'volumeName:System Folder:Extensions::'
-		**	is passed, the directory ID of the Extensions folder is
-		**	returned in the ioFlParID field instead of fsRtDirID. Since
-		**	multiple separators at the end of a pathname always specifies
-		**	a directory, we only need to work-around cases where the
-		**	object is a directory and there are multiple separators at
-		**	the end of the name parameter.
-		*/
-		if ( (pb.hFileInfo.ioFlAttrib & kioFlAttribDirMask) != 0 )
-		{
-			/* Its a directory */
-			
-			/* is there a pathname? */
-			if ( pb.hFileInfo.ioNamePtr == name )	
-			{
-				/* could it contain multiple separators? */
-				if ( name[0] >= 2 )
-				{
-					/* does it contain multiple separators at the end? */
-					if ( (name[name[0]] == ':') && (name[name[0] - 1] == ':') )
-					{
-						/* OK, then do the extra stuff to get the correct parID */
-						
-						/* Get the real vRefNum (this should not fail) */
-						error = DetermineVRefNum(name, vRefNum, &realVRefNum);
-						if ( error == noErr )
-						{
-							/* we don't need the parent's name, but add protect against File Sharing problem */
-							tempName[0] = 0;
-							pb.dirInfo.ioNamePtr = tempName;
-							pb.dirInfo.ioVRefNum = realVRefNum;
-							/* pb.dirInfo.ioDrDirID already contains the */
-							/* dirID of the directory object */
-							pb.dirInfo.ioFDirIndex = -1;	/* get information about ioDirID */
-							error = PBGetCatInfoSync(&pb);
-							/* now, pb.dirInfo.ioDrParID contains the correct parID */
-						}
-					}
-				}
-			}
-		}
-		
-		if ( error == noErr )
-		{
-			/* if no errors, then pb.hFileInfo.ioFlParID (pb.dirInfo.ioDrParID) */
-			/* contains the parent ID */
-			*parID = pb.hFileInfo.ioFlParID;
-		}
-	}
-	
-	return ( error );
-}
-#endif
 
 /**********************************************************************
 *

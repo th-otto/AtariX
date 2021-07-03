@@ -205,9 +205,6 @@ typedef struct _mx_fd {
 	//bool GetXFSRootDir (short drv, short *vRefNum, long *dirID);
 	uint32_t DriveToDeviceCode (short drv);
 	long EjectDevice (short opcode, long device);
-	// zur Zeit unbenutzt:
-	//bool GetPathFromFSSpec (FSSpec *spec, char* path, short pathSize);
-	//void XFSVolUnmounted (ParmBlkPtr pb0);
 
 	// lokale Variablen:
 	// -----------------
