@@ -10,6 +10,7 @@
 #import <sys/param.h> /* for MAXPATHLEN */
 #import <unistd.h>
 #import "PreferencesWindowController.h"
+#include "Debug.h"
 
 //extern int my_main(void);
 
@@ -83,23 +84,23 @@ static NSString *getApplicationName(void)
 /*
 - (IBAction)actionRun:(id)sender
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 }
  - (IBAction)actionQuit:(id)sender
  {
- printf("%s()\n", __func__);
+ DebugTrace("%s()", __func__);
  [self terminate:sender];
  }
  
  - (IBAction)actionPreferences:(id)sender
  {
- printf("%s()\n", __func__);
+ DebugTrace("%s()", __func__);
  }
 */
 /* Invoked from the Quit menu item */
 - (void)terminate:(id)sender
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
     /* Post a SDL_QUIT event */
     SDL_Event event;
     event.type = SDL_QUIT;
@@ -114,7 +115,7 @@ static NSString *getApplicationName(void)
 /* Set the working directory to the .app's parent directory */
 - (void) setupWorkingDirectory:(BOOL)shouldChdir
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
     if (shouldChdir)
     {
         char parentdir[MAXPATHLEN];
@@ -303,7 +304,7 @@ static void CustomApplicationMain (int argc, char **argv)
     char *arg;
     const char **newargv;
 
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
     if (!gFinderLaunch)  /* MacOS is passing command line args. */
         return FALSE;
 
@@ -336,7 +337,7 @@ static void CustomApplicationMain (int argc, char **argv)
 {
     int status;
 
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
     /* Set the working directory to the .app's parent directory */
     [self setupWorkingDirectory:gFinderLaunch];
 
@@ -405,7 +406,7 @@ static void CustomApplicationMain (int argc, char **argv)
 /* Main entry point to executable - should *not* be SDL_main! */
 int main (int argc, const char **argv)
 {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
     /* Copy the arguments into a global variable */
     /* This is passed if we are launched by double-clicking */
     if ((argc >= 2) && !strncmp (argv[1], "-psn", 4))
