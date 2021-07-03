@@ -24,10 +24,10 @@
 
 #ifdef _DEBUG
 // System-Header
-#include <Carbon/Carbon.h>
-#include <machine/endian.h>
 // Programm-Header
 #include "Debug.h"
+#include <time.h>
+#include <string.h>
 
 // Schalter
 
@@ -40,7 +40,7 @@ enum LOG_LEVEL {
 	LOG_TRACE
 };
 
-static enum LOG_LEVEL debug_level = LOG_ERROR;
+static enum LOG_LEVEL debug_level = LOG_INFO;
 
 /**********************************************************************
 *

@@ -121,7 +121,7 @@
 		AD3E85AE143E5DF50054D0E8 /* MachOCFMGlue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MachOCFMGlue.h; sourceTree = "<group>"; };
 		AD42AFBC1572794F00F7B76E /* rootfs-common */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "rootfs-common"; sourceTree = "<group>"; };
 		AD5F1156157237F600F8BE63 /* AtariX_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AtariX_Prefix.pch; sourceTree = "<group>"; };
-		AD5F119515723E4500F8BE63 /* AtariX-Application copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "AtariX-Application copy-Info.plist"; path = "AtariX-Application copy-Info.plist"; sourceTree = "<group>"; };
+		AD5F119515723E4500F8BE63 /* AtariX-Application copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "AtariX-Application copy-Info.plist"; sourceTree = "<group>"; };
 		AD5F11971572401100F8BE63 /* English */ = {isa = PBXFileReference; lastKnownFileType = folder; name = English; path = English.lproj/rootfs; sourceTree = "<group>"; };
 		AD60906C15A38E5D0073E842 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/atarix.xib; sourceTree = "<group>"; };
 		AD60906F15A38E820073E842 /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/atarix.xib; sourceTree = "<group>"; };
