@@ -1529,50 +1529,93 @@ Reinstall the application.
 	pMacXSysHdr->MacSys_verMac = cpu_to_be32(10);
 	pMacXSysHdr->MacSys_cpu = cpu_to_be16(20);		// 68020
 	pMacXSysHdr->MacSys_fpu = cpu_to_be16(0);		// keine FPU
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L491 */
 	SetThunkCPP(MacSys_init, thunk_AtariInit);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L706 */
 	SetThunkCPP(MacSys_biosinit, thunk_AtariBIOSInit);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L763 */
 	SetThunkCPP(MacSys_VdiInit, thunk_AtariVdiInit);
 	SetThunkCPP(MacSys_Exec68k, thunk_AtariExec68k);
 	pMacXSysHdr->MacSys_pixmap = cpu_to_be32((uint32_t)((char *)&pAtari68kData->m_PixMap - (char *)m_RAM68k));
 	pMacXSysHdr->MacSys_pMMXCookie = cpu_to_be32((uint32_t)((char *)&pAtari68kData->m_CookieData - (char *)m_RAM68k));
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L866 */
 	SetThunkCPP(MacSys_Xcmd, thunk_XCmdCommand);
 	pMacXSysHdr->MacSys_PPCAddr = cpu_to_be32((uint32_t) (uintptr_t) m_RAM68k);
 	pMacXSysHdr->MacSys_VideoAddr = cpu_to_be32(m_pMagiCScreen->m_PixMap.baseAddr32);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2524 */
 	SetThunk(MacSys_gettime, AtariGettime);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2538 */
 	SetThunk(MacSys_settime, AtariSettime);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2634 */
 	SetThunk(MacSys_Setpalette, AtariSetpalette);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2647 */
 	SetThunk(MacSys_Setcolor, AtariSetcolor);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2669 */
 	SetThunk(MacSys_VsetRGB, AtariVsetRGB);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2681 */
 	SetThunk(MacSys_VgetRGB, AtariVgetRGB);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L1667 */
 	SetThunk(MacSys_syshalt, AtariSysHalt);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L1724 */
 	SetThunk(MacSys_syserr, AtariSysErr);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3069 */
 	SetThunk(MacSys_coldboot, AtariColdBoot);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/inc/puntaes.s#L95 */
 	SetThunk(MacSys_exit, AtariExit);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L1644 */
 	SetThunk(MacSys_debugout, AtariDebugOut);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L830 */
 	SetThunk(MacSys_error, AtariError);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3276 */
 	SetThunk(MacSys_prtos, AtariPrtOs);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3271 */
 	SetThunk(MacSys_prtin, AtariPrtIn);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3264 */
 	SetThunk(MacSys_prtout, AtariPrtOut);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3291 */
 	SetThunk(MacSys_prtouts, AtariPrtOutS);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3225 */
 	SetThunk(MacSys_serconf, AtariSerConf);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3254 */
 	SetThunk(MacSys_seris, AtariSerIs);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3259 */
 	SetThunk(MacSys_seros, AtariSerOs);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3235 */
 	SetThunk(MacSys_serin, AtariSerIn);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3247 */
 	SetThunk(MacSys_serout, AtariSerOut);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L145 */
 	SetThunk(MacSys_SerOpen, AtariSerOpen);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L159 */
 	SetThunk(MacSys_SerClose, AtariSerClose);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L173 */
 	SetThunk(MacSys_SerRead, AtariSerRead);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L191 */
 	SetThunk(MacSys_SerWrite, AtariSerWrite);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L209 */
 	SetThunk(MacSys_SerStat, AtariSerStat);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L234 */
 	SetThunk(MacSys_SerIoctl, AtariSerIoctl);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2830 */
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2870 */
 	SetThunkCPP(MacSys_GetKeybOrMouse, thunk_AtariGetKeyboardOrMouseData);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L848 */
 	SetThunk(MacSys_dos_macfn, AtariDOSFn);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s */
 	SetThunkCPP(MacSys_xfs, thunk_XFSFunctions);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1183 */
 	SetThunkCPP(MacSys_xfs_dev, thunk_XFSDevFunctions);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L1772 */
 	SetThunkCPP(MacSys_drv2devcode, thunk_Drv2DevCode);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L1753 */
 	SetThunkCPP(MacSys_rawdrvr, thunk_RawDrvr);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L814 */
 	SetThunkCPP(MacSys_Daemon, thunk_MmxDaemon);
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3391 */
 	SetThunk(MacSys_Yield, AtariYield);
+
+#undef SetThunk
+#undef SetThunkCPP
 
 	// ssp nach Reset
 	*((uint32_t *)(m_RAM68k + 0)) = cpu_to_be32(512*1024);		// Stack auf 512k
@@ -2803,6 +2846,7 @@ int CMagiC::SendVBL( void )
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L491 */
 uint32_t CMagiC::AtariInit(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -2817,6 +2861,7 @@ uint32_t CMagiC::AtariInit(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L706 */
 uint32_t CMagiC::AtariBIOSInit(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -2831,6 +2876,7 @@ uint32_t CMagiC::AtariBIOSInit(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L763 */
 uint32_t CMagiC::AtariVdiInit(uint32_t params, unsigned char *AdrOffset68k)
 {
 //#pragma unused(params)
@@ -2965,6 +3011,7 @@ uint32_t CMagiC::AtariExec68k(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L848 */
 uint32_t CMagiC::AtariDOSFn(uint32_t params, unsigned char *AdrOffset68k)
 {
   	#pragma options align=packed
@@ -2989,6 +3036,7 @@ uint32_t CMagiC::AtariDOSFn(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2524 */
 uint32_t CMagiC::AtariGettime(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -3015,6 +3063,7 @@ uint32_t CMagiC::AtariGettime(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2538 */
 uint32_t CMagiC::AtariSettime(uint32_t params, unsigned char *AdrOffset68k)
 {
 	uint32_t time;
@@ -3045,6 +3094,7 @@ uint32_t CMagiC::AtariSettime(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2634 */
 uint32_t CMagiC::AtariSetpalette(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params,AdrOffset68k)
@@ -3059,6 +3109,7 @@ uint32_t CMagiC::AtariSetpalette(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2647 */
 uint32_t CMagiC::AtariSetcolor(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params,AdrOffset68k)
@@ -3073,6 +3124,7 @@ uint32_t CMagiC::AtariSetcolor(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2669 */
 uint32_t CMagiC::AtariVsetRGB(uint32_t params, unsigned char *AdrOffset68k)
 {
 	int i,j;
@@ -3123,6 +3175,7 @@ uint32_t CMagiC::AtariVsetRGB(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2681 */
 uint32_t CMagiC::AtariVgetRGB(uint32_t params, unsigned char *AdrOffset68k)
 {
 	int i,j;
@@ -3219,6 +3272,7 @@ void CMagiC::SendMessageToMainThread( bool bAsync, uint32_t command )
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L1667 */
 uint32_t CMagiC::AtariSysHalt(uint32_t params, unsigned char *AdrOffset68k)
 {
 	char *ErrMsg = (char *) (AdrOffset68k + params);
@@ -3239,7 +3293,7 @@ uint32_t CMagiC::AtariSysHalt(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
-
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L1724 */
 uint32_t CMagiC::AtariSysErr(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -3304,6 +3358,7 @@ uint32_t CMagiC::AtariSysErr(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3069 */
 uint32_t CMagiC::AtariColdBoot(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -3319,6 +3374,7 @@ uint32_t CMagiC::AtariColdBoot(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/inc/puntaes.s#L95 */
 uint32_t CMagiC::AtariExit(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -3363,6 +3419,11 @@ uint32_t cmagic_hostcall(uint32_t func, uint32_t params, unsigned char *AdrOffse
 {
 	C_callback_func proc;
 
+	/*
+	 * FIXME: the exec_macfn hook in the MgMx cookie
+	 * will pass a symbol address to be called as function number.
+	 * That symbol address is returned by the XCmd interface.
+	 */
 	if (func >= C_callback_NUM)
 		func = MacSys_enosys;
 	proc = g_callbacks[func];
@@ -3392,6 +3453,7 @@ uint32_t CMagiC::AtariEnosys(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L1644 */
 uint32_t CMagiC::AtariDebugOut(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -3435,6 +3497,7 @@ uint32_t CMagiC::AtariDebugOut(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L830 */
 uint32_t CMagiC::AtariError(uint32_t params, unsigned char *AdrOffset68k)
 {
 #ifdef _DEBUG
@@ -3466,6 +3529,7 @@ uint32_t CMagiC::AtariError(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3276 */
 uint32_t CMagiC::AtariPrtOs(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -3481,6 +3545,7 @@ uint32_t CMagiC::AtariPrtOs(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3271 */
 uint32_t CMagiC::AtariPrtIn(uint32_t params, unsigned char *AdrOffset68k)
 {
 	unsigned char c;
@@ -3504,6 +3569,7 @@ uint32_t CMagiC::AtariPrtIn(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3264 */
 uint32_t CMagiC::AtariPrtOut(uint32_t params, unsigned char *AdrOffset68k)
 {
 	uint32_t ret;
@@ -3526,6 +3592,7 @@ uint32_t CMagiC::AtariPrtOut(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3291 */
 uint32_t CMagiC::AtariPrtOutS(uint32_t params, unsigned char *AdrOffset68k)
 {
 	struct PrtOutParm
@@ -3603,6 +3670,7 @@ uint32_t CMagiC::OpenSerialBIOS(void)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3225 */
 uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
@@ -3995,6 +4063,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3254 */
 uint32_t CMagiC::AtariSerIs(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -4021,6 +4090,7 @@ uint32_t CMagiC::AtariSerIs(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3259 */
 uint32_t CMagiC::AtariSerOs(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -4047,6 +4117,7 @@ uint32_t CMagiC::AtariSerOs(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3235 */
 uint32_t CMagiC::AtariSerIn(uint32_t params, unsigned char *AdrOffset68k)
 {
 	char c;
@@ -4083,6 +4154,7 @@ uint32_t CMagiC::AtariSerIn(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3247 */
 uint32_t CMagiC::AtariSerOut(uint32_t params, unsigned char *AdrOffset68k)
 {
 //	DebugInfo("CMagiC::AtariSerOut()");
@@ -4106,6 +4178,7 @@ uint32_t CMagiC::AtariSerOut(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L145 */
 uint32_t CMagiC::AtariSerOpen(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -4146,6 +4219,7 @@ uint32_t CMagiC::AtariSerOpen(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L159 */
 uint32_t CMagiC::AtariSerClose(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
@@ -4182,6 +4256,7 @@ uint32_t CMagiC::AtariSerClose(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L173 */
 uint32_t CMagiC::AtariSerRead(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
@@ -4213,6 +4288,7 @@ uint32_t CMagiC::AtariSerRead(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L191 */
 uint32_t CMagiC::AtariSerWrite(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
@@ -4244,6 +4320,7 @@ uint32_t CMagiC::AtariSerWrite(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L209 */
 uint32_t CMagiC::AtariSerStat(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
@@ -4273,6 +4350,7 @@ uint32_t CMagiC::AtariSerStat(uint32_t params, unsigned char *AdrOffset68k)
 *.
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L234 */
 uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
@@ -4562,6 +4640,7 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3391 */
 uint32_t CMagiC::AtariYield(uint32_t params, unsigned char *AdrOffset68k)
 {
    	#pragma options align=packed
@@ -4611,6 +4690,8 @@ uint32_t CMagiC::AtariYield(uint32_t params, unsigned char *AdrOffset68k)
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2830 */
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L2870 */
 uint32_t CMagiC::AtariGetKeyboardOrMouseData(uint32_t params, unsigned char *AdrOffset68k)
 {
 	uint32_t ret;
@@ -4663,13 +4744,13 @@ uint32_t CMagiC::AtariGetKeyboardOrMouseData(uint32_t params, unsigned char *Adr
 	ret = *m_pKbRead++;
 	if	(m_pKbRead >= m_cKeyboardOrMouseData + KEYBOARDBUFLEN)
 		m_pKbRead = m_cKeyboardOrMouseData;
-	#if defined(_DEBUG_KBD_AND_MOUSE)
+#if defined(_DEBUG_KBD_AND_MOUSE)
 	DebugInfo("CMagiC::AtariGetKeyboardOrMouseData() - Sende 0x%02x", ret);
-	#endif
+#endif
 	OS_ExitCriticalRegion(m_KbCriticalRegionId);
-	#if defined(_DEBUG_KB_CRITICAL_REGION)
+#if defined(_DEBUG_KB_CRITICAL_REGION)
 	DebugInfo("CMagiC::AtariGetKeyboardOrMouseData() --- Exited critical region m_KbCriticalRegionId");
-	#endif
+#endif
 	return(ret);
 }
 
@@ -4680,6 +4761,7 @@ uint32_t CMagiC::AtariGetKeyboardOrMouseData(uint32_t params, unsigned char *Adr
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L814 */
 uint32_t CMagiC::MmxDaemon(uint32_t params, unsigned char *AdrOffset68k)
 {
 	uint32_t ret;

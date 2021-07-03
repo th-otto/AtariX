@@ -4251,6 +4251,7 @@ int32_t CMacXFS::dev_putc( MAC_FD *f, uint16_t mode, int32_t val )
 *
 *************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s */
 int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 {
 #pragma options align=packed
@@ -4263,20 +4264,21 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 	DebugInfo("CMacXFS::XFSFunctions(%d)", (int) fncode);
 	if (fncode == 7)
 	{
-/*
+#if 0
 		if (!m68k_trace_trigger)
 		{
 			// ab dem ersten fopen() tracen
 			m68k_trace_trigger = 1;
 			_DumpAtariMem("AtariMemOnFirstXfsCall.data");
 		}
-*/
+#endif
 	}
 #endif
 	params += 2;
 	switch(fncode)
 	{
-		case 0:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L250 */
+	case 0:
 		{
 			struct syncparm
 			{
@@ -4284,10 +4286,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			};
 			syncparm *psyncparm = (syncparm *) params;
 			doserr = xfs_sync(be16_to_cpu(psyncparm->drv));
-			break;
 		}
+		break;
 
-		case 1:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L266 */
+	case 1:
 		{
 			struct ptermparm
 			{
@@ -4296,10 +4299,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			ptermparm *pptermparm = (ptermparm *) params;
 			xfs_pterm((PD *) (AdrOffset68k + be32_to_cpu(pptermparm->pd)));
 			doserr = E_OK;
-			break;
 		}
+		break;
             
-		case 2:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L323 */
+	case 2:
 		{
 			struct drv_openparm
 			{
@@ -4312,10 +4316,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be16_to_cpu(pdrv_openparm->drv),
 					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdrv_openparm->dd)),
 					be32_to_cpu(pdrv_openparm->flg_ask_diskchange));
-			break;
 		}
+		break;
             
-		case 3:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L366 */
+	case 3:
 		{
 			struct drv_closeparm
 			{
@@ -4325,10 +4330,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			drv_closeparm *pdrv_closeparm = (drv_closeparm *) params;
 			doserr = xfs_drv_close(be16_to_cpu(pdrv_closeparm->drv),
 										be16_to_cpu(pdrv_closeparm->mode));
-			break;
 		}
+		break;
 
-		case 4:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L438 */
+	case 4:
 		{
 			struct path2DDparm
 			{
@@ -4368,10 +4374,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			if (doserr >= 0)
 				DebugInfo(" restpath = „%s“", restpath);
 #endif
-			break;
 		}
+		break;
 			
-		case 5:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L540 */
+	case 5:
 		{
 			struct sfirstparm
 			{
@@ -4389,10 +4396,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(MAC_DTA *) (AdrOffset68k + be32_to_cpu(psfirstparm->dta)),
 					be16_to_cpu(psfirstparm->attrib)
 					);
-			break;
 		}
+		break;
 
-		case 6:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L568 */
+	case 6:
 		{
 			struct snextparm
 			{
@@ -4404,10 +4412,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be16_to_cpu(psnextparm->drv),
 					(MAC_DTA *) (AdrOffset68k + be32_to_cpu(psnextparm->dta))
 					);
-			break;
 		}
+		break;
 	
-		case 7:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L598 */
+	case 7:
 		{
 			struct fopenparm
 			{
@@ -4425,10 +4434,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be16_to_cpu(pfopenparm->omode),
 					be16_to_cpu(pfopenparm->attrib)
 					);
-			break;
 		}
+		break;
 			
-		case 8:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L644 */
+	case 8:
 		{
 			struct fdeleteparm
 			{
@@ -4442,10 +4452,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pfdeleteparm->dd)),
 					(char *) (AdrOffset68k + be32_to_cpu(pfdeleteparm->name))
 					);
-			break;
 		}
+		break;
 			
-		case 9:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L669 */
+	case 9:
 		{
 			struct flinkparm
 			{
@@ -4467,10 +4478,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be16_to_cpu(pflinkparm->mode),
 					be16_to_cpu(pflinkparm->dst_drv)
 					);
-			break;
 		}
+		break;
 			
-		case 10:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L699 */
+	case 10:
 		{
 			struct xattrparm
 			{
@@ -4488,10 +4500,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(XATTR *) (AdrOffset68k + be32_to_cpu(pxattrparm->xattr)),
 					be16_to_cpu(pxattrparm->mode)
 					);
-			break;
 		}
+		break;
 			
-		case 11:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L729 */
+	case 11:
 		{
 			struct attribparm
 			{
@@ -4509,10 +4522,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be16_to_cpu(pattribparm->rwflag),
 					be16_to_cpu(pattribparm->attr)
 					);
-			break;
 		}
+		break;
 			
-		case 12:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L756 */
+	case 12:
 		{
 			struct chownparm
 			{
@@ -4530,10 +4544,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be16_to_cpu(pchownparm->uid),
 					be16_to_cpu(pchownparm->gid)
 					);
-			break;
 		}
+		break;
 			
-		case 13:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L782 */
+	case 13:
 		{
 			struct chmodparm
 			{
@@ -4549,10 +4564,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(char *) (AdrOffset68k + be32_to_cpu(pchmodparm->name)),
 					be16_to_cpu(pchmodparm->fmode)
 					);
-			break;
 		}
+		break;
 			
-		case 14:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L809 */
+	case 14:
 		{
 			struct dcreateparm
 			{
@@ -4572,10 +4588,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdcreateparm->dd)),
 					(char *) (AdrOffset68k + be32_to_cpu(pdcreateparm->name))
 					);
-			break;
 		}
+		break;
 			
-		case 15:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L832 */
+	case 15:
 		{
 			struct ddeleteparm
 			{
@@ -4587,10 +4604,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be16_to_cpu(pddeleteparm->drv),
 					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pddeleteparm->dd))
 					);
-			break;
 		}
+		break;
 			
-		case 16:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L855 */
+	case 16:
 		{
 			struct dd2nameparm
 			{
@@ -4606,10 +4624,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(char *) (AdrOffset68k + be32_to_cpu(pdd2nameparm->buf)),
 					be16_to_cpu(pdd2nameparm->bufsiz)
 					);
-			break;
 		}
-			
-		case 17:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L877 */
+	case 17:
 		{
 			struct dopendirparm
 			{
@@ -4625,10 +4644,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdopendirparm->dd)),
 					be16_to_cpu(pdopendirparm->tosflag)
 					);
-			break;
 		}
-	
-		case 18:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L919 */
+	case 18:
 		{
 			struct dreaddirparm
 			{
@@ -4648,10 +4668,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(XATTR *) ((pdreaddirparm->xattr) ? AdrOffset68k + be32_to_cpu(pdreaddirparm->xattr) : NULL),
 					(int32_t *) ((pdreaddirparm->xr) ? (AdrOffset68k + be32_to_cpu(pdreaddirparm->xr)) : NULL)
 					);
-			break;
 		}
-			
-		case 19:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L943 */
+	case 19:
 		{
 			struct drewinddirparm
 			{
@@ -4663,10 +4684,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(MAC_DIRHANDLE *) (AdrOffset68k + be32_to_cpu(pdrewinddirparm->dirh)),
 					be16_to_cpu(pdrewinddirparm->drv)
 					);
-			break;
 		}
-			
-		case 20:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L963 */
+	case 20:
 		{
 			struct dclosedirparm
 			{
@@ -4678,10 +4700,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(MAC_DIRHANDLE *) (AdrOffset68k + be32_to_cpu(pdclosedirparm->dirh)),
 					be16_to_cpu(pdclosedirparm->drv)
 					);
-			break;
 		}
-			
-		case 21:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1014 */
+	case 21:
 		{
 			struct dpathconfparm
 			{
@@ -4695,10 +4718,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdpathconfparm->dd)),
 					be16_to_cpu(pdpathconfparm->which)
 					);
-			break;
 		}
+		break;
 
-		case 22:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1035 */
+	case 22:
 		{
 			struct dfreeparm
 			{
@@ -4715,10 +4739,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 #ifdef DEBUG_VERBOSE
 			__dump((const unsigned char *) (AdrOffset68k + be32_to_cpu(pdfreeparm->data)), 16);
 #endif
-			break;
 		}
+		break;
 
-		case 23:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1056 */
+	case 23:
 		{
 			struct wlabelparm
 			{
@@ -4732,10 +4757,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pwlabelparm->dd)),
 					(char *) (AdrOffset68k + be32_to_cpu(pwlabelparm->name))
 					);
-			break;
 		}
-			
-		case 24:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1078 */
+	case 24:
 		{
 			struct rlabelparm
 			{
@@ -4751,10 +4777,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(char *) (AdrOffset68k + be32_to_cpu(prlabelparm->name)),
 					be16_to_cpu(prlabelparm->bufsiz)
 					);
-			break;
 		}
-			
-		case 25:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1102 */
+	case 25:
 		{
 			struct symlinkparm
 			{
@@ -4770,10 +4797,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(char *) (AdrOffset68k + be32_to_cpu(psymlinkparm->name)),
 					(char *) (AdrOffset68k + be32_to_cpu(psymlinkparm->to))
 					);
-			break;
 		}
+		break;
 			
-		case 26:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1127 */
+	case 26:
 		{
 			struct readlinkparm
 			{
@@ -4791,10 +4819,11 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(char *) (AdrOffset68k + be32_to_cpu(preadlinkparm->buf)),
 					be16_to_cpu(preadlinkparm->bufsiz)
 					);
-			break;
 		}
-			
-		case 27:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1135 */
+	case 27:
 		{
 			struct dcntlparm
 			{
@@ -4813,13 +4842,12 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					AdrOffset68k + be32_to_cpu(pdcntlparm->arg),
 					AdrOffset68k
 					);
-			break;
 		}
-			
+		break;
 
-		default:
-			doserr = EINVFN;
-			break;
+	default:
+		doserr = EINVFN;
+		break;
 	}
 
 #ifdef DEBUG_VERBOSE
@@ -4835,13 +4863,13 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 *
 *************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1183 */
 int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 {
 	uint16_t fncode;
 	int32_t doserr;
 	unsigned char *params = AdrOffset68k + param;
 	uint32_t ifd;
-
 
 	// first 2 bytes: function code
 	fncode = be16_to_cpu(*((uint16_t *) params));
@@ -4857,13 +4885,13 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 #endif
 	switch(fncode)
 	{
-		case 0:
-		{
-			doserr = dev_close(f);
-			break;
-		}
-			
-		case 1:
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1375 */
+	case 0:
+		doserr = dev_close(f);
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1183 */
+	case 1:
 		{
 			struct devreadparm
 			{
@@ -4877,10 +4905,11 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be32_to_cpu(pdevreadparm->count),
 					(char *) (AdrOffset68k + be32_to_cpu(pdevreadparm->buf))
 					);
-			break;
 		}
-			
-		case 2:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1202 */
+	case 2:
 		{
 			struct devwriteparm
 			{
@@ -4894,10 +4923,11 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be32_to_cpu(pdevwriteparm->count),
 					(char *) (AdrOffset68k + be32_to_cpu(pdevwriteparm->buf))
 					);
-			break;
 		}
-			
-		case 3:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1295 */
+	case 3:
 		{
 			struct devstatparm
 			{
@@ -4913,10 +4943,11 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be16_to_cpu(pdevstatparm->rwflag),
 					be32_to_cpu(pdevstatparm->apcode)
 					);
-			break;
 		}
-			
-		case 4:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1315 */
+	case 4:
 		{
 			struct devseekparm
 			{
@@ -4930,10 +4961,11 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be32_to_cpu(pdevseekparm->pos),
 					be16_to_cpu(pdevseekparm->mode)
 					);
-			break;
 		}
-			
-		case 5:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1353 */
+	case 5:
 		{
 			struct devdatimeparm
 			{
@@ -4947,10 +4979,11 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(uint16_t *) (AdrOffset68k + be32_to_cpu(pdevdatimeparm->d)),
 					be16_to_cpu(pdevdatimeparm->rwflag)
 					);
-			break;
 		}
-			
-		case 6:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1334 */
+	case 6:
 		{
 			struct devioctlparm
 			{
@@ -4964,10 +4997,11 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be16_to_cpu(pdevioctlparm->cmd),
 					(void *) (AdrOffset68k + be32_to_cpu(pdevioctlparm->buf))
 					);
-			break;
 		}
-			
-		case 7:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1227 */
+	case 7:
 		{
 			struct devgetcparm
 			{
@@ -4979,10 +5013,11 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					f,
 					be16_to_cpu(pdevgetcparm->mode)
 					);
-			break;
 		}
-			
-		case 8:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1251 */
+	case 8:
 		{
 			struct devgetlineparm
 			{
@@ -4998,10 +5033,11 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be32_to_cpu(pdevgetlineparm->size),
 					be16_to_cpu(pdevgetlineparm->mode)
 					);
-			break;
 		}
-			
-		case 9:
+		break;
+
+	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1275 */
+	case 9:
 		{
 			struct devputcparm
 			{
@@ -5015,12 +5051,12 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be16_to_cpu(pdevputcparm->mode),
 					be32_to_cpu(pdevputcparm->val)
 					);
-			break;
 		}
-			
-		default:
-			doserr = EINVFN;
-			break;
+		break;
+
+	default:
+		doserr = EINVFN;
+		break;
 	}
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::XFSDevFunctions => %d", (int) doserr);
@@ -5144,6 +5180,7 @@ void CMacXFS::ChangeXFSDriveFlags
 *
 *************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L1772 */
 int32_t CMacXFS::Drv2DevCode(uint32_t params, unsigned char *AdrOffset68k)
 {
 	short vol;
@@ -5206,6 +5243,7 @@ int32_t CMacXFS::Drv2DevCode(uint32_t params, unsigned char *AdrOffset68k)
 *
 *************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L1753 */
 int32_t CMacXFS::RawDrvr (uint32_t param, unsigned char *AdrOffset68k)
 {
 	int32_t ret;

@@ -683,6 +683,7 @@ OSErr CXCmd::OnCommandFindSymbol
 *
 **********************************************************************/
 
+/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L866 */
 int32_t CXCmd::Command(uint32_t params, unsigned char *AdrOffset68k)
 {
 	strXCMD *pCmd = (strXCMD *) (params + AdrOffset68k);
