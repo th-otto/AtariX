@@ -174,7 +174,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 		 unsigned drvnr = c - 'A';
 		 NSString *path = obj;
 		 NSURL *drvUrl = [NSURL URLWithString:path];
-		 // __bridgte wird benötigt, wenn Automatic Reference Counting eingeschaltet ist
+		 // __bridge wird benötigt, wenn Automatic Reference Counting eingeschaltet ist
 		 CFURLRef myCFURL = (__bridge CFURLRef) drvUrl;
 		 EmulationChangeAtariDrive(drvnr, myCFURL);
 		 // wir müssen hier den Referenzzähler erhöhen, weil wir die NSURL als CFURL weitergegeben haben und sie dort gespeichert wird.

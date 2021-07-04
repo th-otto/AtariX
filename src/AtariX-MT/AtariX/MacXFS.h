@@ -231,7 +231,7 @@ typedef struct _mx_fd {
 	// -----------------
 	struct mount_info drives[NDRVS];
 
-	long xfs_drvbits;
+	uint32_t xfs_drvbits;
 
 	/* Zur Rueckgabe an den MagiC-Kernel: */
 	MX_SYMLINK mx_symlink;
@@ -332,7 +332,7 @@ typedef struct _mx_fd {
 	OSErr f_2_cinfo( MAC_FD *f, CInfoPBRec *pb, char *fname);
 	OSErr getFSSpecByFileRefNum (short fRefNum, FSSpec *spec, FCBPBRec *pb);
 
-	void setDrivebits (long newbits, unsigned char *AdrOffset68k);
+	void setDrivebits (uint32_t newbits, unsigned char *AdrOffset68k);
 //	short Num0DrvOfDrvr (short dRefNum, short drvNum);
 };
 

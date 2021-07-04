@@ -2906,7 +2906,7 @@ uint32_t CMagiC::AtariVdiInit(uint32_t params, unsigned char *AdrOffset68k)
 uint32_t CMagiC::AtariExec68k(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(AdrOffset68k)
-	char Old68kContext[128];
+	char Old68kContext[1024];
 	uint32_t ret;
    	#pragma options align=packed
 	struct New68Context
@@ -2936,9 +2936,9 @@ uint32_t CMagiC::AtariExec68k(uint32_t params, unsigned char *AdrOffset68k)
 	}
 
 #if defined(USE_ASGARD_PPC_68K_EMU)
-	if (Asgard68000GetContext(NULL) > 1024)
+	if (Asgard68000GetContext(NULL) > sizeof(Old68kContext))
 #else
-	if (m68k_context_size() > 1024)
+	if (m68k_context_size() > sizeof(Old68kContext))
 #endif
 	{
 		DebugError("CMagiC::AtariExec68k() --- Kontext zu groß");

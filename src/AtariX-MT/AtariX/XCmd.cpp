@@ -33,6 +33,8 @@
 #include "PascalStrings.h"
 #include "XCmd.h"
 #include "Atari.h"
+#include <dirent.h>
+#include <sys/stat.h>
 
 extern "C" {
 #include "MyMoreFiles.h"
@@ -87,41 +89,27 @@ CXCmd::~CXCmd()
 
 int CXCmd::Init(void)
 {
-	OSErr err = 0;
-#ifdef NOTYET
-	Boolean isDir;
+	char dirname[ATARI_PATH_MAX];
+	struct stat st;
+	int err = 0;
 
-	err = FSMakeFSSpec(
-			CGlobals::s_ProcDir.vRefNum,
-			CGlobals::s_ProcDirID,
-			"\pPreload-XCMDs",
-			&m_XCMDFolderSpec);
-	if	(err)
+	strcpy(dirname, CGlobals::s_ThisPathNameUnix);
+	strcat(dirname, "Preload-XCMDs");
+	
+	if (stat(dirname, &st) != 0 || !S_ISDIR(st.st_mode))
 	{
-		DebugError("CXCmd::Init() -- Fehler %d bei FSMakeFSSpec", err);
-		m_XCMDFolderSpec.vRefNum = 0;
-		m_XCMDFolderSpec.parID = 0;
-		return(err);
+		err = errno;
+		DebugError("CXCmd::Init() -- Verzeichnis \"Preload-XCMDs\" nicht gefunden");
+		m_XCMDFolderSpec = NULL;
+		return err;
 	}
 
-	FSpResolveAlias(&m_XCMDFolderSpec);
-	err = FSpGetDirectoryID (&m_XCMDFolderSpec, &m_XCMDFolderSpec.parID, &isDir);
-	m_XCMDFolderSpec.name[0] = 0;
-	if (err || !isDir)
-	{
-		DebugError("CXCmd::Init() -- Verzeichnis \"pPreload-XCMDs\" nicht gefunden");
-		m_XCMDFolderSpec.vRefNum = 0;
-		m_XCMDFolderSpec.parID = 0;
-		if	(!err)
-			err = dirNFErr;
-		return(err);
-	}
-#endif
+	m_XCMDFolderSpec = strdup(dirname);
 
 	if (m_XCMDFolderSpec)
 		err = Preload();
 
-	return(err);
+	return err;
 }
 
 
@@ -131,50 +119,37 @@ int CXCmd::Init(void)
 *
 **********************************************************************/
 
-OSErr CXCmd::Preload(void)
+int CXCmd::Preload(void)
 {
-#ifdef NOTYET
-	CFragConnectionID ConnectionId;
-	short	index;
-	OSErr	err, err2;
-	CInfoPBRec myCPB;
-	Str63	fName/*, dirname*/;
-	FSSpec spec;
+	DIR *dir;
+	struct dirent *ent;
+	char filename[ATARI_PATH_MAX];
+	struct stat st;
+	int i;
 
-
-//	GetDirName (m_XCMDFolderSpec.vRefNum, m_XCMDFolderSpec.parID, dirname);
-
-	myCPB.hFileInfo.ioNamePtr = fName;
-	myCPB.hFileInfo.ioVRefNum = m_XCMDFolderSpec.vRefNum;
+	dir = opendir(m_XCMDFolderSpec);
+	if (dir == NULL)
+		return errno;
 
 	// durchsuche das Verzeichnis, bis ein Fehler auftritt
-	for	(index = 1, err = 0; err == 0; index++)
+	while (i < MAX_PLUGINS && (ent = readdir(dir)) != NULL)
 	{
-		myCPB.hFileInfo.ioFDirIndex = index;	// set up index
-		myCPB.hFileInfo.ioDirID = m_XCMDFolderSpec.parID;
+		if (strcmp(ent->d_name, ".") == 0 ||
+			strcmp(ent->d_name, "..") == 0 ||
+			ent->d_name[0] == '.')
+			continue;	// unsichtbare Dateien überspringen
+		strcpy(filename, m_XCMDFolderSpec);
+		strcat(filename, "/");
+		strcat(filename, ent->d_name);
+		// Verzeichnisse überspringen
+		if (stat(filename, &st) != 0 || !S_ISREG(st.st_mode))
+			continue;
 
-		// hole den (index)-ten Verzeichniseintrag
-		err = PBGetCatInfoSync (&myCPB);
-		if	(err)	// Ende
-			break;
-
-		if	((myCPB.hFileInfo.ioFlAttrib & ioDirMask) || (myCPB.hFileInfo.ioFlFndrInfo.fdFlags & fInvisible))
-			continue;	// Verzeichnisse und unsichtbare Dateien überspringen
-
-		// Datei gefunden. FSSpec erstellen
-		err2 = FSMakeFSSpec (myCPB.hFileInfo.ioVRefNum, myCPB.hFileInfo.ioFlParID, fName, &spec);
-		if	(!err2)
-			err2 = FSpResolveAlias (&spec);
-		if	(err2)
-		{
-			P2C(fName);
-			DebugWarning("CXCmd::Preload() -- error opening %s", fName+1);
-			continue;	// überspringen
-		}
-
-		(void) Load(&spec, &ConnectionId);
+		// Datei gefunden. Laden
+		if (Load(filename, &s_Plugins[i]) == 0)
+			i++;
 	}
-#endif
+	closedir(dir);
 
 	return 0;
 }
@@ -272,7 +247,7 @@ OSErr CXCmd::LoadPlugin
 	struct tsLoadedPlugin *plugin
 )
 {
-	char szPath[256];
+	char szPath[ATARI_PATH_MAX];
 	OSErr err;
 	CFURLRef plugInURL;
 	CFStringRef cpUnixPath;
@@ -474,7 +449,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 	const char *pPluginCreator;
 	uint32_t ulPluginVersionMajor;
 	uint32_t ulPluginVersionMinor;
-	char szSearchPath[256];
+	char szSearchPath[ATARI_PATH_MAX];
 	uint32_t ulNumOfSym;
 
 

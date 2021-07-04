@@ -75,7 +75,7 @@ class CXCmd
 				unsigned char *pSymClass,
 				void **pSymbolAddress
 				);
-   	OSErr Preload(void);
+   	int Preload(void);
    	void InitXCMD(struct tsLoadedPlugin *plugin);
    	static XCmdCallbackFunctionProcType Callback;
 

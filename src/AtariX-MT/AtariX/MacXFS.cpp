@@ -80,16 +80,17 @@ CMacXFS::CMacXFS()
 	int i;
 	struct mount_info *drive_m;
 
-	xfs_drvbits = 0;
 	for (i = 0; i < NDRVS; i++)
 	{
 		drives[i].drv_fsspec.vRefNum = 0;    // ungueltig
 		drives[i].drv_must_eject = false;
 		drives[i].drv_changed = false;
 		drives[i].drv_longnames = false;
+		drives[i].host_dir = NULL;
 	}
 
 	// Mac-Wurzelverzeichnis machen
+	xfs_drvbits = 1L << ('M'-'A');
 	drive_m = &drives['M'-'A'];
 	drive_m->drv_type = MacRoot;
 	drive_m->drv_valid = true;
@@ -119,8 +120,6 @@ CMacXFS::~CMacXFS()
 #ifdef DEBUG_VERBOSE
 static void __dump(const unsigned char *p, int len)
 {
-//	char buf[256];
-
 	while (len >= 4)
 	{
 		DebugInfo(" mem = %02x %02x %02x %02x", p[0], p[1], p[2], p[3]);
@@ -2966,7 +2965,7 @@ int32_t CMacXFS::xfs_dpathconf(uint16_t drv, MXFSDD *dd, uint16_t which)
 		case	DP_MAXREQ:	return DP_XATTRFIELDS;
 		case	DP_IOPEN:	return 100;	// ???
 		case	DP_MAXLINKS:	return 1;
-		case	DP_PATHMAX:	return 128;
+		case	DP_PATHMAX:	return ATARI_PATH_MAX;
 		case	DP_NAMEMAX:	return drv < NDRVS && drives[drv].drv_longnames ? 31 : 12;
 		case	DP_ATOMIC:	return 512;	// ???
 		case	DP_TRUNC:	return drv < NDRVS && drives[drv].drv_longnames ? DP_AUTOTRUNC : DP_DOSTRUNC;
@@ -3625,7 +3624,7 @@ int32_t CMacXFS::xfs_dcntl
 					return doserr;
 				if (pb.hFileInfo.ioFlAttrib & ioDirMask)
 					return EACCDN;
-				mmex->longVal = cpu_to_be32((long) pb.hFileInfo.ioFlRLgLen);
+				mmex->longVal = cpu_to_be32(pb.hFileInfo.ioFlRLgLen);
 				return 0;
 
 			case FMACGETTYCR:
@@ -5046,15 +5045,15 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 *
 *************************************************************/
 
-void CMacXFS::setDrivebits(long newbits, unsigned char *AdrOffset68k)
+void CMacXFS::setDrivebits(uint32_t newbits, unsigned char *AdrOffset68k)
 {
-	long val;
-
-	val = be32_to_cpu(*(long*)(&AdrOffset68k[_drvbits]));
-	newbits |= (1L << ('m'-'a'));	// virtuelles Laufwerk M: immer präsent
-	val &= -1L-xfs_drvbits;		// alte löschen
+	uint32_t val;
+	uint32_t *p_drvbits = (uint32_t*)&AdrOffset68k[_drvbits];
+	
+	val = be32_to_cpu(*p_drvbits);
+	val &= -1L - xfs_drvbits;		// alte löschen
 	val |= newbits;			// neue setzen
-	*(long*)(&AdrOffset68k[_drvbits]) = cpu_to_be32(val);
+	*p_drvbits = cpu_to_be32(val);
 	xfs_drvbits = newbits;
 }
 
@@ -5078,27 +5077,38 @@ void CMacXFS::SetXFSDrive
 
 	DebugInfo("CMacXFS::%s(%c: has type %s)", __FUNCTION__, 'A' + drv, xfsDrvTypeToStr(drvType));
 
-	long newbits = xfs_drvbits;
+	uint32_t newbits = xfs_drvbits;
+
+	free(drives[drv].host_dir);
+	drives[drv].host_dir = NULL;
 
 #ifdef SPECIALDRIVE_AB
 	if (drv >= 2)
 #endif
 	{
-		if (drvType == NoMacXFS)
+		// Laufwerk ist kein MacXFS-Laufwerk mehr => abmelden
+		newbits &= ~(1L << drv);
+		if (drvType != NoMacXFS)
 		{
-			// Laufwerk ist kein MacXFS-Laufwerk mehr => abmelden
-			newbits &= ~(1L << drv);
-		}
-		else
-		{
-			// Laufwerk ist MacXFS-Laufwerk
-			newbits |= 1L << drv;
-	
+			char dirname[ATARI_PATH_MAX];
+
 			// convert CFURLRef to FSRef
 			if (!CFURLGetFSRef(pathUrl, &fs))
 			{
 				DebugError("CMacXFS::%s() -- conversion from URL to FSRef failed", __FUNCTION__);
 				return;
+			}
+			if (CFURLGetFileSystemRepresentation(pathUrl, true, (unsigned char *)dirname, sizeof(dirname)))
+			{
+				size_t len = strlen(dirname);
+				if (len > 0 && dirname[len - 1] != '/')
+					strcat(dirname, "/");
+				drives[drv].host_dir = strdup(dirname);
+				// Laufwerk ist MacXFS-Laufwerk
+				newbits |= 1L << drv;
+			} else
+			{
+				drvType = NoMacXFS;
 			}
 		}
 	}

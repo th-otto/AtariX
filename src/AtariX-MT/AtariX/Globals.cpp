@@ -39,19 +39,16 @@ const char scrapFileName[] = "/GEMSYS/GEMSCRAP/SCRAP.TXT";
 
 
 bool CGlobals::s_bRunning;
-uint8_t CGlobals::s_atariKernelPathUrl[1024];
-uint8_t CGlobals::s_atariRootfsPathUrl[1024];
-uint8_t CGlobals::s_atariScrapFileUnixPath[1024];
-FSSpec CGlobals::s_ProcDir;
-long CGlobals::s_ProcDirID;					// hier liegt das Bundle
-long CGlobals::s_ExecutableDirID;		
+uint8_t CGlobals::s_atariKernelPathUrl[ATARI_PATH_MAX];
+uint8_t CGlobals::s_atariRootfsPathUrl[ATARI_PATH_MAX];
+uint8_t CGlobals::s_atariScrapFileUnixPath[ATARI_PATH_MAX];
 
 /*
  * hier liegt die ausführbare Datei
  * FIXME: only used by printing, for the temp print files
  * FIXME2: there should be a better place for those files
  */
-char CGlobals::s_ThisPathNameUnix[1024];
+char CGlobals::s_ThisPathNameUnix[ATARI_PATH_MAX];
 
 NumVersion CGlobals::s_ProgramVersion;
 CFURLRef CGlobals::s_MagiCKernelUrl;

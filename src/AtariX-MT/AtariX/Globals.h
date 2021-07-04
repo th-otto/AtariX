@@ -36,6 +36,8 @@
 
 #define MAX_ATARIMEMSIZE	(2U*1024U*1024U*1024U)		// 2 Gigabytes
 
+#define ATARI_PATH_MAX 1024
+
 
 // global functions used by XCMD
 extern void MMX_BeginDialog(void);
@@ -75,22 +77,17 @@ class CGlobals
 {
      public:
 	CGlobals();
-	static uint8_t s_atariKernelPathUrl[1024];		// UTF8 encoded
-	static uint8_t s_atariRootfsPathUrl[1024];		// UTF8 encoded
-	static uint8_t s_atariScrapFileUnixPath[1024];
+	static uint8_t s_atariKernelPathUrl[ATARI_PATH_MAX];		// UTF8 encoded
+	static uint8_t s_atariRootfsPathUrl[ATARI_PATH_MAX];		// UTF8 encoded
+	static uint8_t s_atariScrapFileUnixPath[ATARI_PATH_MAX];
 	static int Init(void);
 	static OSErr GetDosPath(
 				const FSSpec *pSpec,
 				char *pBuf,
 				unsigned uBufLen);
 	static bool s_bRunning;
-	// die ausführbare Datei
 	// der Ordner, in dem die ausführbare Datei bzw. das Bundle liegt
-	static FSSpec s_ProcDir;
-	static long s_ProcDirID;			// hier liegt das Bundle bzw. die PEF-Datei
-	static long s_ExecutableDirID;		// hier liegt die ausführbare Datei
-	// nochmal dasselbe, aber als UNIX-Pfad (Versuch!)
-	static char s_ThisPathNameUnix[1024];
+	static char s_ThisPathNameUnix[ATARI_PATH_MAX];
 	// Programmversion
 	static NumVersion s_ProgramVersion;
 	static CFURLRef s_MagiCKernelUrl;
