@@ -4812,7 +4812,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdcntlparm->dd)),
 					(char *) (AdrOffset68k + be32_to_cpu(pdcntlparm->name)),
 					be16_to_cpu(pdcntlparm->cmd),
-					AdrOffset68k + be32_to_cpu(pdcntlparm->arg),
+					pdcntlparm->arg ? AdrOffset68k + be32_to_cpu(pdcntlparm->arg) : NULL,
 					AdrOffset68k
 					);
 		}
