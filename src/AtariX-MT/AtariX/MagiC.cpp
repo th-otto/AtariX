@@ -257,7 +257,7 @@ static const char *AtariAddr2Description(uint32_t addr)
 		addr |= 0xff000000;
 
 	if	(addr == 0xffff8201)
-		return("Videocontroller: Video base register high");
+		return "Videocontroller: Video base register high";
 
 	if	(addr == 0xffff8203)
 		return("Videocontroller: Video base register mid");

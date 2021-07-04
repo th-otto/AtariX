@@ -173,11 +173,16 @@ typedef struct _mx_fd {
 	     uint16_t	mod_time[2];	/* Mac-Teil: Zeit fuer Fdatime (DOS-Codes) (host native endian) */
 	} MAC_FD;
 
+	struct MXFSDD
+	{
+		int32_t dirID;			/* Verzeichniskennung (host native endian) */
+		int16_t vRefNum;		/* Mac-Volume (host native endian) */
+	};
+
 	typedef struct
 	{
 	     MX_DHD	dhd;			/* allgemeiner Teil */
-	     int32_t	dirID;			/* Verzeichniskennung (host native endian) */
-	     short	vRefNum;		// Mac-Volume (host native endian)
+	     struct MXFSDD dhdd;
 	     uint16_t	index;		/* Position des Lesezeigers (host native endian) */
 	     uint16_t	tosflag;		/* TOS-Modus, d.h. 8+3 und ohne Inode (host native endian) */
 	} MAC_DIRHANDLE;
@@ -194,42 +199,40 @@ typedef struct _mx_fd {
 	  char		data[256];
 	} MX_SYMLINK;
 
-	struct MXFSDD
-	{
-		int32_t dirID;
-		int16_t vRefNum;
-	};
-
    	#pragma options align=reset
 
-	//bool GetXFSRootDir (short drv, short *vRefNum, long *dirID);
+	/*
+	 * NDRVS Laufwerke werden vom XFS verwaltet
+	 * Fuer jedes Laufwerk gibt es einen FSSpec, der
+	 * das MAC-Verzeichnis repraesentiert, das fuer
+	 * "x:\" steht.
+	 * Ungültige FSSpec haben die Volume-Id 0.
+	 */
+	struct mount_info {
+		bool drv_changed;
+		bool drv_must_eject;
+		bool drv_valid;			// zeigt an, ob alias gültig ist.
+		FSSpec drv_fsspec;		// => macSys, damit MagiC die volume-ID ermitteln kann.
+		FSRef xfs_path;			// nur auswerten, wenn drv_valid = true
+		CInfoPBRec drv_pbrec;
+		long drv_dirID;
+		bool drv_longnames;		// initialisiert auf 0en
+		bool drv_rvsDirOrder;
+		bool drv_readOnly;
+		MacXFSDrvType drv_type;
+
+		char *host_dir;
+	};
+	
 	uint32_t DriveToDeviceCode (short drv);
 	long EjectDevice (short opcode, long device);
 
 	// lokale Variablen:
 	// -----------------
+	struct mount_info drives[NDRVS];
 
-	bool drv_changed[NDRVS];
-	bool drv_must_eject[NDRVS];
 	long xfs_drvbits;
-/*
-* NDRVS Laufwerke werden vom XFS verwaltet
-* Fuer jedes Laufwerk gibt es einen FSSpec, der
-* das MAC-Verzeichnis repraesentiert, das fuer
-* "x:\" steht.
-* Ungültige FSSpec haben die Volume-Id 0.
-*/
-	FSSpec drv_fsspec[NDRVS];		// => macSys, damit MagiC die volume-ID
-							// ermitteln kann.
 
-	FSRef xfs_path[NDRVS];		// nur auswerten, wenn drv_valid = true
-	bool drv_valid[NDRVS];			// zeigt an, ob alias gültig ist.
-	CInfoPBRec	drv_pbrec[NDRVS];
-	long drv_dirID[NDRVS];
-	bool drv_longnames[NDRVS];			// initialisiert auf 0en
-	bool drv_rvsDirOrder[NDRVS];
-	bool drv_readOnly[NDRVS];
-	MacXFSDrvType drv_type[NDRVS];
 	/* Zur Rueckgabe an den MagiC-Kernel: */
 	MX_SYMLINK mx_symlink;
 
@@ -241,7 +244,7 @@ typedef struct _mx_fd {
 	static void MacFnameToAtariFname(const unsigned char *src, unsigned char *dst);
 	static void date_mac2dos( unsigned long macdate, uint16_t *time, uint16_t *date);
 	static void date_dos2mac( uint16_t time, uint16_t date, unsigned long *macdate);
-	static int fname_is_invalid( char *name);
+	static int fname_is_invalid(const char *name);
 	static int32_t cnverr (OSErr err);
 	static bool filename_match(char *muster, char *fname);
 	static bool conv_path_elem(const char *path, char *name);
@@ -310,7 +313,6 @@ typedef struct _mx_fd {
 	OSErr fsspec2DirID (int drv);
 //	OSErr cpath2DirID( int drv, char *cpath );
 	int32_t resolve_symlink( FSSpec *fs, uint16_t buflen, char *buf );
-	OSErr resAlias(AliasHandle alias,  FSSpec *gSpec, bool gOnlyMountedVols);
 	int32_t drv_open (uint16_t drv, bool onlyMountedVols);
 	int32_t vRefNum2drv(short vRefNum, uint16_t *drv);
 	int32_t MakeFSSpecManually( short vRefNum, long reldir,

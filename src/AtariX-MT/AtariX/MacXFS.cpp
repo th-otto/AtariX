@@ -78,27 +78,30 @@ extern void _DumpAtariMem(const char *filename);
 CMacXFS::CMacXFS()
 {
 	int i;
+	struct mount_info *drive_m;
 
 	xfs_drvbits = 0;
 	for (i = 0; i < NDRVS; i++)
 	{
-		drv_fsspec[i].vRefNum = 0;    // ungueltig
-//		drv_must_eject[i] = 0;
-		drv_changed[i] = 0;
-		drv_longnames[i] = false;
+		drives[i].drv_fsspec.vRefNum = 0;    // ungueltig
+		drives[i].drv_must_eject = false;
+		drives[i].drv_changed = false;
+		drives[i].drv_longnames = false;
 	}
 
 	// Mac-Wurzelverzeichnis machen
-	drv_type['M'-'A'] = MacRoot;
-	drv_valid['M'-'A'] = true;
-	drv_longnames['M'-'A'] = true;
-	drv_rvsDirOrder['M'-'A'] = true;
-	drv_dirID['M'-'A'] = 0;
-	drv_fsspec['M'-'A'].vRefNum = -32768;		// ungültig
-	drv_fsspec['M'-'A'].parID = 0;
-	drv_fsspec['M'-'A'].name[0] = EOS;
+	drive_m = &drives['M'-'A'];
+	drive_m->drv_type = MacRoot;
+	drive_m->drv_valid = true;
+	drive_m->drv_longnames = true;
+	drive_m->drv_rvsDirOrder = true;
+	drive_m->drv_dirID = 0;
+	drive_m->drv_fsspec.vRefNum = -32768;		// ungültig
+	drive_m->drv_fsspec.parID = 0;
+	drive_m->drv_fsspec.name[0] = EOS;
+	drive_m->host_dir = strdup("/");
 
-	DebugInfo("CMacXFS::CMacXFS() -- Drive %c: %s dir order, %s names", 'A' + ('M'-'A'), drv_rvsDirOrder['M'-'A'] ? "reverse" : "normal", drv_longnames['M'-'A'] ? "long" : "8+3");
+	DebugInfo("CMacXFS::CMacXFS() -- Drive %c: %s dir order, %s names", 'A' + ('M'-'A'), drive_m->drv_rvsDirOrder ? "reverse" : "normal", drive_m->drv_longnames ? "long" : "8+3");
 }
 
 
@@ -161,10 +164,10 @@ char CMacXFS::ToUpper( char c )
 	char *found;
 
 	if (c >= 'a' && c <= 'z')
-		return((char) (c & '\x5f'));
+		return (char) (c & '\x5f');
 	if ((unsigned char) c >= 128 &&((found = strchr(lowers, c)) != NULL))
-		return(uppers[found - lowers]);
-	return(c);
+		return uppers[found - lowers];
+	return c;
 }
 
 char CMacXFS::ToLower( char c )
@@ -173,10 +176,10 @@ char CMacXFS::ToLower( char c )
 	char *found;
 
 	if (c >= 'A' && c <= 'Z')
-		return((char) (c | '\x20'));
+		return (char) (c | '\x20');
 	if ((unsigned char) c >= 128 &&((found = strchr(uppers, c)) != NULL))
-		return(lowers[found - uppers]);
-	return(c);
+		return lowers[found - uppers];
+	return c;
 }
 
 
@@ -288,11 +291,11 @@ void CMacXFS::date_dos2mac(uint16_t time, uint16_t date, unsigned long *macdate)
 *
 ******************************************************************/
 
-int CMacXFS::fname_is_invalid( char *name)
+int CMacXFS::fname_is_invalid(const char *name)
 {
-	while ((*name) == '.')		// führende Punkte weglassen
+	while (*name == '.')		// führende Punkte weglassen
 		name++;
-	return(!(*name));			// Name besteht nur aus Punkten
+	return *name == '\0';		// Name besteht nur aus Punkten
 }
 
 
@@ -306,21 +309,21 @@ int32_t CMacXFS::cnverr(OSErr err)
 {
 	switch(err)
 	{
-          case noErr:         return(E_OK);       /* 0      no error  */
-          case nsvErr:        return(EDRIVE);     /* -35    no such volume */
-          case fnfErr:        return(EFILNF);     /* -43    file not found */
-          case dirNFErr:      return(EPTHNF);     // -120   directory not found
-          case ioErr:         return(EREADF);     /* -36    IO Error */
+          case noErr:         return E_OK;        /* 0      no error  */
+          case nsvErr:        return EDRIVE;      /* -35    no such volume */
+          case fnfErr:        return EFILNF;      /* -43    file not found */
+          case dirNFErr:      return EPTHNF;      /* -120   directory not found */
+          case ioErr:         return EREADF;      /* -36    IO Error */
           case gfpErr:                            /* -52    get file pos error */
           case rfNumErr:                          /* -51    Refnum error */
           case paramErr:                          /* -50    error in user parameter list */
-          case fnOpnErr:      return(EINTRN);     /* -38    file not open */
+          case fnOpnErr:      return EINTRN;      /* -38    file not open */
           case bdNamErr:                          /* -37    bad name in file system (>31 Zeichen)*/
           case posErr:                            /* -40    pos before start of file */
-          case eofErr:        return(ATARIERR_ERANGE);     /* -39    end of file */
-          case mFulErr:       return(ENSMEM);     /* -41    memory full */
-          case tmfoErr:       return(ENHNDL);     /* -42    too many open files */
-          case wPrErr:        return(EWRPRO);     /* -44    disk is write protected */
+          case eofErr:        return ATARIERR_ERANGE;     /* -39    end of file */
+          case mFulErr:       return ENSMEM;      /* -41    memory full */
+          case tmfoErr:       return ENHNDL;      /* -42    too many open files */
+          case wPrErr:        return EWRPRO;      /* -44    disk is write protected */
           case notAFileErr:                       /* -1302  is directory, no file! */
           case wrPermErr:                         /* -61    write permission error */
 
@@ -333,14 +336,14 @@ int32_t CMacXFS::cnverr(OSErr err)
           case dupFNErr:                          /* -48    duplicate filename */
           case fBsyErr:                           /* -47    file is busy */
           case vLckdErr:                          /* -46    volume is locked */
-          case fLckdErr:      return(EACCDN);     /* -45    file is locked */
-          case volOffLinErr:  return(EDRVNR);     /* -53    volume off line (ejected) */
-          case badMovErr:     return ENSAME;      // -122   not same volumes or folder move from/to file
-          case dataVerErr:                        // read verify error
-          case verErr:        return EBADSF;      // track format verify error
+          case fLckdErr:      return EACCDN;      /* -45    file is locked */
+          case volOffLinErr:  return EDRVNR;      /* -53    volume off line (ejected) */
+          case badMovErr:     return ENSAME;      /* -122   not same volumes or folder move from/to file */
+          case dataVerErr:                        /* read verify error */
+          case verErr:        return EBADSF;      /* track format verify error */
 	}
 
-	return(ERROR);
+	return ERROR;
 }
 
 
@@ -387,7 +390,7 @@ bool CMacXFS::filename_match(char *muster, char *fname)
 
 
 	if (fname[0] == '\xe5')     /* Suche nach geloeschter Datei */
-		return((muster[0] == '?') || (muster[0] == fname[0]));
+		return muster[0] == '?' || muster[0] == fname[0];
 
 	/* vergleiche 11 Zeichen */
 
@@ -398,7 +401,7 @@ bool CMacXFS::filename_match(char *muster, char *fname)
 		if (c1 != '?')
 		{
 			if (ToUpper(c1) != ToUpper(c2))
-				return(false);
+				return false;
 		}
 	}
 
@@ -408,21 +411,21 @@ bool CMacXFS::filename_match(char *muster, char *fname)
 	c2 = *fname;
 
 //	if (c1 == F_ARCHIVE)	
-//		return(c1 & c2);
+//		return c1 & c2;
 	c2 &= F_SUBDIR + F_SYSTEM + F_HIDDEN + F_VOLUME;
 	if (!c2)
-		return(true);
+		return true;
 	if ((c2 & F_SUBDIR) && !(c1 & F_SUBDIR))
-		return(false);
+		return false;
 	if ((c2 & F_VOLUME) && !(c1 & F_VOLUME))
-		return(false);
+		return false;
 	if (c2 & F_HIDDEN+F_SYSTEM)
 	{
 		c2 &= F_HIDDEN+F_SYSTEM;
 		c1 &= F_HIDDEN+F_SYSTEM;
 	}
 
-	return((bool) (c1 & c2));
+	return (bool) (c1 & c2);
 }
 
 
@@ -497,7 +500,7 @@ bool CMacXFS::conv_path_elem(const char *path, char *name)
 		*name++ = c;
 	}
 
-	return(truncated);
+	return truncated;
 }
 
 
@@ -600,7 +603,7 @@ bool CMacXFS::nameto_8_3 (const unsigned char *macname,
 	if (*macname)
 		truncated = true;
 
-	return(truncated);
+	return truncated;
 }
 
 
@@ -618,7 +621,7 @@ char *CMacXFS::ps(char *s)
 
 	strncpy(cs, s + 1, s[0]);
 	cs[(int) s[0]] = EOS;
-	return(cs);
+	return cs;
 }
 
 
@@ -656,12 +659,12 @@ long CMacXFS::cfss
 	bool fromAtari
 )
 {
-	if (!drv_fsspec[drv].vRefNum)		// Abfrage eigentlich unnoetig
-		return(EDRIVE);
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)		// Abfrage eigentlich unnoetig
+		return EDRIVE;
 
 	fs->vRefNum = vRefNum;
 	fs->parID = dirID;
-	if (drv_longnames[drv])
+	if (drives[drv].drv_longnames)
 	{
 		// copy up to 62 characters and nul-terminate the destination
 		strlcpy((char *) fs->name + 1, (char *) name, sizeof(fs->name) - 1);
@@ -680,7 +683,7 @@ long CMacXFS::cfss
 
 	sp((char *) fs->name);
 
-	return(E_OK);
+	return E_OK;
 }
 
 
@@ -698,40 +701,23 @@ OSErr CMacXFS::fsspec2DirID(int drv)
 	FSSpec *fs;
 	CInfoPBPtr pb;
 
-	fs = drv_fsspec+drv;
-	pb = drv_pbrec+drv;
+	fs = &drives[drv].drv_fsspec;
+	pb = &drives[drv].drv_pbrec;
 
 	pb -> hFileInfo.ioVRefNum = fs -> vRefNum;
 	pb -> hFileInfo.ioNamePtr = fs -> name;
 	pb -> hFileInfo.ioFDirIndex = 0;
 	pb -> hFileInfo.ioDirID = fs -> parID;
-	if (pb->hFileInfo.ioNamePtr[0] == 0) pb->hFileInfo.ioFDirIndex = -1;
+	if (pb->hFileInfo.ioNamePtr[0] == 0)
+		pb->hFileInfo.ioFDirIndex = -1;
 	err = PBGetCatInfoSync (pb);
 	if (err)
-		return(err);
-	if (!(pb -> hFileInfo.ioFlAttrib & 0x10))
-		return(-1);    /* kein SubDir */
-	drv_dirID[drv] = pb -> dirInfo.ioDrDirID;
-	return(0);
+		return err;
+	if (!(pb -> hFileInfo.ioFlAttrib & ioDirMask))
+		return -1;    /* kein SubDir */
+	drives[drv].drv_dirID = pb -> dirInfo.ioDrDirID;
+	return 0;
 }
-
-/*
-OSErr CMacXFS::cpath2DirID( int drv, char *cpath )
-{
-	OSErr err;
-	FSSpec *fs;
-
-	c2pstr(cpath);
-	fs = drv_fsspec+drv;
-	err = FSMakeFSSpec(0, 0L, (unsigned char*)cpath, fs);
-	if (err)
-		{
-		fs->vRefNum = 0;
-		return(err);
-		}
-	return fsspec2DirID (drv);
-}
-*/
 
 /*************************************************************
 *
@@ -779,7 +765,7 @@ int32_t CMacXFS::resolve_symlink( FSSpec *fs, uint16_t buflen, char *buf )
 
 	refnum = FSpOpenResFile(fs, fsRdPerm);
 	if (refnum == -1)
-		return(EACCDN);
+		return EACCDN;
 
 	/* Die Ressource #0 des Typs 'alis' holen	*/
 	/* -------------------------------------	*/
@@ -858,7 +844,7 @@ int32_t CMacXFS::resolve_symlink( FSSpec *fs, uint16_t buflen, char *buf )
 
 	CloseResFile(refnum);
 	UseResFile (saveRefNum);
-	return(doserr);
+	return doserr;
 }
 
 
@@ -888,15 +874,15 @@ int32_t CMacXFS::xfs_sync(uint16_t drv)
 	DebugInfo("CMacXFS::xfs_sync(drv = %d)", (int) drv);
 #endif
 
-	if (!(pb.ioParam.ioRefNum = drv_fsspec[drv].vRefNum))
-		return(EDRIVE);
+	if (drv >= NDRVS || (pb.ioParam.ioRefNum = drives[drv].drv_fsspec.vRefNum) == 0)
+		return EDRIVE;
 
 	pb.ioParam.ioNamePtr = NULL;		// !!!
 //	if (UseAsynchronousDiskIO)
 //		err = PBFlushVolAsync (pb);
 //	else
 		err = PBFlushVolSync (&pb);
-	return(cnverr(err));
+	return cnverr(err);
 }
 
 
@@ -934,48 +920,6 @@ OSErr CMacXFS::getInfo (CInfoPBPtr pb, FSSpec *fs)
 	return PBGetCatInfoSync (pb);
 }
 
-OSErr CMacXFS::resAlias(AliasHandle alias, 	FSSpec *gSpec, bool gOnlyMountedVols)
-{
-	Boolean b;
-	CInfoPBRec pb;
-	short saveRefNum, fRefNum;
-	AliasHandle ori_alias = alias;
-	OSErr gErr;
-
-
-	do
-	{
-		// Schleife: Falls gewählte Datei wieder ein Alias ist, das auch auflösen
-		if (gOnlyMountedVols)
-		{
-			short matches = 1;
-			unsigned long mode = kARMSearch | kARMSearchRelFirst | kARMMultVols | kARMNoUI;
-		 	gErr = MatchAlias (&Globals.s_ProcDir, mode, alias, &matches, gSpec, &b, nil, nil);
-		}
-		else
-		{
-			gErr = ResolveAlias (&Globals.s_ProcDir, alias, gSpec, &b);
-		}
-		if (alias != ori_alias) DisposeHandle ((Handle)alias);
-		if (gErr || getInfo (&pb, gSpec) || (pb.hFileInfo.ioFlAttrib&16) || !(pb.hFileInfo.ioFlFndrInfo.fdFlags&0x8000))
-		{
-			break;
-		}
-		saveRefNum = CurResFile ();
-		fRefNum = FSpOpenResFile (gSpec, fsRdPerm);
-		if (fRefNum == -1) { gErr = dirNFErr; break; }
-		UseResFile (fRefNum);
-		alias = (AliasHandle)GetResource ('alis', 0);
-		DetachResource ((Handle)alias);
-		CloseResFile (fRefNum);
-		UseResFile (saveRefNum);
-	}
-	while (alias);
-
-	return(gErr);
-}
-
-
 int32_t CMacXFS::drv_open (uint16_t drv, bool onlyMountedVols)
 {
 	HVolumeParam pbh;
@@ -984,47 +928,44 @@ int32_t CMacXFS::drv_open (uint16_t drv, bool onlyMountedVols)
 //	checkForNewDrive (drv);
 
 	if (drv == 'M'-'A')
-		return(E_OK);
+		return E_OK;
 
-	if (!drv_valid[drv])
-		return(EDRIVE);
+	if (drv >= NDRVS || !drives[drv].drv_valid)
+		return EDRIVE;
 
 	// convert modern FSRef to ancient FFSpec
 	err = FSGetCatalogInfo(
-					&xfs_path[drv],
+					&drives[drv].xfs_path,
 					kFSCatInfoNone,		// FSCatalogInfoBitmap whichInfo,
 					NULL,				// FSCatalogInfo *catalogInfo,
 					NULL,				// HFSUniStr255 *outName,
-					&drv_fsspec[drv],
+					&drives[drv].drv_fsspec,
 					NULL				// FSRef *parentRef
 					);
-//	if (resAlias(xfs_alias[drv], &drv_fsspec[drv], onlyMountedVols))
 	if (err)
 	{
 		DebugError("CMacXFS::drv_open(): Cannot convert FSRef to FSSpec");
-		return(EDRVNR);
+		return EDRVNR;
 	}
 
 	fsspec2DirID (drv);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
 
 	// Ermitteln, ob Volume "locked" ist.
 	pbh.ioVolIndex = 0;
 	pbh.ioNamePtr = nil;
-	pbh.ioVRefNum = drv_fsspec[drv].vRefNum;
+	pbh.ioVRefNum = drives[drv].drv_fsspec.vRefNum;
 	pbh.ioVAtrb = 0;
 	PBHGetVInfoSync ((HParmBlkPtr)&pbh);
-	drv_readOnly[drv] = (pbh.ioVAtrb & 0x8080) != 0;
+	drives[drv].drv_readOnly = (pbh.ioVAtrb & 0x8080) != 0;
 
 	return E_OK;
 }
 
 int32_t CMacXFS::xfs_drv_open (uint16_t drv, MXFSDD *dd, int32_t flg_ask_diskchange)
 {
-	//static void *oldsp;
 	int32_t	err;
-
 
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::xfs_drv_open(drv = %d, flag = %d)", (int) drv, (int) flg_ask_diskchange);
@@ -1032,13 +973,13 @@ int32_t CMacXFS::xfs_drv_open (uint16_t drv, MXFSDD *dd, int32_t flg_ask_diskcha
 
 	if (flg_ask_diskchange)		// Diskchange- Status ermitteln
 	{
-		if (drv_changed[drv])
-			return(E_CHNG);
+		if (drives[drv].drv_changed)
+			return E_CHNG;
 		else
-			return(E_OK);
+			return E_OK;
 	}
 
-	drv_changed[drv] = false;		// Diskchange reset
+	drives[drv].drv_changed = false;		// Diskchange reset
 
 	err = drv_open(drv, false);
 	if (err)
@@ -1046,14 +987,14 @@ int32_t CMacXFS::xfs_drv_open (uint16_t drv, MXFSDD *dd, int32_t flg_ask_diskcha
 
 	// note that dirID and vRefNum remain in CPU natural byte order, i.e. little endian on x86
 
-	dd->dirID = drv_dirID[drv];
-	dd->vRefNum = drv_fsspec[drv].vRefNum;
+	dd->dirID = drives[drv].drv_dirID;
+	dd->vRefNum = drives[drv].drv_fsspec.vRefNum;
 
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::xfs_drv_open => (dd.dirID = %ld, vRefNum = %d)", dd->dirID, (int) dd->vRefNum);
 #endif
 
-	return(E_OK);
+	return E_OK;
 }
 
 
@@ -1072,12 +1013,12 @@ int32_t CMacXFS::vRefNum2drv(short vRefNum, uint16_t *drv)
 	uint16_t i;
 
 	for	(i = 0; i < NDRVS; i++)
-		if (drv_fsspec[i].vRefNum == vRefNum)
+		if (drives[i].drv_fsspec.vRefNum == vRefNum)
 		{
 			*drv = cpu_to_be16(i);
-			return(E_OK);
+			return E_OK;
 		}
-	return(EDRIVE);
+	return EDRIVE;
 }
 
 
@@ -1091,21 +1032,24 @@ int32_t CMacXFS::vRefNum2drv(short vRefNum, uint16_t *drv)
 
 int32_t CMacXFS::xfs_drv_close(uint16_t drv, uint16_t mode)
 {
+	if (drv >= NDRVS)
+		return EDRIVE;
 	if (drv == 'M'-'A')
-		return((mode) ? E_OK : EACCDN);
-	if (mode == 0 && drv_fsspec[drv].vRefNum == 0)    /* ungueltig */
-		return(EDRIVE);
+		return mode ? E_OK : EACCDN;
+	if (mode == 0 && drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
+		return EDRIVE;
 
-	if (mode == 0 && drv_fsspec[drv].vRefNum == -1)
+	if (mode == 0 && drives[drv].drv_fsspec.vRefNum == -1)
 	{
 		// Mac-Boot-Volume darf nicht ungemountet werden.
-		return(EACCDN);
+		return EACCDN;
 	}
 	else
 	{
-		if (drv_type[drv] == MacDrive) drv_valid[drv] = false;	// macht Alias ungültig
-		drv_fsspec[drv].vRefNum = 0;
-		return(E_OK);
+		if (drives[drv].drv_type == MacDrive)
+			drives[drv].drv_valid = false;	// macht Alias ungültig
+		drives[drv].drv_fsspec.vRefNum = 0;
+		return E_OK;
 	}
 }
 
@@ -1148,7 +1092,7 @@ int32_t CMacXFS::MakeFSSpecManually( short vRefNum, long reldir,
 
 		err = FSMakeFSSpec(vRefNum, reldir, dirname, fs);
 		if (err)
-			return(cnverr(err));		// darf eigentlich nicht passieren
+			return cnverr(err);		// darf eigentlich nicht passieren
 		pb.hFileInfo.ioVRefNum = fs->vRefNum;
 		pb.hFileInfo.ioNamePtr = fs->name;
 		pb.hFileInfo.ioFDirIndex = 0;
@@ -1156,7 +1100,7 @@ int32_t CMacXFS::MakeFSSpecManually( short vRefNum, long reldir,
 		if (pb.hFileInfo.ioNamePtr[0] == 0) pb.hFileInfo.ioFDirIndex = -1;
 		err = PBGetCatInfoSync (&pb);
 		if (err)
-			return(cnverr(err));			// nix gefunden
+			return cnverr(err);			// nix gefunden
 
 		/* ggf. Alias aufloesen */
 		/* ------------------- */
@@ -1174,9 +1118,11 @@ int32_t CMacXFS::MakeFSSpecManually( short vRefNum, long reldir,
 				if (pb.hFileInfo.ioNamePtr[0] == 0) pb.hFileInfo.ioFDirIndex = -1;
 				err = PBGetCatInfoSync (&pb);
 				if (err)
-					return(cnverr(err));			// nix gefunden
+					return cnverr(err);			// nix gefunden
+			} else
+			{
+				return doserr;		/* Fehler */
 			}
-			else	return(doserr);		/* Fehler */
 		}
 		reldir = pb.hFileInfo.ioDirID;
 		vRefNum = fs->vRefNum;
@@ -1186,7 +1132,7 @@ int32_t CMacXFS::MakeFSSpecManually( short vRefNum, long reldir,
 	memcpy(dirname+1, s, len);
 	dirname[0] = (unsigned char) len;
 	err = FSMakeFSSpec(vRefNum, reldir, dirname, fs);
-	return (cnverr(err));
+	return cnverr(err);
 }
 
 
@@ -1274,17 +1220,19 @@ int32_t CMacXFS::xfs_path2DD
 	unsigned char c;
 	bool get_parent;
 	short vRefNum;
-	long reldir = rel_dd->dirID;
+	int32_t reldir = rel_dd->dirID;
 
 
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::xfs_path2DD(drv = %d, pathname = \"%s\")", (int) drv, pathname);
 #endif
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)    /* ungueltig */
-		return(EDRIVE);
+	if (drv >= NDRVS)
+		return EDRIVE;
+	if (drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
 	vRefNum = rel_dd->vRefNum;
 
@@ -1325,12 +1273,12 @@ int32_t CMacXFS::xfs_path2DD
 				else
 				{
 					// ich kann nicht zurueckgehen
-					if (reldir == drv_dirID[drv])
+					if (reldir == drives[drv].drv_dirID)
 					{
 						// bin schon root
 						*restpfad = (char *) t;
 						*symlink = NULL;
-						return(ELINK);
+						return ELINK;
 					}
 					err = FSMakeFSSpec(vRefNum, reldir, NULL, &fs);
 					if (err)
@@ -1344,7 +1292,7 @@ int32_t CMacXFS::xfs_path2DD
 		}
 		else
 		if (c == ':')
-			return(EPTHNF);				// Doppelpunkt nicht erlaubt
+			return EPTHNF;				// Doppelpunkt nicht erlaubt
 		else
 			*s++ = c;
 	}
@@ -1383,7 +1331,7 @@ int32_t CMacXFS::xfs_path2DD
 	{
 		if (!strcmp((char *) (macpath + 1), ":"))					// noch Mac-Root
 		{
-			pb.hFileInfo.ioFlAttrib = 0x10;
+			pb.hFileInfo.ioFlAttrib = ioDirMask;
 			reldir = rel_dd->dirID;
 			vRefNum = rel_dd->vRefNum;
 			goto giveback;
@@ -1444,7 +1392,7 @@ int32_t CMacXFS::xfs_path2DD
 		was_doserr2:
 		if (doserr == EFILNF)
 		     doserr = EPTHNF;
-		return(doserr);
+		return doserr;
 	}
 
 	/* ggf. Alias aufloesen */
@@ -1466,7 +1414,7 @@ int32_t CMacXFS::xfs_path2DD
 			if ((!err) && (vRefNum2drv(fs.vRefNum, dir_drive)))
 				err = nsvErr;
 			if (err)
-				return(cnverr(err));			// nix gefunden
+				return cnverr(err);			// nix gefunden
 		}
 		else
 			goto was_doserr2;		/* Fehler */
@@ -1477,16 +1425,16 @@ int32_t CMacXFS::xfs_path2DD
 	giveback:
 	if (mode)                                       /* Verzeichnis */
 	{
-		if (!(pb.hFileInfo.ioFlAttrib & 0x10))
-			return(EPTHNF);                         /* kein SubDir */
+		if (!(pb.hFileInfo.ioFlAttrib & ioDirMask))
+			return EPTHNF;                         /* kein SubDir */
 		*restpfad = pathname + strlen(pathname);     /* kein Restpfad */
 		if (get_parent)
 		{
 
-			if (reldir == drv_dirID[drv])
+			if (reldir == drives[drv].drv_dirID)
 			{	// bin schon root
 				*symlink = NULL;
-				return(ELINK);
+				return ELINK;
 			}
 
 			err = FSMakeFSSpec(vRefNum, reldir, NULL, &fs);
@@ -1509,8 +1457,7 @@ int32_t CMacXFS::xfs_path2DD
 	dd->dirID = reldir;
 	dd->vRefNum = vRefNum;
 
-//	return(reldir);
-	return(E_OK);
+	return E_OK;
 }
 
 
@@ -1542,7 +1489,7 @@ Byte CMacXFS::mac2DOSAttr (CInfoPBRec *pb)
 /*************************************************************
 *
 * Wird von xfs_sfirst und xfs_snext verwendet
-* Unabhaengig von drv_longnames[drv] werden die Dateien
+* Unabhaengig von drv_longnames werden die Dateien
 * immer in Gross-Schrift und 8+3 konvertiert.
 * MiNT konvertiert je nach Pdomain() in Gross-Schrift oder nicht.
 *
@@ -1565,13 +1512,13 @@ int32_t CMacXFS::_snext(uint16_t drv, MAC_DTA *dta)
 	unsigned char macname[256];		// Pascalstring Mac-Dateiname
 	char atariname[256];			// C-String Atari-Dateiname (lang)
 	unsigned char dosname[14], cmpname[14];	// intern, 8+3
-	bool first = !drv_rvsDirOrder[drv] && !drv_readOnly[drv];
+	bool first = !drives[drv].drv_rvsDirOrder && !drives[drv].drv_readOnly;
 
 
 	DebugInfo("CMacXFS::_snext() -- pattern = %.11s", dta->macdta.sname);
 
-	if (!drv_fsspec[drv].vRefNum)    /* ungueltig */
-		return(EDRIVE);
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
+		return EDRIVE;
 
 	if ((dta->macdta.vRefNum == -32768) && (dta->macdta.dirID == 0))	// Mac-Root
 	{
@@ -1603,7 +1550,7 @@ int32_t CMacXFS::_snext(uint16_t drv, MAC_DTA *dta)
 		}
 
 		dta->macdta.sname[0] = EOS;                  /* DTA ungueltig machen */
-		return(ENMFIL);
+		return ENMFIL;
 	}
 
 	/* suchen */
@@ -1620,12 +1567,11 @@ int32_t CMacXFS::_snext(uint16_t drv, MAC_DTA *dta)
 		if (dta->macdta.index == 0)
 		{
 			dta->macdta.sname[0] = EOS;                  /* DTA ungueltig machen */
-			return(EFILNF);
+			return EFILNF;
 		}
 
 		/* Verzeichniseintrag (PBREC) lesen.		*/
-		/* --------------------------------	*/ 
-    
+		/* --------------------------------	*/
 		pb.hFileInfo.ioVRefNum = dta->macdta.vRefNum;
 		pb.hFileInfo.ioFDirIndex = (short) dta->macdta.index;
 		pb.hFileInfo.ioDirID = dta->macdta.dirID;
@@ -1637,10 +1583,10 @@ int32_t CMacXFS::_snext(uint16_t drv, MAC_DTA *dta)
 		{
 			DebugInfo("CMacXFS::_snext() -- PBGetCatInfoSync() => %d", err);
 			dta->macdta.sname[0] = EOS;                  /* DTA ungueltig machen */
-			return(cnverr(err));
+			return cnverr(err);
 		}
 
-		if (drv_rvsDirOrder[drv])
+		if (drives[drv].drv_rvsDirOrder)
 		{
 			dta->macdta.index--;
 		}
@@ -1671,7 +1617,6 @@ int32_t CMacXFS::_snext(uint16_t drv, MAC_DTA *dta)
 		/* dereferenzieren, damit der Attributvergleich	*/
 		/* moeglich ist (Attr aus Datei, nicht Alias!)	*/
 		/* -----------------------------------------	*/
-
 		if (pb.hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias)
 		{
 			DebugInfo("CMacXFS::_snext() -- dereference Alias %s", atariname);
@@ -1716,7 +1661,7 @@ int32_t CMacXFS::_snext(uint16_t drv, MAC_DTA *dta)
 	/* ------------------------------------------------------------------ */
 
 //	keine Ahnung, was das sollte:
-//	if (!drv_rvsDirOrder[drv] && !drv_readOnly[drv])
+//	if (!drives[drv].drv_rvsDirOrder && !drives[drv].drv_readOnly)
 //		--dta->macdta.index;		// letzten Eintrag das nächste Mal nochmal lesen!
 
 doit:
@@ -1730,7 +1675,7 @@ doit:
 	dta->mxdta.dta_date = cpu_to_be16(dta->mxdta.dta_date);
 
 	nameto_8_3 (macname + 1, (unsigned char *) dta->mxdta.dta_name, 1, true);
-	return(E_OK);
+	return E_OK;
 }
 
 
@@ -1746,30 +1691,31 @@ doit:
 int32_t CMacXFS::xfs_sfirst(uint16_t drv, MXFSDD *dd, char *name,
                     MAC_DTA *dta, uint16_t attrib)
 {
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drv >= NDRVS)
+		return EDRIVE;
+	if (drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
 //	DebugInfo("CMacXFS::xfs_sfirst(%s, attrib = %d)", name, (int) attrib);
 
 	/* Unschoenheit im Kernel ausbügeln: */
 	dta->mxdta.dta_drive = (char) drv;
-
 	conv_path_elem(name, dta->macdta.sname);	// Suchmuster -> DTA
 	dta->mxdta.dta_name[0] = 0;		//  gefundenen Namen erstmal löschen
 	dta->macdta.sattr = (char) attrib;			// Suchattribut
 	dta->macdta.dirID = dd->dirID;
 	dta->macdta.vRefNum = dd->vRefNum;
 
-	if (drv_rvsDirOrder[drv])
+	if (drives[drv].drv_rvsDirOrder)
 	{
 		CInfoPBRec pb;
 		//Str255 name2;
 		OSErr err;
 
 		pb.hFileInfo.ioNamePtr = nil;
-		pb.hFileInfo.ioVRefNum = drv_fsspec[drv].vRefNum;
+		pb.hFileInfo.ioVRefNum = drives[drv].drv_fsspec.vRefNum;
 		pb.hFileInfo.ioFDirIndex = -1; // get info of directory
 		pb.hFileInfo.ioDirID = dd->dirID;
 		err = PBGetCatInfoSync (&pb);
@@ -1782,10 +1728,10 @@ int32_t CMacXFS::xfs_sfirst(uint16_t drv, MXFSDD *dd, char *name,
 	}
 	else
 	{
-		dta->macdta.index = 1;				// erste Datei
+		dta->macdta.index = 1;						// erste Datei
 	}
-	
-	return(_snext(drv, dta));
+
+	return _snext(drv, dta);
 }
 
 
@@ -1800,18 +1746,19 @@ int32_t CMacXFS::xfs_snext(uint16_t drv, MAC_DTA *dta)
 {
 	int32_t err;
 
-
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drv >= NDRVS)
+		return EDRIVE;
+	if (drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
 	if (!dta->macdta.sname[0])
-		return(ENMFIL);
+		return ENMFIL;
 	err = _snext(drv, dta);
 	if (err == EFILNF)
 		err = ENMFIL;
-	return(err);
+	return err;
 }
 
 
@@ -1860,19 +1807,21 @@ int32_t CMacXFS::xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
 	if (omode & O_CREAT)
 	{
 		(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-		return(EWRPRO);
+		return EWRPRO;
 	}
 #endif
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drv >= NDRVS)
+		return EDRIVE;
+	if (drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
 	if (fname_is_invalid(name))
-		return(EACCDN);
+		return EACCDN;
 
-	if (!drv_longnames[drv])
+	if (!drives[drv].drv_longnames)
 	{
 		// keine langen Namen: nach Großschrift und 8+3
 		nameto_8_3 ((unsigned char *) name, dosname, 2, false);
@@ -1897,7 +1846,7 @@ int32_t CMacXFS::xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
 		if (err == dupFNErr)        /* Datei existiert schon */
 		{
 			if (omode & O_EXCL)
-				return(EACCDN);
+				return EACCDN;
 			err = FSpDelete(&fs);
 			if (!err)
 				err = FSpCreate(&fs, creator, type, smSystemScript);
@@ -1916,7 +1865,7 @@ int32_t CMacXFS::xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
 		}
 
 		if (err)
-			return(cnverr(err));
+			return cnverr(err);
 	}
 
 
@@ -1966,12 +1915,12 @@ int32_t CMacXFS::xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
 
 	err = FSpGetFInfo (&fs, &finfo);
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 	if (finfo.fdFlags & kIsAlias)
 	{
-		doserr = resolve_symlink( &fs, 0, NULL );
+		doserr = resolve_symlink( &fs, 0, NULL);
 		if (doserr)
-			return(doserr);
+			return doserr;
 	}
 
 	err = FSpOpenDF(&fs, perm, &refnum);
@@ -1987,7 +1936,7 @@ int32_t CMacXFS::xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
 	}
 
 /*
-	pb.ioParam.ioVRefNum = drv_fsspec[drv].vRefNum;
+	pb.ioParam.ioVRefNum = drives[drv].drv_fsspec.vRefNum;
 	pb.ioParam.ioNamePtr = fs.name;
 	pb.ioParam.ioPermssn = perm;
 	pb.ioParam.ioMisc = 0;
@@ -1995,7 +1944,7 @@ int32_t CMacXFS::xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
 	err = PBHOpen(&pb, FALSE);
 */
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 
 	if (omode & O_TRUNC)
 	{
@@ -2003,7 +1952,7 @@ int32_t CMacXFS::xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
 		if (err)
 		{
 			FSClose(refnum);
-			return(cnverr(err));
+			return cnverr(err);
 		}
 	}
 
@@ -2033,20 +1982,22 @@ int32_t CMacXFS::xfs_fdelete(uint16_t drv, MXFSDD *dd, char *name)
 #ifdef DEMO
 	#pragma unused(drv, dd, name)
 	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-	return(EWRPRO);
+	return EWRPRO;
 #else
 	FSSpec fs;
 	OSErr err;
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drv >= NDRVS)
+		return EDRIVE;
+	if (drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
 //	DebugInfo("CMacXFS::xfs_fdelete(name = %s)", name);
 	cfss(drv, dd->dirID, dd->vRefNum, (unsigned char *) name, &fs, true);
 	err = FSpDelete(&fs);
-	return(cnverr(err));
+	return cnverr(err);
 #endif
 }
 
@@ -2073,7 +2024,7 @@ int32_t CMacXFS::xfs_link(uint16_t drv, char *nam1, char *nam2,
 #ifdef DEMO
 	#pragma unused(drv, nam1, nam2, dd1, dd2, mode, dst_drv)
 	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-	return(EWRPRO);
+	return EWRPRO;
 #else
 	long doserr;
 	FSSpec fs1,fs2;
@@ -2086,20 +2037,22 @@ int32_t CMacXFS::xfs_link(uint16_t drv, char *nam1, char *nam2,
 
 	memcpy(tempname, "\pmmac&&&", 9);
 
-	if ((drv_changed[drv]) || (drv_changed[dst_drv]))
-		return(E_CHNG);
-	if ((!drv_fsspec[drv].vRefNum) || (!drv_fsspec[dst_drv].vRefNum))
-		return(EDRIVE);
-	if (drv_fsspec[drv].vRefNum != drv_fsspec[dst_drv].vRefNum)
-		return(ENSAME);		// !AK: 23.1.97
+	if (drv >= NDRVS ||
+		dst_drv >= NDRVS ||
+		drives[drv].drv_fsspec.vRefNum == 0 || drives[dst_drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed || drives[dst_drv].drv_changed)
+		return E_CHNG;
+	if (drives[drv].drv_fsspec.vRefNum != drives[dst_drv].drv_fsspec.vRefNum)
+		return ENSAME;		// !AK: 23.1.97
 	// auf demselben Volume?
 	if (dd1->vRefNum != dd2->vRefNum)
-		return(ENSAME);
+		return ENSAME;
 	if (fname_is_invalid(nam2))
-		return(EACCDN);
+		return EACCDN;
 
 	if (mode)
-		return(EINVFN);          // keine Hardlinks
+		return EINVFN;          // keine Hardlinks
 
 	/* Beide Namen ins Mac-Format wandeln */
 
@@ -2211,7 +2164,7 @@ int32_t CMacXFS::xfs_link(uint16_t drv, char *nam1, char *nam2,
 		}
 	}
 ende:
-	return(cnverr(err));
+	return cnverr(err);
 #endif
 }
 
@@ -2283,19 +2236,20 @@ int32_t CMacXFS::xfs_xattr(uint16_t drv, MXFSDD *dd, char *name,
 	int32_t doserr;
 	unsigned char fname[64];
 
-
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::xfs_xattr(drv = %d, „%s“, mode = 0x%04x)", (int) drv, name, (int) mode);
 	__dump((const unsigned char *) dd, sizeof(*dd));
 //	__dump((const unsigned char *) xattr, sizeof(*xattr));
 #endif
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drv >= NDRVS)
+		return EDRIVE;
+	if (drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
-	if (drv_longnames[drv])
+	if (drives[drv].drv_longnames)
 	{
 		if ((name[0] == '.') && (!name[1]))
 			fname[1] = EOS;		// "." wie leerer Name
@@ -2318,7 +2272,7 @@ int32_t CMacXFS::xfs_xattr(uint16_t drv, MXFSDD *dd, char *name,
 			fname[0]++;
 			err = FSMakeFSSpec(0, 0, fname, &fs);	// abs. Pfad
 			if (err)
-				return(cnverr(err));
+				return cnverr(err);
 			xattr->attr = cpu_to_be16(F_SUBDIR);			// Volume-Root
 			xattr->mode = cpu_to_be16(S_IFDIR + 0777);	// rwx fuer user/group/world
 			xattr->dev = cpu_to_be16((uint16_t) fs.vRefNum);
@@ -2346,7 +2300,7 @@ int32_t CMacXFS::xfs_xattr(uint16_t drv, MXFSDD *dd, char *name,
 		xattr->cdate = 0;
 		xattr->reserved2 = 0;
 		xattr->reserved3[0] = xattr->reserved3[1] = 0;
-		return(E_OK);
+		return E_OK;
 	}
 
 	pb.hFileInfo.ioNamePtr = fname;
@@ -2359,7 +2313,7 @@ int32_t CMacXFS::xfs_xattr(uint16_t drv, MXFSDD *dd, char *name,
 	if (pb.hFileInfo.ioNamePtr[0] == 0) pb.hFileInfo.ioFDirIndex = -1;
 	err = PBGetCatInfoSync (&pb);
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 
 	/* Im Modus 0 muessen Aliase dereferenziert werden	*/
 	/* ------------------------------------------------	*/
@@ -2389,7 +2343,7 @@ int32_t CMacXFS::xfs_xattr(uint16_t drv, MXFSDD *dd, char *name,
 
 	if (!doserr)
 		cinfo_to_xattr(&pb, xattr, drv);
-	return(doserr);
+	return doserr;
 }
 
 
@@ -2420,20 +2374,20 @@ int32_t CMacXFS::xfs_attrib(uint16_t drv, MXFSDD *dd, char *name, uint16_t rwfla
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::xfs_attrib(„%s“, drv = %d, wrmode = %d, attr = 0x%04x)", name, (int) drv, (int) rwflag, (int) attr);
 #endif
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
 #ifdef DEMO
 	if (rwflag)
 	{
 		(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-		return(EWRPRO);
+		return EWRPRO;
 	}
 #endif
 	
-	if (drv_longnames[drv])
+	if (drives[drv].drv_longnames)
 	{
 		AtariFnameToMacFname((unsigned char *) name, fname + 1);
 	}
@@ -2452,7 +2406,7 @@ int32_t CMacXFS::xfs_attrib(uint16_t drv, MXFSDD *dd, char *name, uint16_t rwfla
 		pb.hFileInfo.ioFDirIndex = -1;
 	err = PBGetCatInfoSync(&pb);
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 
 	/* Aliase muessen dereferenziert werden	*/
 	/* -------------------------------------	*/
@@ -2475,7 +2429,7 @@ int32_t CMacXFS::xfs_attrib(uint16_t drv, MXFSDD *dd, char *name, uint16_t rwfla
 		}
 		else
 		{
-			return(doserr);		/* Fehler */
+			return doserr;		/* Fehler */
 		}
 	}
 
@@ -2526,8 +2480,8 @@ int32_t CMacXFS::xfs_attrib(uint16_t drv, MXFSDD *dd, char *name, uint16_t rwfla
 	}
 
 	if (err)
-		return(cnverr(err));
-	return((int32_t) oldattr);
+		return cnverr(err);
+	return oldattr;
 }
 
 
@@ -2541,7 +2495,7 @@ int32_t CMacXFS::xfs_fchown(uint16_t drv, MXFSDD *dd, char *name,
                     uint16_t uid, uint16_t gid)
 {
 #pragma unused(drv, dd, name, uid, gid)
-	return(EINVFN);
+	return EINVFN;
 }
 
 
@@ -2554,7 +2508,7 @@ int32_t CMacXFS::xfs_fchown(uint16_t drv, MXFSDD *dd, char *name,
 int32_t CMacXFS::xfs_fchmod(uint16_t drv, MXFSDD *dd, char *name, uint16_t fmode)
 {
 #pragma unused(drv, dd, name, fmode)
-	return(EINVFN);
+	return EINVFN;
 }
 
 
@@ -2574,18 +2528,18 @@ int32_t CMacXFS::xfs_dcreate(uint16_t drv, MXFSDD *dd, char *name)
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::xfs_dcreate(„%s“, drv = %d)", name, (int) drv);
 #endif
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 	if (fname_is_invalid(name))
-		return(EACCDN);
+		return EACCDN;
 
 #ifdef DEMO
 
 	#pragma unused(fs, err, ndirID)
 	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-	return(EWRPRO);
+	return EWRPRO;
 
 #else
 
@@ -2597,7 +2551,7 @@ int32_t CMacXFS::xfs_dcreate(uint16_t drv, MXFSDD *dd, char *name)
 	if (!err)
 		FlushVol(NULL, dd->vRefNum);
 */
-	return(cnverr(err));
+	return cnverr(err);
 
 #endif
 }
@@ -2616,29 +2570,29 @@ int32_t CMacXFS::xfs_ddelete(uint16_t drv, MXFSDD *dd)
 {
 #ifdef DEMO
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 	
 	#pragma unused(dd)
 	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-	return(EWRPRO);
+	return EWRPRO;
 	
 #else
 
 	FSSpec fs;
 	OSErr err;
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
 	err = FSMakeFSSpec(dd->vRefNum, dd->dirID, NULL, &fs);
 	if (!err)
 		err = HDelete(fs.vRefNum, fs.parID, fs.name);
-	return(cnverr(err));
+	return cnverr(err);
 
 #endif
 }
@@ -2658,14 +2612,15 @@ int32_t CMacXFS::xfs_DD2name(uint16_t drv, MXFSDD *dd, char *buf, uint16_t bufsi
 	uint16_t len;
 	MXFSDD par_dd;
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drv >= NDRVS)
+		return EDRIVE;
+	if (drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
 	if (drv == 'M'-'A')
 	{
-// DebugStr("\phallo");
 		if (dd->vRefNum == -32768)	// Mac-Root
 			goto root;
 		if (dd->dirID == fsRtDirID)			// Wurzelverzeichnis eines Volumes
@@ -2677,35 +2632,35 @@ int32_t CMacXFS::xfs_DD2name(uint16_t drv, MXFSDD *dd, char *buf, uint16_t bufsi
 			pb.ioNamePtr = fs.name;
 			err = PBHGetVInfoSync ((HParamBlockRec*)&pb);
 			if (err)
-				return(cnverr(err));
+				return cnverr(err);
 			len = fs.name[0];
 			if (len > bufsiz)
-				return(ATARIERR_ERANGE);
+				return ATARIERR_ERANGE;
 			goto doit;
 		}
 	}
-	if (dd->dirID == drv_dirID[drv])          /* root ? */
+	if (dd->dirID == drives[drv].drv_dirID)          /* root ? */
 	{
-		root:
+	root:
 		len = 1;
 		if (len > bufsiz)
-			return(ATARIERR_ERANGE);
+			return ATARIERR_ERANGE;
 		buf[0] = EOS;
-		return(E_OK);
+		return E_OK;
 	}
 	err = FSMakeFSSpec(dd->vRefNum, dd->dirID, NULL, &fs);
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 	len = fs.name[0];
 	if (len > bufsiz)
-		return(ATARIERR_ERANGE);
+		return ATARIERR_ERANGE;
 	par_dd.vRefNum = dd->vRefNum;
 	par_dd.dirID = fs.parID;
 	doserr = xfs_DD2name(drv, &par_dd, buf, (uint16_t) (bufsiz - len));
 	if (doserr)
-		return(doserr);
+		return doserr;
 
-	doit:
+doit:
 	if (buf[strlen(buf)-1] != '\\')
 		strcat(buf, "\\");
 	fs.name[fs.name[0]+1] = EOS;
@@ -2718,7 +2673,7 @@ int32_t CMacXFS::xfs_DD2name(uint16_t drv, MXFSDD *dd, char *buf, uint16_t bufsi
 
 //	alte Version: strcat(buf, (char*)fs.name+1);
 
-	return(E_OK);
+	return E_OK;
 }
 
 
@@ -2734,14 +2689,14 @@ int32_t CMacXFS::xfs_DD2name(uint16_t drv, MXFSDD *dd, char *buf, uint16_t bufsi
 int32_t CMacXFS::xfs_dopendir(MAC_DIRHANDLE *dirh, uint16_t drv, MXFSDD *dd,
 				uint16_t tosflag)
 {
-	dirh -> dirID = dd->dirID;
-	dirh -> vRefNum = dd->vRefNum;
+	dirh -> dhdd.dirID = dd->dirID;
+	dirh -> dhdd.vRefNum = dd->vRefNum;
 	dirh -> tosflag = tosflag;
 
 	if ((dd->vRefNum == -32768) && (dd->dirID == 0))	// Mac-Root
 		dirh->index = 1;
 	else
-	if (drv_rvsDirOrder[drv])
+	if (drives[drv].drv_rvsDirOrder)
 	{
 		CInfoPBRec pb;
 		//Str255 name2;
@@ -2763,7 +2718,7 @@ int32_t CMacXFS::xfs_dopendir(MAC_DIRHANDLE *dirh, uint16_t drv, MXFSDD *dd,
 		dirh -> index = 1;
 	}
 
-	return(E_OK);
+	return E_OK;
 }
 
 
@@ -2792,16 +2747,16 @@ int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 	unsigned char macname[256];
 
 
-	if (!drv_fsspec[drv].vRefNum)    /* ungueltig */
-		return(EDRIVE);
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
+		return EDRIVE;
 
 	again:
 	if (dirh->index == 0)
 	{
-		return(ENMFIL);
+		return ENMFIL;
 	}
 
-	if ((dirh->vRefNum == -32768) && (dirh->dirID == 0))	// Mac-Root
+	if ((dirh->dhdd.vRefNum == -32768) && (dirh->dhdd.dirID == 0))	// Mac-Root
 	{
 		pbh.ioNamePtr = VolumeName;
 		for	(;;)
@@ -2841,15 +2796,15 @@ int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 			goto doit;
 		}
 		dirh->index = 0;	// ungültig machen
-		return(ENMFIL);
+		return ENMFIL;
 	}
 
 	/* suchen */
 	/* ------ */
 
 	pb.hFileInfo.ioNamePtr = (unsigned char *) macname;
-	pb.hFileInfo.ioVRefNum = dirh->vRefNum;
-	if (drv_rvsDirOrder[drv])
+	pb.hFileInfo.ioVRefNum = dirh->dhdd.vRefNum;
+	if (drives[drv].drv_rvsDirOrder)
 	{
 		// scan index num, num - 1, num - 2, ..., 1
 		pb.hFileInfo.ioFDirIndex = (short) dirh->index--;
@@ -2859,7 +2814,7 @@ int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 		// scan index 1, 2, ..., num
 		pb.hFileInfo.ioFDirIndex = (short) dirh->index++;
 	}
-	pb.hFileInfo.ioDirID = dirh->dirID;
+	pb.hFileInfo.ioDirID = dirh->dhdd.dirID;
 	/* notwendige Initialisierung fuer Verzeichnisse (sonst Muell!) */
 	pb.hFileInfo.ioFlLgLen = 0;
 	pb.hFileInfo.ioFlPyLen = 0;
@@ -2867,21 +2822,21 @@ int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 
 	// Carbon-Fehler von MacOS X bei Wurzelverzeichnis einer Netzwerkverbindung
 	// umgehen (Anzahl Dateien ist um 1 zu hoch!)
-	if ((err == fnfErr) && (drv_rvsDirOrder[drv]) && (dirh->index > 0))
+	if ((err == fnfErr) && drives[drv].drv_rvsDirOrder && (dirh->index > 0))
 	{
 		DebugError("CMacXFS::xfs_dreaddir() -- Bug im MacOS. Versuche zu umgehen (1. Wdh)");
 		// wir machen es einfach nochmal
 		pb.hFileInfo.ioFDirIndex = (short) dirh->index--;
 		err = PBGetCatInfoSync (&pb);		// hier später mal asynchron
 	}
-	if ((err == fnfErr) && (drv_rvsDirOrder[drv]) && (dirh->index > 0))
+	if ((err == fnfErr) && drives[drv].drv_rvsDirOrder && (dirh->index > 0))
 	{
 		DebugError("CMacXFS::xfs_dreaddir() -- Bug im MacOS. Versuche zu umgehen (2. Wdh)");
 		// wir machen es einfach ein drittes Mal
 		pb.hFileInfo.ioFDirIndex = (short) dirh->index--;
 		err = PBGetCatInfoSync (&pb);		// hier später mal asynchron
 	}
-	if ((err == fnfErr) && (drv_rvsDirOrder[drv]) && (dirh->index > 0))
+	if ((err == fnfErr) && drives[drv].drv_rvsDirOrder && (dirh->index > 0))
 	{
 		DebugError("CMacXFS::xfs_dreaddir() -- Bug im MacOS. Versuche zu umgehen (3. Wdh)");
 		// wir machen es einfach ein viertes Mal
@@ -2893,9 +2848,9 @@ int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 	{
 		dirh->index = 0;                  /* dirh ungueltig machen */
 		if (err == fnfErr)
-			return(ENMFIL);		// special error code for D(x)readdir() Fsnext()
+			return ENMFIL;		// special error code for D(x)readdir() Fsnext()
 		else
-			return(cnverr(err));
+			return cnverr(err);
 	}
 
 	doit:
@@ -2903,7 +2858,7 @@ int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 	if (dirh->tosflag)
 	{
 		if (size < 13)
-			return(ATARIERR_ERANGE);
+			return ATARIERR_ERANGE;
 		if (nameto_8_3(macname + 1, (unsigned char *) buf, 1, true))
 			goto again;		// musste Dateinamen kuerzen
 	}
@@ -2916,7 +2871,7 @@ int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 		if (!memcmp(macname, "\p.DS_Store", 10))
 			goto again;
 		if (size < macname[0] + 5)
-			return(ATARIERR_ERANGE);
+			return ATARIERR_ERANGE;
 		strncpy(buf, (char *) &(pb.hFileInfo.ioDirID), 4);
 		buf += 4;
 		MacFnameToAtariFname(macname + 1, (unsigned char *) buf);
@@ -2933,7 +2888,7 @@ int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 		*xr = cpu_to_be32(E_OK);
 	}
 
-	return(E_OK);
+	return E_OK;
 }
 
 
@@ -2945,10 +2900,10 @@ int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 
 int32_t CMacXFS::xfs_drewinddir(MAC_DIRHANDLE *dirh, uint16_t drv)
 {
-	if (drv_rvsDirOrder[drv])
-		return(xfs_dopendir(dirh, drv, (MXFSDD*) (&dirh->dirID), dirh->tosflag));
+	if (drives[drv].drv_rvsDirOrder)
+		return xfs_dopendir(dirh, drv, &dirh->dhdd, dirh->tosflag);
 	dirh -> index = 1;
-	return(E_OK);
+	return E_OK;
 }
 
 
@@ -2961,8 +2916,8 @@ int32_t CMacXFS::xfs_drewinddir(MAC_DIRHANDLE *dirh, uint16_t drv)
 int32_t CMacXFS::xfs_dclosedir(MAC_DIRHANDLE *dirh, uint16_t drv)
 {
 #pragma unused(drv)
-	dirh -> dirID = -1L;
-	return(E_OK);
+	dirh->dhdd.dirID = -1L;
+	return E_OK;
 }
 
 
@@ -3008,21 +2963,21 @@ int32_t CMacXFS::xfs_dpathconf(uint16_t drv, MXFSDD *dd, uint16_t which)
 #pragma unused(dd)
 	switch(which)
 	{
-		case	DP_MAXREQ:	return(DP_XATTRFIELDS);
-		case	DP_IOPEN:	return(100);	// ???
-		case	DP_MAXLINKS:	return(1);
-		case	DP_PATHMAX:	return(128);
-		case	DP_NAMEMAX:	return((drv_longnames[drv]) ? 31 : 12);
-		case	DP_ATOMIC:	return(512);	// ???
-		case	DP_TRUNC:	return((drv_longnames[drv]) ? DP_AUTOTRUNC : DP_DOSTRUNC);
-		case	DP_CASE:		return((drv_longnames[drv]) ? DP_CASEINSENS : DP_CASECONV);
-		case	DP_MODEATTR:	return(F_RDONLY+F_SUBDIR+F_ARCHIVE+F_HIDDEN
-							+DP_FT_DIR+DP_FT_REG+DP_FT_LNK);
-		case	DP_XATTRFIELDS:return(DP_INDEX+DP_DEV+DP_NLINK+DP_BLKSIZE
+		case	DP_MAXREQ:	return DP_XATTRFIELDS;
+		case	DP_IOPEN:	return 100;	// ???
+		case	DP_MAXLINKS:	return 1;
+		case	DP_PATHMAX:	return 128;
+		case	DP_NAMEMAX:	return drv < NDRVS && drives[drv].drv_longnames ? 31 : 12;
+		case	DP_ATOMIC:	return 512;	// ???
+		case	DP_TRUNC:	return drv < NDRVS && drives[drv].drv_longnames ? DP_AUTOTRUNC : DP_DOSTRUNC;
+		case	DP_CASE:		return drv < NDRVS && drives[drv].drv_longnames ? DP_CASEINSENS : DP_CASECONV;
+		case	DP_MODEATTR:	return F_RDONLY+F_SUBDIR+F_ARCHIVE+F_HIDDEN
+							+DP_FT_DIR+DP_FT_REG+DP_FT_LNK;
+		case	DP_XATTRFIELDS:return DP_INDEX+DP_DEV+DP_NLINK+DP_BLKSIZE
 							+DP_SIZE+DP_NBLOCKS
-							+DP_CTIME+DP_MTIME);
+							+DP_CTIME+DP_MTIME;
 	}
-	return(EINVFN);
+	return EINVFN;
 }
 
 
@@ -3053,28 +3008,29 @@ int32_t CMacXFS::xfs_dfree(uint16_t drv, int32_t dirID, uint32_t data[4])
 	DebugInfo("CMacXFS::xfs_dfree(drv = %d, dirID = 0x%08x)", (int) drv, (int) dirID);
 #endif
 
-	if (drv_type[drv] == MacRoot)
+	if (drv >= NDRVS)
+		return EDRIVE;
+	if (drives[drv].drv_type == MacRoot)
 	{
 		// 2G frei, d.h. 4 M Blöcke à 512 Bytes
 		data[0] = cpu_to_be32((2 * 1024) * 2 * 1024);	// # freie Blöcke
 		data[1] = cpu_to_be32((2 * 1024) * 2 * 1024);	// # alle Blöcke
 		data[2] = cpu_to_be32(512);					// Sektorgröße in Bytes
 		data[3] = cpu_to_be32(1);						// Sektoren pro Cluster
-		return(E_OK);
+		return E_OK;
 	}
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
 	xpb.ioVolIndex = 0;       /* ioRefNum ist gueltig */
-	xpb.ioVRefNum = drv_fsspec[drv].vRefNum;
+	xpb.ioVRefNum = drives[drv].drv_fsspec.vRefNum;
 	xpb.ioNamePtr = NULL;
 	err = PBXGetVolInfo(&xpb, 0);			// hier später mal asynchron
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 
 //		wbu.wbytes = xpb.ioVFreeBytes;		// CWPRO 3
 	wbu.bytes = xpb.ioVFreeBytes;		// CWPRO 5
@@ -3085,7 +3041,7 @@ int32_t CMacXFS::xfs_dfree(uint16_t drv, int32_t dirID, uint32_t data[4])
 	data[1] = cpu_to_be32((uint32_t) (wbu.bytes / xpb.ioVAlBlkSiz));	// # alle Blöcke
 	data[2] = cpu_to_be32(xpb.ioVAlBlkSiz);				// Bytes pro Sektor
 	data[3] = cpu_to_be32(1);								// Sektoren pro Cluster
-	return(E_OK);
+	return E_OK;
 }
 
 
@@ -3104,7 +3060,7 @@ int32_t CMacXFS::xfs_dfree(uint16_t drv, int32_t dirID, uint32_t data[4])
 int32_t CMacXFS::xfs_wlabel(uint16_t drv, MXFSDD *dd, char *name)
 {
 #pragma unused(drv, dd, name)
-	return(EINVFN);
+	return EINVFN;
 }
 
 int32_t CMacXFS::xfs_rlabel(uint16_t drv, MXFSDD *dd, char *name, uint16_t bufsiz)
@@ -3114,24 +3070,24 @@ int32_t CMacXFS::xfs_rlabel(uint16_t drv, MXFSDD *dd, char *name, uint16_t bufsi
 	unsigned char buf[256];
 	OSErr err;
 
-	if (drv_type[drv] == MacRoot)
-		return(EFILNF);
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_type == MacRoot)
+		return EFILNF;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
 	pb.ioVolIndex = 0;       /* ioRefNum ist gueltig */
-	pb.ioVRefNum = drv_fsspec[drv].vRefNum;
+	pb.ioVRefNum = drives[drv].drv_fsspec.vRefNum;
 	pb.ioNamePtr = buf;
 	err = PBHGetVInfoSync ((HParmBlkPtr) &pb);	// hier später mal asychron
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 	buf[buf[0] + 1] = EOS;
 	if (buf[0] + 1 > bufsiz)
-		return(ATARIERR_ERANGE);
+		return ATARIERR_ERANGE;
 	MacFnameToAtariFname(buf + 1, (unsigned char *) name);
-	return(E_OK);
+	return E_OK;
 }
 
 
@@ -3164,7 +3120,7 @@ OSErr CMacXFS::PathNameFromDirID( long dirid, short vrefnum,
 		block.ioDrDirID = block.ioDrParID;
 		err = PBGetCatInfoSync ((CInfoPBPtr) &block);
 		if (err)
-			return(err);
+			return err;
 		memcpy(dirnamec, dirname+1, dirname[0]);
 		dirnamec[dirname[0]] = EOS;
 		strcat(dirnamec, ":");
@@ -3173,7 +3129,7 @@ OSErr CMacXFS::PathNameFromDirID( long dirid, short vrefnum,
 		memcpy(fullpathname, dirnamec, (unsigned long) (dirname[0] + 1));
 	}
 	while (block.ioDrDirID != 2);
-	return(0);
+	return 0;
 }
 
 int32_t CMacXFS::dospath2macpath( uint16_t drv, MXFSDD *dd,
@@ -3198,8 +3154,8 @@ int32_t CMacXFS::dospath2macpath( uint16_t drv, MXFSDD *dd,
 		dospath += 2;
 	if (*dospath == '\\')			// absoluter Pfad
 	{
-		reldir = drv_dirID[drv];
-		vRefNum = drv_fsspec[drv].vRefNum;
+		reldir = drives[drv].drv_dirID;
+		vRefNum = drives[drv].drv_fsspec.vRefNum;
 		dospath++;
 	}
 
@@ -3209,23 +3165,23 @@ int32_t CMacXFS::dospath2macpath( uint16_t drv, MXFSDD *dd,
 			&restpfad, &symlink_dd, &symlink, &my_dd, &drv );
 
 	if (doserr < E_OK)
-		return(doserr);
+		return doserr;
 
 	// neu:
 
 	// erstelle aus der DirID ein FSSpec
 	err = FSMakeFSSpec(my_dd.vRefNum, my_dd.dirID, nil, &spec);
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 
 	// erstelle aus der DirID einen Pfad
 
 	err = FSpGetFullPath(&spec, &fullPathLength, &hFullPath);
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 
 	if (fullPathLength > 200)
-		return(EPTHOV);
+		return EPTHOV;
 
 	memcpy(macname, *hFullPath, fullPathLength);
 	macname[fullPathLength] = '\0';
@@ -3239,7 +3195,7 @@ int32_t CMacXFS::dospath2macpath( uint16_t drv, MXFSDD *dd,
 	if (!err && *restpfad)
 		strcat(macname, restpfad);
 */
-	return(cnverr(err));
+	return cnverr(err);
 }
 
 
@@ -3256,16 +3212,16 @@ int32_t CMacXFS::xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to)
 {
 #ifdef DEMO
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)    /* ungueltig */
-		return(EDRIVE);
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 	if (fname_is_invalid(name))
-		return(EACCDN);
+		return EACCDN;
 	
 	#pragma unused(dd, to)
 	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-	return(EWRPRO);
+	return EWRPRO;
 
 #else
 
@@ -3287,12 +3243,12 @@ int32_t CMacXFS::xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to)
 	short	saveRefNum;
 
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)    /* ungueltig */
-		return(EDRIVE);
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 	if (fname_is_invalid(name))
-		return(EACCDN);
+		return EACCDN;
 
 	/* pruefen, ob der Symlink auf ein Mac-Laufwerk zeigt */
 	/* -------------------------------------------------- */
@@ -3302,7 +3258,7 @@ int32_t CMacXFS::xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to)
 	is_macpath = true;
 	if (/*(dst_drv >= 0) &&*/ (dst_drv < NDRVS) && (to[1] == ':'))
 	{	// Laufwerk angegeben
-		if (!drv_fsspec[dst_drv].vRefNum)    /* ungueltig */
+		if (drives[dst_drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
 			is_macpath = false;
 	}
 
@@ -3339,7 +3295,7 @@ int32_t CMacXFS::xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to)
 							NULL,
 							&newalias);
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 
 	/* Der Alias braucht nicht umkopiert zu werden, wir vergroessern	*/
 	/* einfach den Speicherblock, damit wir genug Platz fuer die	*/
@@ -3371,7 +3327,7 @@ int32_t CMacXFS::xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to)
 	/* FFSpec erstellen */
 	/* --------------- */
 
-	if (!drv_longnames[drv])
+	if (!drives[drv].drv_longnames)
 	{	// keine langen Namen: nach Gross-Schrift und 8+3
 		nameto_8_3 ((unsigned char *) name, dosname, 2, false);
 		name = (char *) dosname;
@@ -3422,7 +3378,7 @@ int32_t CMacXFS::xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to)
 	sp((char *) resname);
 	AddResource((Handle) newalias, 'alis', 0, resname);
 	CloseResFile(refnum);
-//	FlushVol(nil, drv_fsspec[drv].vRefNum);
+//	FlushVol(nil, drives[drv].drv_fsspec.vRefNum);
 
 	/* Finder-Flags fuer Alias setzen (umstaendlich!!!) */
 
@@ -3444,7 +3400,7 @@ int32_t CMacXFS::xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to)
 ende:
 	DisposeHandle((Handle) newalias);
 	UseResFile (saveRefNum);
-	return(cnverr(err));
+	return cnverr(err);
 
 #endif
 }
@@ -3466,17 +3422,17 @@ int32_t CMacXFS::xfs_readlink(uint16_t drv, MXFSDD *dd, char *name,
 	DebugInfo("CMacXFS::xfs_readlink(„%s“, drv = %d, dirID = %d, buf = 0x%04x, bufsize = %d)", name, (int) drv, (int) dd->dirID, (int) buf, bufsiz);
 #endif
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)    /* ungueltig */
-		return(EDRIVE);
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
 	/* FSSpec erstellen und Alias auslesen	*/
 	/* ---------------------------------	*/
 
 	cfss(drv, dd->dirID, dd->vRefNum, (unsigned char *) name, &fs, true);
 
-	return(resolve_symlink(&fs, bufsiz, buf));
+	return resolve_symlink(&fs, bufsiz, buf);
 }
 
 
@@ -3548,13 +3504,12 @@ int32_t CMacXFS::xfs_dcntl
 	int32_t doserr;
 	unsigned char fname[64];
 
+	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
+		return EDRIVE;
+	if (drives[drv].drv_changed)
+		return E_CHNG;
 
-	if (drv_changed[drv])
-		return(E_CHNG);
-	if (!drv_fsspec[drv].vRefNum)
-		return(EDRIVE);
-
-	if (drv_longnames[drv])
+	if (drives[drv].drv_longnames)
 	{
 		if ((name[0] == '.') && (!name[1]))
 			fname[1] = EOS;		// "." wie leerer Name
@@ -3597,7 +3552,7 @@ int32_t CMacXFS::xfs_dcntl
 		if (doserr)
 			return doserr;
 		cinfo_to_xattr(&pb, (XATTR *) pArg, drv);
-		return(E_OK);
+		return E_OK;
 
 	// "type" und "creator" einer Datei ermitteln
 
@@ -3608,7 +3563,7 @@ int32_t CMacXFS::xfs_dcntl
 		if (doserr)
 			return doserr;
 		*(FInfo *) pArg = pb.hFileInfo.ioFlFndrInfo;
-		return(E_OK);
+		return E_OK;
 
 	// "type" und "creator" einer Datei ändern
 
@@ -3618,7 +3573,7 @@ int32_t CMacXFS::xfs_dcntl
 #ifdef DEMO
 
 		(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-		return(EWRPRO);
+		return EWRPRO;
 
 #else
 			
@@ -3631,7 +3586,7 @@ int32_t CMacXFS::xfs_dcntl
 		{
 		    return cnverr(err);
 		}
-		return(E_OK);
+		return E_OK;
 
 #endif
 
@@ -3651,7 +3606,7 @@ int32_t CMacXFS::xfs_dcntl
 				if (be32_to_cpu((uint32_t) (mmex->destPtr)) >= m_AtariMemSize)
 				{
 					DebugError("CMacXFS::xfs_dcntl(FMACMAGICEX, MMEX_GETFSSPEC) - invalid dest ptr");
-					return(ERROR);
+					return ERROR;
 				}
 				doserr = getCatInfo (drv, &pb, true);
 				if (doserr)
@@ -3678,13 +3633,13 @@ int32_t CMacXFS::xfs_dcntl
 				if (doserr)
 					return doserr;
 				*(CInfoPBRec*) pArg = pb;
-				return(E_OK);
+				return E_OK;
 
 			case FMACSETTYCR:
 #ifdef DEMO
 				
 				(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-				return(EWRPRO);
+				return EWRPRO;
 				
 #else
 				doserr = getCatInfo (drv, &pb, true);
@@ -3700,7 +3655,7 @@ int32_t CMacXFS::xfs_dcntl
 		}
 		}
 	}
-	return(EINVFN);
+	return EINVFN;
 }
 
 
@@ -3721,7 +3676,7 @@ OSErr CMacXFS::f_2_cinfo( MAC_FD *f, CInfoPBRec *pb, char *fname)
 	err = PBGetFCBInfoSync (&fpb);  /* refnum => parID und Name */
 
 	if (err)
-		return(err);
+		return err;
 
 	pb->hFileInfo.ioVRefNum = fpb.ioFCBVRefNum;
 	pb->hFileInfo.ioNamePtr = (unsigned char*)fname;
@@ -3729,7 +3684,7 @@ OSErr CMacXFS::f_2_cinfo( MAC_FD *f, CInfoPBRec *pb, char *fname)
 	pb->hFileInfo.ioDirID = fpb.ioFCBParID;
 	if (pb->hFileInfo.ioNamePtr[0] == 0) pb->hFileInfo.ioFDirIndex = -1;
 	err = PBGetCatInfoSync (pb);
-	return(err);
+	return err;
 }
 
 
@@ -3745,7 +3700,7 @@ int32_t CMacXFS::dev_close( MAC_FD *f )
 
 	refcnt = be16_to_cpu(f->fd.fd_refcnt);
 	if (refcnt <= 0)
-		return(EINTRN);
+		return EINTRN;
 
 	// FCB der Datei ermitteln
 	fpb.ioFCBIndx = 0;
@@ -3756,7 +3711,7 @@ int32_t CMacXFS::dev_close( MAC_FD *f )
 	if (err)
 	{
 		FSClose(f->refnum);
-		return(cnverr(err));
+		return cnverr(err);
 	}
 
 	refcnt--;
@@ -3766,12 +3721,11 @@ int32_t CMacXFS::dev_close( MAC_FD *f )
 
 	/* Datum und Uhrzeit koennen erst nach Schliessen gesetzt werden */
 	/* ------------------------------------------------------------- */
-
 		if (f->mod_time_dirty)
 		{
 			err = FSClose(f->refnum);
 			if (err)
-				return(cnverr(err));
+				return cnverr(err);
 
 			pb.hFileInfo.ioVRefNum = fpb.ioFCBVRefNum;
 			pb.hFileInfo.ioNamePtr = (unsigned char*) fname;
@@ -3784,7 +3738,7 @@ int32_t CMacXFS::dev_close( MAC_FD *f )
 			err = PBGetCatInfoSync (&pb);
 
     		if (err)
-				return(cnverr(err));
+				return cnverr(err);
 
 			// !TT Archiv-Bit: falls Datei gerade neu angelegt, dann Backup-Datum auf Null setzen
 			if (pb.hFileInfo.ioFlCrDat == pb.hFileInfo.ioFlMdDat)
@@ -3817,7 +3771,7 @@ int32_t CMacXFS::dev_close( MAC_FD *f )
 //	if (!err && FlushWhenClosing)
 //		FlushVol (nil, fpb.ioVRefNum);
 
-	return(cnverr(err));
+	return cnverr(err);
 }
 
 /*
@@ -3865,8 +3819,8 @@ static int32_t CMacXFS::dev_pwrite( MAC_FD *f, ParamBlockRec *pb )
 	pb->ioParam.ioResult = 1;					// warte, bis <= 0
 	err = PBWriteAsync (pb);				// asynchron!
 	if (err)
-		return(cnverr(err));
-	return(pb->ioParam.ioActCount);
+		return cnverr(err);
+	return pb->ioParam.ioActCount;
 }
 
 
@@ -3883,8 +3837,8 @@ static int32_t CMacXFS::dev_pread( MAC_FD *f, ParamBlockRec *pb )
 	if (err == eofErr)
 		err = 0;					// nur Teil eingelesen, kein Fehler!
 	if (err)
-		return(cnverr(err));
-	return(pb->ioParam.ioActCount);
+		return cnverr(err);
+	return pb->ioParam.ioActCount;
 }
 */
 
@@ -3908,8 +3862,8 @@ int32_t CMacXFS::dev_read( MAC_FD *f, int32_t count, char *buf )
 		err = 0;				/* nur Teil eingelesen, kein Fehler! */
 	else
 	if (err)
-		return(cnverr(err));
-	return((int32_t) lcount);
+		return cnverr(err);
+	return (int32_t) lcount;
 }
 
 
@@ -3918,7 +3872,7 @@ int32_t CMacXFS::dev_write( MAC_FD *f, int32_t count, char *buf )
 #ifdef DEMO
 	#pragma unused(f, count, buf)
 	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-	return(EWRPRO);
+	return EWRPRO;
 #else
 	OSErr err;
 	long lcount;
@@ -3926,8 +3880,8 @@ int32_t CMacXFS::dev_write( MAC_FD *f, int32_t count, char *buf )
 	lcount = count;
 	err = FSWrite(f->refnum, &lcount, buf);
 	if (err)
-		return(cnverr(err));
-	return((int32_t) lcount);
+		return cnverr(err);
+	return (int32_t) lcount;
 #endif
 }
 
@@ -3939,18 +3893,17 @@ int32_t CMacXFS::dev_stat(MAC_FD *f, void *unsel, uint16_t rwflag, int32_t apcod
 	long pos;
 	long laenge;
 
-
 	if (rwflag)
-		return(1L);         /* Schreiben immer bereit */
+		return 1;         /* Schreiben immer bereit */
 	err = GetEOF(f->refnum, &laenge);
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 	err = GetFPos(f->refnum, &pos);
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 	if (pos < laenge)
-		return(1L);
-	return(0L);
+		return 1;
+	return 0;
 }
 
 
@@ -3965,16 +3918,16 @@ int32_t CMacXFS::dev_seek(MAC_FD *f, int32_t pos, uint16_t mode)
 		case 0:   macmode = 1;break;
 		case 1:   macmode = 3;break;
 		case 2:   macmode = 2;break;
-		default:  return(EINVFN);
+		default:  return EINVFN;
 	}
 	lpos = pos;
 	err = SetFPos(f->refnum, macmode, lpos);
 	if (err)
-		return(cnverr(err));
+		return cnverr(err);
 	err = GetFPos(f->refnum, &lpos);
 	if (err)
-		return(cnverr(err));
-	return(lpos);
+		return cnverr(err);
+	return lpos;
 }
 
 
@@ -3990,7 +3943,7 @@ int32_t CMacXFS::dev_datime(MAC_FD *f, uint16_t d[2], uint16_t rwflag)
 	if (rwflag)
 	{
 		(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-		return(EWRPRO);
+		return EWRPRO;
 	}
 	
 #endif
@@ -4014,7 +3967,7 @@ int32_t CMacXFS::dev_datime(MAC_FD *f, uint16_t d[2], uint16_t rwflag)
 		{
 			err = f_2_cinfo(f, &pb, fname);
    			if (err)
-       			return(cnverr(err));
+       			return cnverr(err);
 
           	/* Datum ist ioFlMdDat bzw. ioDrMdDat */
           	date_mac2dos(pb.hFileInfo.ioFlMdDat, &(d[0]), &(d[1]));
@@ -4023,7 +3976,7 @@ int32_t CMacXFS::dev_datime(MAC_FD *f, uint16_t d[2], uint16_t rwflag)
 		}
 	}
 
-	return(cnverr(err));
+	return cnverr(err);
 }
 
 OSErr CMacXFS::getFSSpecByFileRefNum (short fRefNum, FSSpec *spec, FCBPBRec *pb)
@@ -4048,22 +4001,22 @@ int32_t CMacXFS::dev_ioctl(MAC_FD *f, uint16_t cmd, void *buf)
 
 	switch(cmd)
 	{
-	  case FSTAT:
+	case FSTAT:
 		if (buf == 0)
 		    return EINVFN;
 		err = f_2_cinfo(f, &pb, fname);
 		if (err)
-			return(cnverr(err));
+			return cnverr(err);
 		/*
 		struct _mx_dmd *fd_dmd = (struct _mx_dmd *) (be32_to_cpu(f->fd.fd_dmd) + AdrOffset68k);
 		cinfo_to_xattr(&pb, (XATTR *) buf, be16_to_cpu(fd_dmd->d_drive));
 		*/
 		cinfo_to_xattr(&pb, (XATTR *) buf, 0 /*dummy*/);
-		return(E_OK);
+		return E_OK;
 	  	break;
 	  case FTRUNCATE:
 	  	err = SetEOF(f->refnum, cpu_to_be32(*((int32_t *) buf)));
-		return(cnverr(err));
+		return cnverr(err);
 	  	break;
 
 	  case FMACOPENRES:
@@ -4078,18 +4031,18 @@ int32_t CMacXFS::dev_ioctl(MAC_FD *f, uint16_t cmd, void *buf)
 			if (err) return cnverr (err);
 			
 			// get the file's access permission
-			switch (fcb.ioFCBFlags & 0x1100)
+			switch (fcb.ioFCBFlags & (kioFCBSharedWriteMask|kioFCBWriteMask))
 			{
-			  case 0x0100:
+			  case kioFCBWriteMask:
 				perm = fsRdWrPerm;
 				break;
 			  case 0x0000:
 				perm = fsRdPerm;
 				break;
-			  case 0x1100:
+			  case kioFCBSharedWriteMask|kioFCBWriteMask:
 				perm = fsRdWrShPerm;
 				break;
-			  case 0x1000:
+			  case kioFCBSharedWriteMask:
 				perm = fsRdPerm;
 				break;
 			}
@@ -4099,7 +4052,7 @@ int32_t CMacXFS::dev_ioctl(MAC_FD *f, uint16_t cmd, void *buf)
 			if ((err = PBCloseSync((ParmBlkPtr)&pb)) != noErr)
 			    return cnverr(err);
 
-			/* now open the data fork */
+			/* now open the resource fork */
 			pb.ioParam.ioVRefNum = spec.vRefNum;
 			pb.fileParam.ioDirID = spec.parID;
 			pb.ioParam.ioNamePtr = spec.name;
@@ -4187,7 +4140,7 @@ int32_t CMacXFS::dev_ioctl(MAC_FD *f, uint16_t cmd, void *buf)
       		}
 		}
 	}
-	return(EINVFN);
+	return EINVFN;
 }
 
 int32_t CMacXFS::dev_getc(MAC_FD *f, uint16_t mode)
@@ -4197,11 +4150,11 @@ int32_t CMacXFS::dev_getc(MAC_FD *f, uint16_t mode)
 	int32_t ret;
 
 	ret = dev_read(f, 1L, (char *) &c);
-	if (ret < 0L)
-		return(ret);			// Fehler
-	if (!ret)
-		return(0x0000ff1a);		// EOF
-	return(c & 0x000000ff);
+	if (ret < 0)
+		return ret;			// Fehler
+	if (ret == 0)
+		return 0x0000ff1a;		// EOF
+	return c;
 }
 
 
@@ -4211,12 +4164,12 @@ int32_t CMacXFS::dev_getline( MAC_FD *f, char *buf, int32_t size, uint16_t mode 
 	char c;
 	int32_t gelesen,ret;
 
-	for	(gelesen = 0L; gelesen < size;)
+	for	(gelesen = 0; gelesen < size;)
 		{
-		ret = dev_read(f, 1L, (char *) &c);
-		if (ret < 0L)
-			return(ret);			// Fehler
-		if (ret == 0L)
+		ret = dev_read(f, 1, &c);
+		if (ret < 0)
+			return ret;			// Fehler
+		if (ret == 0)
 			break;			// EOF
 		if (c == 0x0d)
 			continue;
@@ -4225,7 +4178,7 @@ int32_t CMacXFS::dev_getline( MAC_FD *f, char *buf, int32_t size, uint16_t mode 
 		gelesen++;
 		*buf++ = c;
 		}
-	return(gelesen);
+	return gelesen;
 }
 
 
@@ -4235,7 +4188,7 @@ int32_t CMacXFS::dev_putc( MAC_FD *f, uint16_t mode, int32_t val )
 	char c;
 
 	c = (char) val;
-	return(dev_write(f, 1L, (char *) &c));
+	return dev_write(f, 1L, &c);
 }
 
 
@@ -4301,7 +4254,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			doserr = E_OK;
 		}
 		break;
-            
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L323 */
 	case 2:
 		{
@@ -4318,7 +4271,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					be32_to_cpu(pdrv_openparm->flg_ask_diskchange));
 		}
 		break;
-            
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L366 */
 	case 3:
 		{
@@ -4350,11 +4303,14 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			};
 			char *restpath;
 			char *symlink;
+			uint32_t *pp;
 
 			path2DDparm *ppath2DDparm = (path2DDparm *) params;
 #ifdef DEBUG_VERBOSE
 			__dump((const unsigned char *) ppath2DDparm, sizeof(*ppath2DDparm));
 #endif
+			restpath = NULL;
+			symlink = NULL;
 			doserr = xfs_path2DD(
 					be16_to_cpu(ppath2DDparm->mode),
 					be16_to_cpu(ppath2DDparm->drv),
@@ -4367,8 +4323,25 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					(uint16_t *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->dir_drive))
 					);
 
-			*((char **) (AdrOffset68k + be32_to_cpu(ppath2DDparm->restpfad))) = (char *) cpu_to_be32(((uint32_t) restpath) - ((uint32_t) AdrOffset68k));
-			*((char **) (AdrOffset68k + be32_to_cpu(ppath2DDparm->symlink))) = (char *) cpu_to_be32(((uint32_t) symlink) - ((uint32_t) AdrOffset68k));
+            /* Writing back Atari addresses into Atari RAM, we currently have Mac addresses */
+            /* Need to write 32-bit pointers back in subtracting offset) */
+            
+			if (ppath2DDparm->restpfad != 0)
+			{
+				pp = (uint32_t *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->restpfad));
+				if (restpath)
+					*pp = cpu_to_be32(restpath - (char *)AdrOffset68k);
+				else
+					*pp = 0;
+			}
+			if (ppath2DDparm->symlink != 0)
+			{
+				pp = (uint32_t *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->symlink));
+				if (symlink)
+					*pp = cpu_to_be32(symlink - (char *)AdrOffset68k);
+				else
+					*pp = 0;
+			}
 #ifdef DEBUG_VERBOSE
 			__dump((const unsigned char *) ppath2DDparm, sizeof(*ppath2DDparm));
 			if (doserr >= 0)
@@ -4376,7 +4349,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 #endif
 		}
 		break;
-			
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L540 */
 	case 5:
 		{
@@ -4414,7 +4387,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					);
 		}
 		break;
-	
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L598 */
 	case 7:
 		{
@@ -4436,7 +4409,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					);
 		}
 		break;
-			
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L644 */
 	case 8:
 		{
@@ -4454,7 +4427,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					);
 		}
 		break;
-			
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L669 */
 	case 9:
 		{
@@ -4480,7 +4453,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					);
 		}
 		break;
-			
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L699 */
 	case 10:
 		{
@@ -4502,7 +4475,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					);
 		}
 		break;
-			
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L729 */
 	case 11:
 		{
@@ -4524,7 +4497,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					);
 		}
 		break;
-			
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L756 */
 	case 12:
 		{
@@ -4546,7 +4519,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					);
 		}
 		break;
-			
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L782 */
 	case 13:
 		{
@@ -4566,7 +4539,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					);
 		}
 		break;
-			
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L809 */
 	case 14:
 		{
@@ -4580,7 +4553,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			if (be32_to_cpu((uint32_t) (pdcreateparm->name)) >= m_AtariMemSize)
 			{
 				DebugError("CMacXFS::xfs_dcreate() - invalid name ptr");
-				return(ERROR);
+				return ERROR;
 			}
 
 			doserr = xfs_dcreate(
@@ -4590,7 +4563,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					);
 		}
 		break;
-			
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L832 */
 	case 15:
 		{
@@ -4606,7 +4579,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					);
 		}
 		break;
-			
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L855 */
 	case 16:
 		{
@@ -4799,7 +4772,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					);
 		}
 		break;
-			
+
 	/* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxfs.s#L1127 */
 	case 26:
 		{
@@ -4853,7 +4826,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::XFSFunctions => %d (= 0x%08x)", (int) doserr, (int) doserr);
 #endif
-	return(doserr);
+	return doserr;
 }
 
 
@@ -4995,7 +4968,7 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			doserr = dev_ioctl(
 					f,
 					be16_to_cpu(pdevioctlparm->cmd),
-					(void *) (AdrOffset68k + be32_to_cpu(pdevioctlparm->buf))
+					pdevioctlparm->buf ? (void *) (AdrOffset68k + be32_to_cpu(pdevioctlparm->buf)) : NULL
 					);
 		}
 		break;
@@ -5061,9 +5034,9 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::XFSDevFunctions => %d", (int) doserr);
 #endif
-	return(doserr);
+	return doserr;
 }
-   	#pragma options align=reset
+#pragma options align=reset
 
 
 /*************************************************************
@@ -5091,7 +5064,6 @@ void CMacXFS::setDrivebits(long newbits, unsigned char *AdrOffset68k)
 * Definiert ein Atari-Laufwerk
 *
 *************************************************************/
-
 void CMacXFS::SetXFSDrive
 (
 	short drv,
@@ -5112,49 +5084,48 @@ void CMacXFS::SetXFSDrive
 	if (drv >= 2)
 #endif
 	{
-	if (drvType == NoMacXFS)
-	{
-		// Laufwerk ist kein MacXFS-Laufwerk mehr => abmelden
-		newbits &= ~(1L << drv);
-	}
-	else
-	{
-		// Laufwerk ist MacXFS-Laufwerk
-		newbits |= 1L << drv;
-
-		// convert CFURLRef to FSRef
-		if (!CFURLGetFSRef(pathUrl, &fs))
+		if (drvType == NoMacXFS)
 		{
-			DebugError("CMacXFS::%s() -- conversion from URL to FSRef failed", __FUNCTION__);
-			return;
+			// Laufwerk ist kein MacXFS-Laufwerk mehr => abmelden
+			newbits &= ~(1L << drv);
+		}
+		else
+		{
+			// Laufwerk ist MacXFS-Laufwerk
+			newbits |= 1L << drv;
+	
+			// convert CFURLRef to FSRef
+			if (!CFURLGetFSRef(pathUrl, &fs))
+			{
+				DebugError("CMacXFS::%s() -- conversion from URL to FSRef failed", __FUNCTION__);
+				return;
+			}
 		}
 	}
 
-	}
-
-	drv_changed[drv] = true;
-	xfs_path[drv] = fs;
-	drv_type[drv] = drvType;
+	drives[drv].drv_changed = true;
+	drives[drv].xfs_path = fs;
+	drives[drv].drv_type = drvType;
 
 	if (drvType == MacDir)
 	{
-		drv_valid[drv] = true;
+		drives[drv].drv_valid = true;
 	}
 	else
 	{
-		drv_valid[drv] = false;
-		drv_fsspec[drv].vRefNum = 0;
+		drives[drv].drv_valid = false;
+		drives[drv].drv_fsspec.vRefNum = 0;
 	}
 
-	drv_longnames[drv] = longnames;
-	drv_rvsDirOrder[drv] = reverseDirOrder;
+	drives[drv].drv_longnames = longnames;
+	drives[drv].drv_rvsDirOrder = reverseDirOrder;
 
-	DebugInfo("CMacXFS::SetXFSDrive() -- Drive %c: %s dir order, %s names", 'A' + drv, drv_rvsDirOrder[drv] ? "reverse" : "normal", drv_longnames[drv] ? "long" : "8+3");
+	DebugInfo("CMacXFS::SetXFSDrive() -- Drive %c: %s dir order, %s names", 'A' + drv, drives[drv].drv_rvsDirOrder ? "reverse" : "normal", drives[drv].drv_longnames ? "long" : "8+3");
 
 #ifdef SPECIALDRIVE_AB
-	if (drv>=2)
+	if (drv >= 2)
 #endif
-		setDrivebits (newbits, AdrOffset68k);
+		setDrivebits(newbits, AdrOffset68k);
 }
 
 void CMacXFS::ChangeXFSDriveFlags
@@ -5164,16 +5135,16 @@ void CMacXFS::ChangeXFSDriveFlags
 	bool reverseDirOrder
 )
 {
-	drv_longnames[drv] = longnames;
-	drv_rvsDirOrder[drv] = reverseDirOrder;
+	drives[drv].drv_longnames = longnames;
+	drives[drv].drv_rvsDirOrder = reverseDirOrder;
 
-	DebugInfo("CMacXFS::ChangeXFSDriveFlags() -- Drive %c: %s dir order, %s names", 'A' + drv, drv_rvsDirOrder[drv] ? "reverse" : "normal", drv_longnames[drv] ? "long" : "8+3");
+	DebugInfo("CMacXFS::ChangeXFSDriveFlags() -- Drive %c: %s dir order, %s names", 'A' + drv, drives[drv].drv_rvsDirOrder ? "reverse" : "normal", drives[drv].drv_longnames ? "long" : "8+3");
 }
 
 
 /*************************************************************
 *
-* Rechnet einen Laufwerkbuchstaben um ein einen "device code".
+* Rechnet einen Laufwerkbuchstaben um in einen "device code".
 * Wird vom Atari benötigt, um das richtige Medium auszuwerfen.
 *
 * Dies ist ein direkter Einsprungpunkt vom Emulator.
@@ -5190,17 +5161,17 @@ int32_t CMacXFS::Drv2DevCode(uint32_t params, unsigned char *AdrOffset68k)
 	if (drv <= 1)
 	{
 		// Floppy A: & B:
-		return((int32_t) 0x00010000 | (drv + 1));	// liefert 1 bzw. 2
+		return (int32_t) 0x00010000 | (drv + 1);	// liefert 1 bzw. 2
 	}
 
-	vol = drv_fsspec[drv].vRefNum;
+	vol = drives[drv].drv_fsspec.vRefNum;
 
 	if (vol == 0)
 	{
 		// evtl. AHDI-Drive?
 		if (false)
 		{	// !!! erstmal nicht unterstützt.
-			return((int32_t) (0x00020000 | drv));
+			return (int32_t) (0x00020000 | drv);
 		}
 		else
 		{
@@ -5230,7 +5201,7 @@ int32_t CMacXFS::Drv2DevCode(uint32_t params, unsigned char *AdrOffset68k)
 			{	// ein SCSI-Device?
 				drvNum = driver;
 			}
-			return((int32_t) (0x00010000 | (uint16_t) drvNum));
+			return (int32_t) (0x00010000 | (uint16_t) drvNum);
 		}
 	}
 }
@@ -5258,7 +5229,7 @@ int32_t CMacXFS::RawDrvr (uint32_t param, unsigned char *AdrOffset68k)
 
 	switch(params->opcode)
 	{
-		case 0:
+	case 0:
 		if (params->device == 0)	// ??
 			ret = EDRIVE;
 		else
@@ -5268,9 +5239,9 @@ int32_t CMacXFS::RawDrvr (uint32_t param, unsigned char *AdrOffset68k)
 			ret = EDRIVE;		// AHDI-Medium auswerfen
 		break;
 
-		default:
+	default:
 		ret = EINVFN;
 		break;
 	}
-	return(ret);
+	return ret;
 }
