@@ -1667,8 +1667,8 @@ Reinstall the application.
 					'C'-'A',							// drvnum
 					CMacXFS::MacDir,					// drvType
 					CGlobals::s_rootfsUrl,				// path
-					(Globals.s_Preferences.m_drvFlags['C'-'A'] & 2) ? false : true,	// lange Dateinamen
-					(Globals.s_Preferences.m_drvFlags['C'-'A'] & 1) ? true : false,	// umgekehrte Verzeichnis-Reihenfolge (Problem bei OS X 10.2!)
+					(Globals.s_Preferences.m_drvFlags['C'-'A'] & M_DRV_DOSNAMES) ? false : true,	// lange Dateinamen
+					(Globals.s_Preferences.m_drvFlags['C'-'A'] & M_DRV_REVERSE_DIR_ORDER) ? true : false,	// umgekehrte Verzeichnis-Reihenfolge (Problem bei OS X 10.2!)
 					m_RAM68k);
 	*((uint16_t *)(m_RAM68k + _bootdev)) = cpu_to_be16('C'-'A');	// Boot-Laufwerk C:
 
@@ -1814,8 +1814,8 @@ void CMagiC::ChangeXFSDrive(short drvNr)
 	{
 		m_MacXFS.ChangeXFSDriveFlags(
 					drvNr,				// Laufwerknummer
-					(Globals.s_Preferences.m_drvFlags[drvNr] & 2) ? false : true,	// lange Dateinamen
-					(Globals.s_Preferences.m_drvFlags[drvNr] & 1) ? true : false	// umgekehrte Verzeichnis-Reihenfolge (Problem bei OS X 10.2!)
+					(Globals.s_Preferences.m_drvFlags[drvNr] & M_DRV_DOSNAMES) ? false : true,	// lange Dateinamen
+					(Globals.s_Preferences.m_drvFlags[drvNr] & M_DRV_REVERSE_DIR_ORDER) ? true : false	// umgekehrte Verzeichnis-Reihenfolge (Problem bei OS X 10.2!)
 					);
 	}
 	else
@@ -1826,8 +1826,8 @@ void CMagiC::ChangeXFSDrive(short drvNr)
 					drvNr,				// Laufwerknummer
 					NewType,			// Laufwerktyp: Mac-Verzeichnis oder nichts
 					Globals.s_Preferences.m_drvPath[drvNr],
-					(Globals.s_Preferences.m_drvFlags[drvNr] & 2) ? false : true,	// lange Dateinamen
-					(Globals.s_Preferences.m_drvFlags[drvNr] & 1) ? true : false,	// umgekehrte Verzeichnis-Reihenfolge (Problem bei OS X 10.2!)
+					(Globals.s_Preferences.m_drvFlags[drvNr] & M_DRV_DOSNAMES) ? false : true,	// lange Dateinamen
+					(Globals.s_Preferences.m_drvFlags[drvNr] & M_DRV_REVERSE_DIR_ORDER) ? true : false,	// umgekehrte Verzeichnis-Reihenfolge (Problem bei OS X 10.2!)
 					m_RAM68k);
 		}
 }

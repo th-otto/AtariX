@@ -78,7 +78,7 @@ CMyPreferences::CMyPreferences()
 		m_drvPath[i] = NULL;
 		m_drvFlags[i] = 0;		// Lange Namen, vorwärts sortiert
 	}
-	m_drvFlags['C'-'A'] |= 2;		// C: hat 8+3
+	m_drvFlags['C'-'A'] |= M_DRV_DOSNAMES;		// C: hat 8+3
 
 	/* no longer used
 	m_DocTypes = NULL;
@@ -172,7 +172,7 @@ int CMyPreferences::GetPreferences()
 		m_drvFlags[i] = GetRsrcNum(cfKey, m_drvFlags[i], false);
 		CFRelease(cfKey);
 		if	(i == 'M' - 'A')
-			m_drvFlags[i] &= ~2;	// immer lange Namen, nicht 8+3
+			m_drvFlags[i] &= ~M_DRV_DOSNAMES;	// immer lange Namen, nicht 8+3
 	}
 #endif
 
