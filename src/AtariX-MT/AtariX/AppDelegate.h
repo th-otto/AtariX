@@ -8,6 +8,7 @@
     PreferencesWindowController *preferencesController;
 	BOOL m_configEmulationDone;
 }
+- (IBAction)actionAbout:(id)sender;
 - (IBAction)actionPreferences:(id)sender;
 - (IBAction)actionQuit:(id)sender;
 - (IBAction)actionRun:(id)sender;
@@ -25,3 +26,5 @@
 - (BOOL) checkRootfs;
 - (void) configEmulation;
 @end
+
+void About(id sender);

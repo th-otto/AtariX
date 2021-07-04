@@ -1,4 +1,3 @@
-
 #import "AppDelegate.h"
 #include "EmulationMain.h"
 #include "Debug.h"
@@ -237,6 +236,19 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	DebugTrace("%s()", __func__);
     [preferencesController release];
     [super dealloc];
+}
+
+
+/*****************************************************************************************************
+ *
+ * Menüeintrag "About"
+ *
+ ****************************************************************************************************/
+
+- (IBAction)actionAbout:(id)sender
+{
+	DebugTrace("%s()", __func__);
+	About(sender);
 }
 
 

@@ -16,6 +16,7 @@
 		8CE01DA92162604200770778 /* nf_debugprintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CE01DA32162604100770778 /* nf_debugprintf.cpp */; };
 		8CE01DAA2162604200770778 /* nf_objs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CE01DA52162604100770778 /* nf_objs.cpp */; };
 		8CEB9A4C2162EE3A00EF9EEB /* maptab.c in Sources */ = {isa = PBXBuildFile; fileRef = 8CEB9A4A2162EE3A00EF9EEB /* maptab.c */; };
+		8CFB1DF626920AFD00C17567 /* About.m in Sources */ = {isa = PBXBuildFile; fileRef = 8CFB1DF526920AFD00C17567 /* About.m */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		AD027A5E1429382D003CBB79 /* SDLMainIntro.m in Sources */ = {isa = PBXBuildFile; fileRef = AD027A5D1429382D003CBB79 /* SDLMainIntro.m */; };
@@ -95,6 +96,7 @@
 		8CE01DA62162604200770778 /* nf_objs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nf_objs.h; sourceTree = "<group>"; };
 		8CEB9A4A2162EE3A00EF9EEB /* maptab.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = maptab.c; sourceTree = "<group>"; };
 		8CEB9A4B2162EE3A00EF9EEB /* maptab.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = maptab.h; sourceTree = "<group>"; };
+		8CFB1DF526920AFD00C17567 /* About.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = About.m; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* AtariX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AtariX.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD027A5C1429382D003CBB79 /* SDLMainIntro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMainIntro.h; sourceTree = "<group>"; };
@@ -314,6 +316,7 @@
 		8CE01D9D21625F8800770778 /* GUI */ = {
 			isa = PBXGroup;
 			children = (
+				8CFB1DF526920AFD00C17567 /* About.m */,
 				AD3E85A4143E50F90054D0E8 /* Preferences.h */,
 				AD3E85A3143E50F90054D0E8 /* Preferences.cpp */,
 				AD3E85AC143E5CC80054D0E8 /* resource.h */,
@@ -499,6 +502,7 @@
 				AD0936E21440B537006D73E9 /* gui.m in Sources */,
 				AD0792A31461EBCD0043E0F6 /* PreferencesWindowController.m in Sources */,
 				AD3A53FD15A8D76D000202C6 /* AppDelegate.m in Sources */,
+				8CFB1DF626920AFD00C17567 /* About.m in Sources */,
 				ADD0A10D156EDED100FF1993 /* AtariCrashWindowController.m in Sources */,
 				8CE01DA82162604200770778 /* nf_basicset.cpp in Sources */,
 			);
