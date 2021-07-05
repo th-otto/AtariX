@@ -403,45 +403,50 @@ struct SYSHDR
 
 /* BIOS level errors */
 
-#define E_OK	  0L	/* OK, no error 		*/
-#define ERROR	 -1L	/* basic, fundamental error	*/
-#define EDRVNR	 -2L	/* drive not ready		*/
-#define EUNCMD	 -3L	/* unknown command		*/
-#define E_CRC	 -4L	/* CRC error			*/
-#define EBADRQ	 -5L	/* bad request			*/
-#define E_SEEK	 -6L	/* seek error			*/
-#define EMEDIA	 -7L	/* unknown media		*/
-#define ESECNF	 -8L	/* sector not found		*/
-#define EPAPER	 -9L	/* no paper				*/
-#define EWRITF	-10L	/* write fault			*/
-#define EREADF	-11L	/* read fault			*/
-#define EGENRL	-12L	/* general error		*/
-#define EWRPRO	-13L	/* write protect		*/
-#define E_CHNG	-14L	/* media change 		*/
-#define EUNDEV	-15L	/* unknown device		*/
-#define EBADSF	-16L	/* bad sectors on format	*/
-#define EOTHER	-17L	/* insert other disk	*/
+#define TOS_E_OK	  0L	/* OK, no error 		*/
+#define TOS_ERROR	 -1L	/* basic, fundamental error	*/
+#define TOS_EDRVNR	 -2L	/* drive not ready		*/
+#define TOS_EUNCMD	 -3L	/* unknown command		*/
+#define TOS_E_CRC	 -4L	/* CRC error			*/
+#define TOS_EBADRQ	 -5L	/* bad request			*/
+#define TOS_E_SEEK	 -6L	/* seek error			*/
+#define TOS_EMEDIA	 -7L	/* unknown media		*/
+#define TOS_ESECNF	 -8L	/* sector not found		*/
+#define TOS_EPAPER	 -9L	/* no paper				*/
+#define TOS_EWRITF	-10L	/* write fault			*/
+#define TOS_EREADF	-11L	/* read fault			*/
+#define TOS_EGENRL	-12L	/* general error		*/
+#define TOS_EWRPRO	-13L	/* write protect		*/
+#define TOS_E_CHNG	-14L	/* media change 		*/
+#define TOS_EUNDEV	-15L	/* unknown device		*/
+#define TOS_EBADSF	-16L	/* bad sectors on format	*/
+#define TOS_EOTHER	-17L	/* insert other disk	*/
+#define TOS_ESRCH	-20L	/* no such process	*/
+#define TOS_EISDIR	-24L	/* is a directory	*/
 
 /* BDOS level errors */
 
-#define EINVFN	-32L	/* invalid function number		 1 */
-#define EFILNF	-33L	/* file not found				 2 */
-#define EPTHNF	-34L	/* path not found	(0xffde)		 3 */
-#define ENHNDL	-35L	/* no handles left				 4 */
-#define EACCDN	-36L	/* access denied				 5 */
-#define EIHNDL	-37L	/* invalid handle				 6 */
-#define ENSMEM	-39L	/* insufficient memory			 8 */
-#define EIMBA	-40L	/* invalid memory block address	 9 */
-#define EDRIVE	-46L	/* invalid drive was specified	15 */
-#define ENSAME	-48L	/* MV between two different drives 17 */
-#define ENMFIL	-49L	/* no more files				18 */
-#define ATARIERR_ERANGE	-64L	/* range error					33 */
-#define EINTRN	-65L	/* internal error				34 */
-#define EPLFMT	-66L	/* invalid program load format	35 */
-#define EGSBF	-67L	/* setblock failure 			36 */
-#define EBREAK	-68L	/* user break (^C)				37 */
-#define EXCPT	-69L	/* 68000- exception ("bombs")	38 */
-#define EPTHOV	-70L	/* path overflow                          MAG!X    */
+#define TOS_EINVFN	-32L	/* invalid function number		 1 */
+#define TOS_EFILNF	-33L	/* file not found				 2 */
+#define TOS_EPTHNF	-34L	/* path not found				 3 */
+#define TOS_ENHNDL	-35L	/* no handles left				 4 */
+#define TOS_EACCDN	-36L	/* access denied				 5 */
+#define TOS_EIHNDL	-37L	/* invalid handle				 6 */
+#define TOS_ENSMEM	-39L	/* insufficient memory			 8 */
+#define TOS_EIMBA	-40L	/* invalid memory block address	 9 */
+#define TOS_EDRIVE	-46L	/* invalid drive was specified	15 */
+#define TOS_ENSAME	-48L	/* MV between two different drives 17 */
+#define TOS_ENMFIL	-49L	/* no more files				18 */
+#define TOS_ERANGE	-64L	/* range error					33 */
+#define TOS_EINTRN	-65L	/* internal error				34 */
+#define TOS_EPLFMT	-66L	/* invalid program load format	35 */
+#define TOS_EGSBF	-67L	/* setblock failure 			36 */
+#define TOS_EBREAK	-68L	/* user break (^C)				37 */
+#define TOS_EXCPT	-69L	/* 68000- exception ("bombs")	38 */
+#define TOS_EPTHOV	-70L	/* path overflow                          MAG!X    */
+#define TOS_EEXIST	-85L	/* File exists */
+#define TOS_EIO		-90L	/* I/O error */
+#define TOS_ENOSPC	-91L	/* No space left on device */
 
 // Keyboard Scancodes
 

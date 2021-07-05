@@ -29,9 +29,7 @@
 #define _MACXFS_H_INCLUDED_
 
 // System-Header
-/*
-#include <aliases.h>
-*/
+#include <dirent.h>
 // Programm-Header
 #include "Atari.h"
 #include "MAC_XFS.H"
@@ -42,6 +40,7 @@
 #define ELINK -300
 #endif
 
+typedef uint32_t memptr;
 
 class CMacXFS
 {
@@ -71,11 +70,11 @@ class CMacXFS
 
 	CMacXFS();
 	~CMacXFS();
-	void Set68kAdressRange(UInt32 AtariMemSize);
-	int32_t XFSFunctions( uint32_t params, unsigned char *AdrOffset68k );
-	int32_t XFSDevFunctions( uint32_t params, unsigned char *AdrOffset68k );
-	int32_t Drv2DevCode( uint32_t params, unsigned char *AdrOffset68k );
-	int32_t RawDrvr( uint32_t params, unsigned char *AdrOffset68k );
+	void Set68kAdressRange(memptr AtariMemSize);
+	int32_t XFSFunctions(memptr params, unsigned char *AdrOffset68k );
+	int32_t XFSDevFunctions(memptr params, unsigned char *AdrOffset68k );
+	int32_t Drv2DevCode(memptr params, unsigned char *AdrOffset68k );
+	int32_t RawDrvr(memptr params, unsigned char *AdrOffset68k );
 	void SetXFSDrive (
 			short drv,
 			MacXFSDrvType drvType,
@@ -90,57 +89,57 @@ class CMacXFS
 
    private:
 
-	UInt32 m_AtariMemSize;
+	memptr m_AtariMemSize;
 	typedef void PD;
 
 #pragma options align=packed
 
 typedef struct _mx_dhd {
-     uint32_t		dhd_dmd;			// struct _mx_dmd *dhd_dmd;
+     memptr	    dhd_dmd;			// struct _mx_dmd *dhd_dmd;
 } MX_DHD;
 
 typedef struct _mx_dev {
-     int32_t      dev_close;
-     int32_t      dev_read;
-     int32_t      dev_write;
-     int32_t      dev_stat;
-     int32_t      dev_seek;
-     int32_t      dev_datime;
-     int32_t      dev_ioctl;
-     int32_t      dev_getc;
-     int32_t      dev_getline;
-     int32_t      dev_putc;
+     int32_t    dev_close;
+     int32_t    dev_read;
+     int32_t    dev_write;
+     int32_t    dev_stat;
+     int32_t    dev_seek;
+     int32_t    dev_datime;
+     int32_t    dev_ioctl;
+     int32_t    dev_getc;
+     int32_t    dev_getline;
+     int32_t    dev_putc;
 } MX_DEV;
 
 typedef struct _mx_dd {
-     uint32_t	dd_dmd;				// struct _mx_dmd *dd_dmd;
-     uint16_t      dd_refcnt;
+     memptr     dd_dmd;				// struct _mx_dmd *dd_dmd;
+     uint16_t   dd_refcnt;
 } MX_DD;
 
 typedef struct _mx_dta {
-     char      dta_res[20];
-     char      dta_drive;
-     char      dta_attribute;
-     uint16_t      dta_time;
-     uint16_t      dta_date;
-     uint32_t     dta_len;
-     char      dta_name[14];
+     char       dta_res[20];
+     char       dta_drive;
+     char       dta_attribute;
+     uint16_t   dta_time;
+     uint16_t   dta_date;
+     uint32_t   dta_len;
+     char       dta_name[14];
 } MX_DTA;
 
 typedef struct _mx_dmd {
-     uint32_t		d_xfs;				// struct _mx_xfs *d_xfs;
-     uint16_t      d_drive;
-     uint32_t		d_root;				// MX_DD     *d_root;
-     uint16_t      biosdev;
-     uint32_t      driver;
-     uint32_t      devcode;
+     memptr	    d_xfs;				// struct _mx_xfs *d_xfs;
+     uint16_t   d_drive;
+     memptr	    d_root;				// MX_DD     *d_root;
+     uint16_t   biosdev;
+     memptr     driver;
+     uint32_t   devcode;
 } MX_DMD;
 
 typedef struct _mx_fd {
-     uint32_t		fd_dmd;				// struct _mx_dmd *fd_dmd;
-     uint16_t      fd_refcnt;
-     uint16_t      fd_mode;
-     uint32_t		fd_dev;				// MX_DEV    *fd_dev;
+     memptr	    fd_dmd;				// struct _mx_dmd *fd_dmd;
+     uint16_t   fd_refcnt;
+     uint16_t   fd_mode;
+     memptr	    fd_dev;				// MX_DEV    *fd_dev;
 } MX_FD;
 
 /* Open- Modus von Dateien (Mag!X- intern)                                 */
@@ -160,15 +159,22 @@ typedef struct _mx_fd {
 	{
 	     char      sname[11];		/* Suchname */
 	     char      sattr;			/* Suchattribut */
-	     int32_t      dirID;			/* Verzeichnis */
-	     int16_t	vRefNum;		/* Mac-Volume */
-	     uint16_t      index;		/* Index innerhalb des Verzeichnis */
+	     int32_t   dirID;			/* Verzeichnis */
+	     int16_t   vRefNum;			/* Mac-Volume */
+	     uint16_t  index;			/* Index innerhalb des Verzeichnis */
+
+	     DIR       *hostDir;		/* used DIR (host one) */
 	} _MAC_DTA;
 
+	/*
+	 * Note: the host_fd member here is assigned from an int
+	 * as obtained from open() etc. If we ever get numbers that
+	 * don't fit in 16 bit, we may have to use a NativeTypeMapper<int, short>
+	 */
 	typedef struct
 	{
 	     MX_FD	fd;			/* allgemeiner Teil (big endian) */
-	     short	refnum;		/* Mac-Teil: Handle (host native endian) */
+	     short	host_fd;	/* Mac-Teil: Handle (host native endian, but written in macxfs.s) */
 	     uint16_t	mod_time_dirty;	/* Mac-Teil: Fdatime war aufgerufen (host native endian) */
 	     uint16_t	mod_time[2];	/* Mac-Teil: Zeit fuer Fdatime (DOS-Codes) (host native endian) */
 	} MAC_FD;
@@ -184,7 +190,7 @@ typedef struct _mx_fd {
 	     MX_DHD	dhd;			/* allgemeiner Teil */
 	     struct MXFSDD dhdd;
 	     uint16_t	index;		/* Position des Lesezeigers (host native endian) */
-	     uint16_t	tosflag;		/* TOS-Modus, d.h. 8+3 und ohne Inode (host native endian) */
+	     uint16_t	tosflag;	/* TOS-Modus, d.h. 8+3 und ohne Inode (host native endian) */
 	} MAC_DIRHANDLE;
 
 	typedef union
@@ -221,9 +227,19 @@ typedef struct _mx_fd {
 		bool drv_readOnly;
 		MacXFSDrvType drv_type;
 
-		char *host_dir;
+		char *host_root;
 	};
 	
+	struct XfsFsFile {
+		XfsFsFile *parent;
+		uint32_t  refCount;
+		uint32_t  childCount;
+		bool      created;      // only xfs_creat() was issued (no dev_open yet)
+
+		memptr locks;
+		char	  *name;
+	};
+
 	uint32_t DriveToDeviceCode (short drv);
 	long EjectDevice (short opcode, long device);
 
@@ -246,6 +262,7 @@ typedef struct _mx_fd {
 	static void date_dos2mac( uint16_t time, uint16_t date, unsigned long *macdate);
 	static int fname_is_invalid(const char *name);
 	static int32_t cnverr (OSErr err);
+	static int32_t errnoHost2Mint(int unixerrno, int defaulttoserrno);
 	static bool filename_match(char *muster, char *fname);
 	static bool conv_path_elem(const char *path, char *name);
 	static bool nameto_8_3 (const unsigned char *macname,
@@ -311,7 +328,6 @@ typedef struct _mx_fd {
 	long cfss(int drv, long dirID, short vRefNum, unsigned char *name, FSSpec *fs,
 			bool fromAtari);
 	OSErr fsspec2DirID (int drv);
-//	OSErr cpath2DirID( int drv, char *cpath );
 	int32_t resolve_symlink( FSSpec *fs, uint16_t buflen, char *buf );
 	int32_t drv_open (uint16_t drv, bool onlyMountedVols);
 	int32_t vRefNum2drv(short vRefNum, uint16_t *drv);
@@ -333,7 +349,6 @@ typedef struct _mx_fd {
 	OSErr getFSSpecByFileRefNum (short fRefNum, FSSpec *spec, FCBPBRec *pb);
 
 	void setDrivebits (uint32_t newbits, unsigned char *AdrOffset68k);
-//	short Num0DrvOfDrvr (short dRefNum, short drvNum);
 };
 
 #endif

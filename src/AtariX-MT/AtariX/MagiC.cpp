@@ -1743,23 +1743,6 @@ void CMagiC::UpdateAtariDoubleBuffer(void)
 
 /**********************************************************************
 *
-* (STATISCH) gibt drvbits zurück
-*
-**********************************************************************/
-/*
-uint32_t CMagiC::GetAtariDrvBits(void)
-{
-	*((uint32_t *)(pTheMagiC->m_RAM68k + _drvbits)) = cpu_to_be32(0);		// noch keine Laufwerke
-
-	newbits |= (1L << ('m'-'a'));	// virtuelles Laufwerk M: immer präsent
-	*(long*)(&AdrOffset68k[_drvbits]) &= -1L-xfs_drvbits;		// alte löschen
-	*(long*)(&AdrOffset68k[_drvbits]) |= newbits;			// neue setzen
-	xfs_drvbits = newbits;
-}
-*/
-
-/**********************************************************************
-*
 * (STATISCH) gibt Namen und PD des aktuellen Atari-Programms zurück
 *
 **********************************************************************/
@@ -3006,7 +2989,7 @@ uint32_t CMagiC::AtariDOSFn(uint32_t params, unsigned char *AdrOffset68k)
 	AtariDOSFnParm *theAtariDOSFnParm = (AtariDOSFnParm *) (AdrOffset68k + params);
 #endif
 	DebugInfo("CMagiC::AtariDOSFn(fn = 0x%x)", be16_to_cpu(theAtariDOSFnParm->dos_fnr));
-	return((uint32_t) EINVFN);
+	return((uint32_t) TOS_EINVFN);
 }
 
 
@@ -3621,13 +3604,13 @@ uint32_t CMagiC::OpenSerialBIOS(void)
 	if	(m_MagiCSerial.IsOpen())
 	{
 		DebugError("CMagiC::OpenSerialBIOS() -- schon vom DOS geöffnet => Fehler");
-		return((uint32_t) ERROR);
+		return((uint32_t) TOS_ERROR);
 	}
 
 	if	(-1 == (int) m_MagiCSerial.Open(CGlobals::s_Preferences.m_szAuxPath))
 	{
 		DebugInfo("CMagiC::OpenSerialBIOS() -- kann \"%s\" nicht öffnen.", CGlobals::s_Preferences.m_szAuxPath);
-		return((uint32_t) ERROR);
+		return((uint32_t) TOS_ERROR);
 	}
 
 	m_bBIOSSerialUsed = true;
@@ -3700,7 +3683,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 	if	(pTheMagiC->OpenSerialBIOS())
 	{
 		DebugInfo("CMagiC::AtariSerConf() -- kann serielle Schnittstelle nicht öffnen => Fehler.");
-		return((uint32_t) ERROR);
+		return((uint32_t) TOS_ERROR);
 	}
 
 	SerConfParm *theSerConfParm = (SerConfParm *) (AdrOffset68k + params);
@@ -3737,38 +3720,38 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 			case TIOCBUFFER:
 				// Inquire/Set buffer settings
 				DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCBUFFER) -- nicht unterstützt");
-				ret = (uint32_t) EINVFN;
+				ret = (uint32_t) TOS_EINVFN;
 				break;
 
 			case TIOCCTLMAP:
 				// Inquire I/O-lines and signaling capabilities
 				DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLMAP) -- nicht unterstützt");
-				ret = (uint32_t) EINVFN;
+				ret = (uint32_t) TOS_EINVFN;
 				break;
 
 			case TIOCCTLGET:
 				// Inquire I/O-lines and signals
 				DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLGET) -- nicht unterstützt");
-				ret = (uint32_t) EINVFN;
+				ret = (uint32_t) TOS_EINVFN;
 				break;
 
 			case TIOCCTLSET:
 				// Set I/O-lines and signals
 				DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLSET) -- nicht unterstützt");
-				ret = (uint32_t) EINVFN;
+				ret = (uint32_t) TOS_EINVFN;
 				break;
 
 			case TIOCGPGRP:
 				//get terminal process group
 				DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCGPGRP) -- nicht unterstützt");
-				ret = (uint32_t) EINVFN;
+				ret = (uint32_t) TOS_EINVFN;
 				break;
 
 			case TIOCSPGRP:
 				//set terminal process group
 				grp = be32_to_cpu(*((uint32_t *) (AdrOffset68k + be32_to_cpu(theSerConfParm->parm))));
 				DebugInfo("CMagiC::AtariSerConf() -- Fcntl(TIOCSPGRP, %d)", (uint32_t) grp);
-				ret = (uint32_t) EINVFN;
+				ret = (uint32_t) TOS_EINVFN;
 				break;
 
 			case TIOCFLUSH:
@@ -3778,8 +3761,8 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 				switch(mode)
 				{
 					// Der Sendepuffer soll komplett gesendet werden. Die Funktion kehrt 
-					// erst zurück, wenn der Puffer leer ist (return E_OK, =0) oder ein 
-					// systeminterner Timeout abgelaufen ist (return EDRVNR, =-2). Der 
+					// erst zurück, wenn der Puffer leer ist (return TOS_E_OK, =0) oder ein 
+					// systeminterner Timeout abgelaufen ist (return TOS_EDRVNR, =-2). Der 
 					// Timeout wird vom System sinnvoll bestimmt.
 					case 0:
 						ret = pTheSerial->Drain();
@@ -3801,7 +3784,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 						break;
 
 					default:
-						ret = (uint32_t) EINVFN;
+						ret = (uint32_t) TOS_EINVFN;
 						break;
 				}
 				break;
@@ -3868,7 +3851,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 
 				*((uint32_t *) (AdrOffset68k + be32_to_cpu(theSerConfParm->parm))) = cpu_to_be32(OldBaudrate);
 				if	((int) ret == -1)
-					ret = (uint32_t) ATARIERR_ERANGE;
+					ret = (uint32_t) TOS_ERANGE;
 				break;
 
 			case TIOCGFLAGS:
@@ -3922,7 +3905,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 				if	(nBits == 7)
 					flags |= 0x4;
 				*((uint16_t *) (AdrOffset68k + be32_to_cpu(theSerConfParm->parm))) = cpu_to_be16(flags);
-				ret = (uint32_t) E_OK;
+				ret = TOS_E_OK;
 				break;
 
 			case TIOCSFLAGS:
@@ -3942,7 +3925,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 				nStopBits = flags & 3U;
 				DebugInfo("CMagiC::AtariSerConf() -- %d Stop-Bits%s", nStopBits, (nStopBits == 0) ? " (Synchron-Modus?)" : "");
 				if	((nStopBits == 0) || (nStopBits == 2))
-					return((uint32_t) ATARIERR_ERANGE);
+					return((uint32_t) TOS_ERANGE);
 				if	(nStopBits == 3)
 					nStopBits = 2;
 				ret = pTheSerial->Config(
@@ -3971,12 +3954,12 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 							nStopBits,
 							NULL);
 				if	((int) ret == -1)
-					ret = (uint32_t) ATARIERR_ERANGE;
+					ret = (uint32_t) TOS_ERANGE;
 				break;
 
 			default:
 				DebugError("CMagiC::AtariSerConf() -- Fcntl(0x%04x -- unbekannt", be16_to_cpu(theSerConfParm->cmd) & 0xffff);
-				ret = (uint32_t) EINVFN;
+				ret = (uint32_t) TOS_EINVFN;
 				break;
 		}
 		return(ret);
@@ -3998,7 +3981,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 	if	(be16_to_cpu(theSerConfParm->baud) >= sizeof(baudtable)/sizeof(baudtable[0]))
 	{
 		DebugError("CMagiC::AtariSerConf() -- ungültige Baudrate von Rsconf()");
-		return((uint32_t) ATARIERR_ERANGE);
+		return((uint32_t) TOS_ERANGE);
 	}
 
 	nBits = nBitsTable[(be16_to_cpu(theSerConfParm->ucr) >> 5) & 3];
@@ -4176,13 +4159,13 @@ uint32_t CMagiC::AtariSerOpen(uint32_t params, unsigned char *AdrOffset68k)
 	if	(pTheMagiC->m_MagiCSerial.IsOpen())
 	{
 		DebugInfo("CMagiC::AtariSerOpen() -- schon vom DOS geöffnet => Fehler");
-		return((uint32_t) EACCDN);
+		return((uint32_t) TOS_EACCDN);
 	}
 
 	if	(-1 == (int) pTheMagiC->m_MagiCSerial.Open(CGlobals::s_Preferences.m_szAuxPath))
 	{
 		DebugInfo("CMagiC::AtariSerOpen() -- kann \"%s\" nicht öffnen.", CGlobals::s_Preferences.m_szAuxPath);
-		return((uint32_t) ERROR);
+		return((uint32_t) TOS_ERROR);
 	}
 
 	return(0);
@@ -4213,12 +4196,12 @@ uint32_t CMagiC::AtariSerClose(uint32_t params, unsigned char *AdrOffset68k)
 	// nicht vom DOS geöffnet => Fehler
 	if	(!pTheMagiC->m_MagiCSerial.IsOpen())
 	{
-		return((uint32_t) EACCDN);
+		return((uint32_t) TOS_EACCDN);
 	}
 
 	if	(pTheMagiC->m_MagiCSerial.Close())
 	{
-		return((uint32_t) ERROR);
+		return((uint32_t) TOS_ERROR);
 	}
 
 	return(0);
@@ -4364,38 +4347,38 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 		case TIOCBUFFER:
 			// Inquire/Set buffer settings
 			DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCBUFFER) -- nicht unterstützt");
-			ret = (uint32_t) EINVFN;
+			ret = (uint32_t) TOS_EINVFN;
 			break;
 
 		case TIOCCTLMAP:
 			// Inquire I/O-lines and signaling capabilities
 			DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLMAP) -- nicht unterstützt");
-			ret = (uint32_t) EINVFN;
+			ret = (uint32_t) TOS_EINVFN;
 			break;
 
 		case TIOCCTLGET:
 			// Inquire I/O-lines and signals
 			DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLGET) -- nicht unterstützt");
-			ret = (uint32_t) EINVFN;
+			ret = (uint32_t) TOS_EINVFN;
 			break;
 
 		case TIOCCTLSET:
 			// Set I/O-lines and signals
 			DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLSET) -- nicht unterstützt");
-			ret = (uint32_t) EINVFN;
+			ret = (uint32_t) TOS_EINVFN;
 			break;
 
 		case TIOCGPGRP:
 			//get terminal process group
 			DebugWarning("CMagiC::AtariSerIoctl() -- Fcntl(TIOCGPGRP) -- nicht unterstützt");
-			ret = (uint32_t) EINVFN;
+			ret = (uint32_t) TOS_EINVFN;
 			break;
 
 		case TIOCSPGRP:
 			//set terminal process group
 			grp = be32_to_cpu(*((uint32_t *) (AdrOffset68k + be32_to_cpu(theSerIoctlParm->parm))));
 			DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(TIOCSPGRP, %d)", (uint32_t) grp);
-			ret = (uint32_t) EINVFN;
+			ret = (uint32_t) TOS_EINVFN;
 			break;
 
 		case TIOCFLUSH:
@@ -4405,8 +4388,8 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 			switch(mode)
 			{
 				// Der Sendepuffer soll komplett gesendet werden. Die Funktion kehrt 
-				// erst zurück, wenn der Puffer leer ist (return E_OK, =0) oder ein 
-				// systeminterner Timeout abgelaufen ist (return EDRVNR, =-2). Der 
+				// erst zurück, wenn der Puffer leer ist (return TOS_E_OK, =0) oder ein 
+				// systeminterner Timeout abgelaufen ist (return TOS_EDRVNR, =-2). Der 
 				// Timeout wird vom System sinnvoll bestimmt.
 				case 0:
 					ret = pTheSerial->Drain();
@@ -4428,7 +4411,7 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 					break;
 
 				default:
-					ret = (uint32_t) EINVFN;
+					ret = (uint32_t) TOS_EINVFN;
 					break;
 			}
 			break;
@@ -4495,7 +4478,7 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 
 			*((uint32_t *) (AdrOffset68k + be32_to_cpu(theSerIoctlParm->parm))) = cpu_to_be32(OldBaudrate);
 			if	((int) ret == -1)
-				ret = (uint32_t) ATARIERR_ERANGE;
+				ret = (uint32_t) TOS_ERANGE;
 			break;
 
 		case TIOCGFLAGS:
@@ -4549,7 +4532,7 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 			if	(nBits == 7)
 				flags |= 0x4;
 			*((uint16_t *) (AdrOffset68k + be32_to_cpu(theSerIoctlParm->parm))) = cpu_to_be16(flags);
-			ret = (uint32_t) E_OK;
+			ret = TOS_E_OK;
 			break;
 
 		case TIOCSFLAGS:
@@ -4569,7 +4552,7 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 			nStopBits = flags & 3U;
 			DebugInfo("CMagiC::AtariSerIoctl() -- %d Stop-Bits%s", nStopBits, (nStopBits == 0) ? " (Synchron-Modus?)" : "");
 			if	((nStopBits == 0) || (nStopBits == 2))
-				return((uint32_t) ATARIERR_ERANGE);
+				return((uint32_t) TOS_ERANGE);
 			if	(nStopBits == 3)
 				nStopBits = 2;
 			ret = pTheSerial->Config(
@@ -4598,12 +4581,12 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 						nStopBits,
 						NULL);
 			if	((int) ret == -1)
-				ret = (uint32_t) ATARIERR_ERANGE;
+				ret = (uint32_t) TOS_ERANGE;
 			break;
 
 		default:
 			DebugError("CMagiC::AtariSerIoctl() -- Fcntl(0x%04x -- unbekannt", be16_to_cpu(theSerIoctlParm->cmd) & 0xffff);
-			ret = (uint32_t) EINVFN;
+			ret = (uint32_t) TOS_EINVFN;
 			break;
 	}
 
@@ -4762,11 +4745,11 @@ uint32_t CMagiC::MmxDaemon(uint32_t params, unsigned char *AdrOffset68k)
 				pBuf = AdrOffset68k + be32_to_cpu(theMmxDaemonParm->parm);
 				// von Quelladresse kopieren
 				strcpy((char *) pBuf, m_szStartAtariFiles[m_iOldestAtariFile]);
-				ret = E_OK;
+				ret = TOS_E_OK;
 				m_iNoOfAtariFiles--;
 			}
 			else
-				ret = (uint32_t) EFILNF;
+				ret = (uint32_t) TOS_EFILNF;
 			OS_ExitCriticalRegion(m_AECriticalRegionId);
 			break;
 
@@ -4776,7 +4759,7 @@ uint32_t CMagiC::MmxDaemon(uint32_t params, unsigned char *AdrOffset68k)
 			break;
 
 		default:
-			ret = EUNCMD;
+			ret = TOS_EUNCMD;
 			break;
 	}
 

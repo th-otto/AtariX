@@ -725,12 +725,12 @@ int32_t CXCmd::Command(uint32_t params, unsigned char *AdrOffset68k)
 
 		default:
 			err = 0;
-			ret = EUNCMD;
+			ret = TOS_EUNCMD;
 			break;
 	}; 
 
 	pCmd->m_MacError = err;
 	if	(err)
-		ret = ERROR;
+		ret = TOS_ERROR;
 	return(ret);
 }
