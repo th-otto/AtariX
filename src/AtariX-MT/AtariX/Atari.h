@@ -47,9 +47,12 @@
 #define _ATARI_O_DENYW        0x20
 #define _ATARI_O_DENYR        0x30
 #define _ATARI_O_DENYNONE     0x40
+#define _ATARI_O_NOINHERIT    0x80
+#define _ATARI_O_NONBLOCK     0x100
 #define _ATARI_O_CREAT        0x200
 #define _ATARI_O_TRUNC        0x400
 #define _ATARI_O_EXCL         0x800
+#define _ATARI_O_NOCTTY       0x4000
 
 /* unterstuetzte Dcntl- Modi (Mag!X- spezifisch!) */
 #define   KER_GETINFO    0x0100
@@ -122,6 +125,7 @@
 #define  DP_ATIME      0x0200
 #define  DP_CTIME      0x0400
 #define  DP_MTIME      0x0800
+#define DP_VOLNAMEMAX 9
 
 /* D/Fcntl(FUTIME,...) */
 
@@ -140,7 +144,9 @@ struct XATTR
 	uint16_t	mode;
 	/* file types */
 	#define _ATARI_S_IFMT 	   0170000        /* mask to select file type */
+    #define _ATARI_S_IFSOCK    0010000        /* socket file */
 	#define _ATARI_S_IFCHR     0020000        /* BIOS special file */
+	#define _ATARI_S_IFBLK     0060000        /* block special file */
 	#define _ATARI_S_IFDIR     0040000        /* directory file */
 	#define _ATARI_S_IFREG     0100000        /* regular file */
 	#define _ATARI_S_IFIFO	   0120000        /* FIFO */
@@ -423,6 +429,7 @@ struct SYSHDR
 #define TOS_EOTHER	-17L	/* insert other disk	*/
 #define TOS_ESRCH	-20L	/* no such process	*/
 #define TOS_EISDIR	-24L	/* is a directory	*/
+#define TOS_EINVAL	-25L	/* Invalid argument */
 
 /* BDOS level errors */
 

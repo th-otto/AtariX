@@ -40,7 +40,33 @@
 #define ELINK -300
 #endif
 
+#include "typemapper.h"
+
 typedef uint32_t memptr;
+
+#pragma options align=packed
+typedef struct {
+	uint64_t _st_dev;
+	uint32_t _st_ino;
+	uint32_t _st_mode;
+	uint32_t _st_nlink;
+	uint32_t _st_uid;
+	uint32_t _st_gid;
+	uint64_t _st_rdev;
+	uint64_t _st_atime;
+	uint32_t _st_atime_ns;
+	uint64_t _st_mtime;
+	uint32_t _st_mtime_ns;
+	uint64_t _st_ctime;
+	uint32_t _st_ctime_ns;
+	uint64_t _st_size;
+	uint64_t _st_blocks;
+	uint32_t _st_blksize;
+	uint32_t _st_flags;
+	uint32_t _st_gen;
+	uint32_t _st_reserved[7];
+} MINT_STAT64;
+#pragma options align=reset
 
 class CMacXFS
 {
@@ -71,21 +97,17 @@ class CMacXFS
 	CMacXFS();
 	~CMacXFS();
 	void Set68kAdressRange(memptr AtariMemSize);
-	int32_t XFSFunctions(memptr params, unsigned char *AdrOffset68k );
-	int32_t XFSDevFunctions(memptr params, unsigned char *AdrOffset68k );
-	int32_t Drv2DevCode(memptr params, unsigned char *AdrOffset68k );
-	int32_t RawDrvr(memptr params, unsigned char *AdrOffset68k );
+	int32_t XFSFunctions(memptr params, unsigned char *AdrOffset68k);
+	int32_t XFSDevFunctions(memptr params, unsigned char *AdrOffset68k);
+	int32_t Drv2DevCode(memptr params, unsigned char *AdrOffset68k);
+	int32_t RawDrvr(memptr params, unsigned char *AdrOffset68k);
 	void SetXFSDrive (
-			short drv,
+			unsigned short dev,
 			MacXFSDrvType drvType,
 			CFURLRef path,
-			bool longnames,
-			bool reverseDirOrder,
+			unsigned int flags,
 			unsigned char *AdrOffset68k);
-	void ChangeXFSDriveFlags (
-			short drv,
-			bool longnames,
-			bool reverseDirOrder);
+	void ChangeXFSDriveFlags(unsigned short dev, unsigned int flags);
 
    private:
 
@@ -155,14 +177,52 @@ typedef struct _mx_fd {
 #define   OM_WDENY       32
 #define   OM_NOCHECK     64
 
+	struct MXFSDD
+	{
+		int32_t dirID;			/* Verzeichniskennung (host native endian, a mapped XfsFsFile *) */
+		int16_t vRefNum;		/* Mac-Volume (host native endian) (unused, but accessed by kernel) */
+	};
+
+	struct XfsFsFile {
+		struct XfsFsFile *parent;
+		uint32_t  refCount;
+		uint32_t  childCount;
+		bool      created;      // only xfs_creat() was issued (no dev_open yet)
+
+		memptr locks;
+		char *name;
+	
+		XfsFsFile(const char *root);
+		virtual ~XfsFsFile(void);
+	};
+
+	struct mount_info;
+	struct XfsCookie {
+		uint16_t   dev;          // device number
+		struct XfsFsFile *index;       // the filesystem implementation specific structure (host one)
+
+		struct mount_info *drv;         // dev->drv mapping is found during the cookie fetch
+	};
+
+	typedef struct
+	{
+	     MX_DHD	dhd;			/* allgemeiner Teil */
+	     uint16_t	index;		/* Position des Lesezeigers (host native endian) */
+	     uint16_t	tosflag;	/* TOS-Modus, d.h. 8+3 und ohne Inode (host native endian) */
+	     XfsCookie fc;
+	     DIR       *hostDir;		/* used DIR (host one) */
+	} MAC_DIRHANDLE;
+
+	/*
+	 * MacXFS specific part of DTA.
+	 */
 	typedef struct
 	{
 	     char      sname[11];		/* Suchname */
 	     char      sattr;			/* Suchattribut */
-	     int32_t   dirID;			/* Verzeichnis */
-	     int16_t   vRefNum;			/* Mac-Volume */
 	     uint16_t  index;			/* Index innerhalb des Verzeichnis */
 
+	     XfsCookie fc;
 	     DIR       *hostDir;		/* used DIR (host one) */
 	} _MAC_DTA;
 
@@ -170,6 +230,7 @@ typedef struct _mx_fd {
 	 * Note: the host_fd member here is assigned from an int
 	 * as obtained from open() etc. If we ever get numbers that
 	 * don't fit in 16 bit, we may have to use a NativeTypeMapper<int, short>
+	 * Note2: the size of this structure must not exceed FDSIZE (94 bytes)
 	 */
 	typedef struct
 	{
@@ -177,26 +238,17 @@ typedef struct _mx_fd {
 	     short	host_fd;	/* Mac-Teil: Handle (host native endian, but written in macxfs.s) */
 	     uint16_t	mod_time_dirty;	/* Mac-Teil: Fdatime war aufgerufen (host native endian) */
 	     uint16_t	mod_time[2];	/* Mac-Teil: Zeit fuer Fdatime (DOS-Codes) (host native endian) */
+	     XfsCookie fc;
 	} MAC_FD;
-
-	struct MXFSDD
-	{
-		int32_t dirID;			/* Verzeichniskennung (host native endian) */
-		int16_t vRefNum;		/* Mac-Volume (host native endian) */
-	};
-
-	typedef struct
-	{
-	     MX_DHD	dhd;			/* allgemeiner Teil */
-	     struct MXFSDD dhdd;
-	     uint16_t	index;		/* Position des Lesezeigers (host native endian) */
-	     uint16_t	tosflag;	/* TOS-Modus, d.h. 8+3 und ohne Inode (host native endian) */
-	} MAC_DIRHANDLE;
 
 	typedef union
 	{
 	     MX_DTA    mxdta;
-	     _MAC_DTA  macdta;
+	     struct {
+#define DTA_MAGIC 0x4d674461 /* 'MgDa' */
+	     	uint32_t magic;
+	     	_MAC_DTA  *macdta;
+	     } macdta;
 	} MAC_DTA;
 
 	typedef struct
@@ -205,7 +257,7 @@ typedef struct _mx_fd {
 	  char		data[256];
 	} MX_SYMLINK;
 
-   	#pragma options align=reset
+#pragma options align=reset
 
 	/*
 	 * NDRVS Laufwerke werden vom XFS verwaltet
@@ -218,28 +270,13 @@ typedef struct _mx_fd {
 		bool drv_changed;
 		bool drv_must_eject;
 		bool drv_valid;			// zeigt an, ob alias gültig ist.
-		FSSpec drv_fsspec;		// => macSys, damit MagiC die volume-ID ermitteln kann.
-		FSRef xfs_path;			// nur auswerten, wenn drv_valid = true
-		CInfoPBRec drv_pbrec;
-		long drv_dirID;
-		bool drv_longnames;		// initialisiert auf 0en
-		bool drv_rvsDirOrder;
-		bool drv_readOnly;
+		unsigned int drv_flags;	// initialisiert auf 0en
 		MacXFSDrvType drv_type;
 
-		char *host_root;
+		XfsFsFile *host_root;
+		char mount_point[10];
 	};
 	
-	struct XfsFsFile {
-		XfsFsFile *parent;
-		uint32_t  refCount;
-		uint32_t  childCount;
-		bool      created;      // only xfs_creat() was issued (no dev_open yet)
-
-		memptr locks;
-		char	  *name;
-	};
-
 	uint32_t DriveToDeviceCode (short drv);
 	long EjectDevice (short opcode, long device);
 
@@ -252,25 +289,26 @@ typedef struct _mx_fd {
 	/* Zur Rueckgabe an den MagiC-Kernel: */
 	MX_SYMLINK mx_symlink;
 
+#if __SIZEOF_POINTER__ > 4 || DEBUG_NON32BIT
+	NativeTypeMapper <void *, memptr> memptrMapper;
+#endif
+
 	// statische Funktionen
 
-	static char ToUpper(char c);
-	static char ToLower(char c);
-	static void AtariFnameToMacFname(const unsigned char *src, unsigned char *dst);
-	static void MacFnameToAtariFname(const unsigned char *src, unsigned char *dst);
-	static void date_mac2dos( unsigned long macdate, uint16_t *time, uint16_t *date);
-	static void date_dos2mac( uint16_t time, uint16_t date, unsigned long *macdate);
+	static unsigned char ToUpper(unsigned char c);
+	static unsigned char ToLower(unsigned char c);
+	static void date_mac2dos(time_t macdate, uint16_t *time, uint16_t *date);
+	static time_t date_dos2mac(uint16_t time, uint16_t date);
 	static int fname_is_invalid(const char *name);
-	static int32_t cnverr (OSErr err);
 	static int32_t errnoHost2Mint(int unixerrno, int defaulttoserrno);
+	mode_t modeMint2Host(uint16_t m);
+	uint16_t modeHost2Mint(mode_t m);
+	uint16_t modeHost2TOS(mode_t m);
+	int flagsMagic2Host(uint16_t flags);
+	int16_t flagsHost2Magic(int flags);
 	static bool filename_match(char *muster, char *fname);
 	static bool conv_path_elem(const char *path, char *name);
-	static bool nameto_8_3 (const unsigned char *macname,
-				unsigned char *dosname,
-				int convmode, bool toAtari);
-	static char *ps(char *s);
-	static void sp(char *s);
-	static OSErr getInfo (CInfoPBPtr pb, FSSpec *fs);
+	static bool nameto_8_3 (const char *macname, char *dosname, int convmode);
 
 	// XFS-Aufrufe
 
@@ -281,72 +319,64 @@ typedef struct _mx_fd {
 	int32_t xfs_path2DD(uint16_t mode, uint16_t drv, MXFSDD *rel_dd, char *pathname,
                   char **restpfad, MXFSDD *symlink_dd, char **symlink,
                    MXFSDD *dd,
-                   uint16_t *dir_drive );
-	int32_t xfs_sfirst(uint16_t drv, MXFSDD *dd, char *name, MAC_DTA *dta, uint16_t attrib);
-	int32_t xfs_snext(uint16_t drv, MAC_DTA *dta);
-	int32_t xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
-				uint16_t omode, uint16_t attrib);
-	int32_t xfs_fdelete(uint16_t drv, MXFSDD *dd, char *name);
-	int32_t xfs_link(uint16_t drv, char *nam1, char *nam2,
-	               MXFSDD *dd1, MXFSDD *dd2, uint16_t mode, uint16_t dst_drv);
-	int32_t xfs_xattr(uint16_t drv, MXFSDD *dd, char *name,
-					XATTR *xattr, uint16_t mode);
-	int32_t xfs_attrib(uint16_t drv, MXFSDD *dd, char *name, uint16_t rwflag, uint16_t attr);
-	int32_t xfs_fchown(uint16_t drv, MXFSDD *dd, char *name, uint16_t uid, uint16_t gid);
-	int32_t xfs_fchmod(uint16_t drv, MXFSDD *dd, char *name, uint16_t fmode);
-	int32_t xfs_dcreate(uint16_t drv, MXFSDD *dd, char *name);
-	int32_t xfs_ddelete(uint16_t drv, MXFSDD *dd);
-	int32_t xfs_DD2name(uint16_t drv, MXFSDD *dd, char *buf, uint16_t bufsiz);
-	int32_t xfs_dopendir(MAC_DIRHANDLE *dirh, uint16_t drv, MXFSDD *dd, uint16_t tosflag);
-	int32_t xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
-			uint16_t size, char *buf, XATTR *xattr, int32_t *xr);
+                   uint16_t *dir_drive);
+	int32_t xfs_sfirst(XfsCookie *fc, char *name, MAC_DTA *dta, uint16_t attrib);
+	int32_t xfs_snext(uint16_t dev, MAC_DTA *dta);
+	int32_t xfs_fopen(XfsCookie *fc, const char *name, uint16_t omode, uint16_t attrib);
+	int32_t xfs_fdelete(XfsCookie *dir, const char *name);
+	int32_t xfs_link(XfsCookie *fromDir, char *fromname, XfsCookie *toDir, char *toname, uint16_t mode);
+	int32_t xfs_xattr(XfsCookie *fc, const char *name, XATTR *xattr, uint16_t mode);
+	int32_t xfs_stat64(XfsCookie *fc, const char *name, MINT_STAT64 *statp);
+	int32_t xfs_attrib(XfsCookie *fc, const char *name, uint16_t rwflag, uint16_t attr);
+	int32_t xfs_fchown(XfsCookie *fc, const char *name, uint16_t uid, uint16_t gid);
+	int32_t xfs_fchmod(XfsCookie *fc, const char *name, uint16_t fmode);
+	int32_t xfs_dcreate(XfsCookie *fc, const char *name);
+	int32_t xfs_ddelete(XfsCookie *fc);
+	int32_t xfs_DD2name(XfsCookie *fc, char *buf, uint16_t bufsiz);
+	int32_t xfs_dopendir(MAC_DIRHANDLE *dirh, XfsCookie *fc, uint16_t tosflag);
+	int32_t xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv, uint16_t size, char *buf, XATTR *xattr, int32_t *xr);
 	int32_t xfs_drewinddir(MAC_DIRHANDLE *dirh, uint16_t drv);
 	int32_t xfs_dclosedir(MAC_DIRHANDLE *dirh, uint16_t drv);
 	int32_t xfs_dpathconf(uint16_t drv, MXFSDD *dd, uint16_t which);
-	int32_t xfs_dfree(uint16_t drv, int32_t dirID, uint32_t data[4]);
+	int32_t xfs_dfree(XfsCookie *fc, uint32_t data[4]);
 	int32_t xfs_wlabel(uint16_t drv, MXFSDD *dd, char *name);
 	int32_t xfs_rlabel(uint16_t drv, MXFSDD *dd, char *name, uint16_t bufsiz);
-	int32_t xfs_readlink(uint16_t drv, MXFSDD *dd, char *name,
-					char *buf, uint16_t bufsiz);
-	int32_t xfs_dcntl(uint16_t drv, MXFSDD *dd, char *name, uint16_t cmd, void *pArg, unsigned char *AdrOffset68k);
+	int32_t xfs_readlink(XfsCookie *fc, const char *name, char *buf, uint16_t bufsiz);
+	int32_t xfs_symlink(XfsCookie *fc, const char *name, const char *to);
+	int32_t xfs_dcntl(XfsCookie *fc, const char *name, uint16_t cmd, uint32_t arg, void *pArg);
 
 	// Gerätetreiber
 
-	int32_t dev_close( MAC_FD *f );
-	int32_t dev_read( MAC_FD *f, int32_t count, char *buf );
-	int32_t dev_write( MAC_FD *f, int32_t count, char *buf );
-	int32_t dev_stat( MAC_FD *f, void *unsel, uint16_t rwflag, int32_t apcode );
-	int32_t dev_seek( MAC_FD *f, int32_t pos, uint16_t mode );
-	int32_t dev_datime( MAC_FD *f, uint16_t d[2], uint16_t rwflag );
-	int32_t dev_ioctl( MAC_FD *f, uint16_t cmd, void *buf );
-	int32_t dev_getc( MAC_FD *f, uint16_t mode );
-	int32_t dev_getline( MAC_FD *f, char *buf, int32_t size, uint16_t mode );
-	int32_t dev_putc( MAC_FD *f, uint16_t mode, int32_t val );
+	int32_t dev_close(MAC_FD *f);
+	int32_t dev_read(MAC_FD *f, int32_t count, char *buf);
+	int32_t dev_write(MAC_FD *f, int32_t count, char *buf);
+	int32_t dev_stat(MAC_FD *f, void *unsel, uint16_t rwflag, int32_t apcode);
+	int32_t dev_seek(MAC_FD *f, int32_t pos, uint16_t mode);
+	int32_t dev_datime(MAC_FD *f, uint16_t d[2], uint16_t rwflag);
+	int32_t dev_ioctl(MAC_FD *f, uint16_t cmd, void *buf);
+	int32_t dev_getc(MAC_FD *f, uint16_t mode);
+	int32_t dev_getline(MAC_FD *f, char *buf, int32_t size, uint16_t mode);
+	int32_t dev_putc(MAC_FD *f, uint16_t mode, int32_t val);
 
 	// Hilfsfunktionen
 
-	long cfss(int drv, long dirID, short vRefNum, unsigned char *name, FSSpec *fs,
-			bool fromAtari);
-	OSErr fsspec2DirID (int drv);
-	int32_t resolve_symlink( FSSpec *fs, uint16_t buflen, char *buf );
-	int32_t drv_open (uint16_t drv, bool onlyMountedVols);
-	int32_t vRefNum2drv(short vRefNum, uint16_t *drv);
-	int32_t MakeFSSpecManually( short vRefNum, long reldir,
-					char *macpath,
-					FSSpec *fs);
-	char getArchiveMask (CInfoPBRec *pb);
-	Byte mac2DOSAttr (CInfoPBRec *pb);
-	int32_t _snext(uint16_t drv, MAC_DTA *dta);
-	void cinfo_to_xattr( CInfoPBRec * pb, XATTR *xattr, uint16_t drv);
-	OSErr PathNameFromDirID( long dirid, short vrefnum,
-		char *fullpathname);
-	int32_t dospath2macpath( uint16_t drv, MXFSDD *dd,
-			char *dospath, char *macname);
-	int32_t xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to);
-	int32_t getCatInfo (uint16_t drv, CInfoPBRec *pb, bool resolveAlias);
+	void fetchXFSC(XfsCookie *fc, uint16_t drv, MXFSDD *dd);
+	char *cookie2Pathname(struct mount_info *drv, XfsFsFile *fs, const char *name, char *buf, bool insert_root);
+	char *cookie2Pathname(XfsCookie *fc, const char *name, char *buf, bool insert_root);
+	bool getHostFileName(char *result, struct mount_info *drv, const char *pathName, const char *name);
 
-	OSErr f_2_cinfo( MAC_FD *f, CInfoPBRec *pb, char *fname);
-	OSErr getFSSpecByFileRefNum (short fRefNum, FSSpec *spec, FCBPBRec *pb);
+	static char *my_canonicalize_file_name(const char *filename, bool append_slash);
+
+
+	DIR *host_opendir(const char *fpathName);
+	char *host_readlink(const char *pathname, char *target, int len);
+	int32_t host_statvfs(const char *fpathName, void *buff);
+
+	int32_t drv_open (uint16_t drv);
+	unsigned char mac2DOSAttr (struct stat *st);
+	int32_t _snext(MAC_DTA *dta);
+	void convert_to_xattr(struct stat *st, XATTR *xattr);
+	void convert_to_stat64(struct stat *st, MINT_STAT64 *statp);
 
 	void setDrivebits (uint32_t newbits, unsigned char *AdrOffset68k);
 };

@@ -29,10 +29,6 @@
 
 #ifndef __MWERKS__
 
-#if 0
-typedef unsigned long OSType;
-#endif
-
 typedef struct
 {
 	short	v;
@@ -45,7 +41,7 @@ typedef struct
 	OSType			fdCreator;		/* file's Creator */
 	unsigned short	fdFlags;		/* file's flags */
 	_ATARI_Point	fdLocation;		/* file's location in folder */
-	short			fdFldr;			/* (unsued) */
+	short			fdFldr;			/* (unused) */
 } _ATARI_FInfo;
 
 #endif
@@ -79,5 +75,57 @@ typedef struct
 #define MMEX_GETRSRCLEN 3	/* Dcntl         */
 #define MMEX_GETCATINFO 4	/* Dcntl & Fcntl */
 #define MMEX_SETCATINFO 5	/* Dcntl & Fcntl */
+
+/*
+ * MagiC opcodes (all group 'm' opcodes are reserved for MagiC)
+ */
+
+# define MX_KER_GETINFO         (('m'<< 8) | 0)         /* mgx_dos.txt */
+# define MX_KER_DOSLIMITS       (('m'<< 8) | 1)         /* mgx_dos.txt */
+# define MX_KER_INSTXFS         (('m'<< 8) | 2)         /* mgx_dos.txt */
+# define MX_KER_DRVSTAT         (('m'<< 8) | 4)         /* mgx_dos.txt */
+# define MX_KER_XFSNAME         (('m'<< 8) | 5)         /* mgx_dos.txt */
+# define MX_DEV_INSTALL         (('m'<< 8) | 0x20)      /* mgx_dos.txt */
+# define MX_DFS_GETINFO         (('m'<< 8) | 0x40)      /* mgx_dos.txt */
+# define MX_DFS_INSTDFS         (('m'<< 8) | 0x41)      /* mgx_dos.txt */
+
+/*
+ * from $FREEMINT_CVS/sys/mint/dcntl.h
+ */
+
+# define MINT_V_CNTR_WP	(('V'<< 8) | 100)		/* MiNT, write protect control */
+
+# define MINT_FS_INFO        0xf100
+# define MINT_FS_USAGE       0xf101
+
+# define MINT_FS_HOSTFS   (15L << 16)
+
+/*
+ * from $FREEMINT_CVS/sys/mint/ioctl.h
+ */
+
+# define MINT_FSTAT		(('F'<< 8) | 0)		/* handled by kernel */
+# define MINT_FIONREAD		(('F'<< 8) | 1)
+# define MINT_FIONWRITE		(('F'<< 8) | 2)
+# define MINT_FUTIME		(('F'<< 8) | 3)
+
+# define MINT_FTRUNCATE		(('F'<< 8) | 4)
+# define MINT_FIOEXCEPT		(('F'<< 8) | 5)
+
+# define MINT_FSTAT64		(('F'<< 8) | 6)		/* 1.15.4 extension, optional */
+# define MINT_FUTIME_UTC	(('F'<< 8) | 7)		/* 1.15.4 extension, optional */
+# define MINT_FIBMAP		(('F'<< 8) | 10)
+
+# define MINT_EXT2_IOC_GETFLAGS       (('f' << 8) | 1)
+# define MINT_EXT2_IOC_SETFLAGS       (('f' << 8) | 2)
+# define MINT_EXT2_IOC_GETVERSION_NEW (('f' << 8) | 3)
+# define MINT_EXT2_IOC_SETVERSION_NEW (('f' << 8) | 4)
+
+# define MINT_EXT2_IOC_GETVERSION     (('v' << 8) | 1)
+# define MINT_EXT2_IOC_SETVERSION     (('v' << 8) | 2)
+
+# define MINT_F_GETLK  5
+# define MINT_F_SETLK  6
+# define MINT_F_SETLKW 7
 
 #endif

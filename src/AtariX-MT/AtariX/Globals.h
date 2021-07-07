@@ -36,7 +36,7 @@
 
 #define MAX_ATARIMEMSIZE	(2U*1024U*1024U*1024U)		// 2 Gigabytes
 
-#define ATARI_PATH_MAX 1024
+#define MAXPATHNAMELEN PATH_MAX
 
 
 // global functions used by XCMD
@@ -77,17 +77,13 @@ class CGlobals
 {
      public:
 	CGlobals();
-	static uint8_t s_atariKernelPathUrl[ATARI_PATH_MAX];		// UTF8 encoded
-	static uint8_t s_atariRootfsPathUrl[ATARI_PATH_MAX];		// UTF8 encoded
-	static uint8_t s_atariScrapFileUnixPath[ATARI_PATH_MAX];
+	static char s_atariKernelPathUrl[MAXPATHNAMELEN];		// UTF8 encoded
+	static char s_atariRootfsPathUrl[MAXPATHNAMELEN];		// UTF8 encoded
+	static char s_atariScrapFileUnixPath[MAXPATHNAMELEN];
 	static int Init(void);
-	static OSErr GetDosPath(
-				const FSSpec *pSpec,
-				char *pBuf,
-				unsigned uBufLen);
 	static bool s_bRunning;
 	// der Ordner, in dem die ausführbare Datei bzw. das Bundle liegt
-	static char s_ThisPathNameUnix[ATARI_PATH_MAX];
+	static char s_ThisPathNameUnix[MAXPATHNAMELEN];
 	// Programmversion
 	static NumVersion s_ProgramVersion;
 	static CFURLRef s_MagiCKernelUrl;

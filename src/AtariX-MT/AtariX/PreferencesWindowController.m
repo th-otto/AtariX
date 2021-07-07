@@ -179,14 +179,14 @@ static const NSString *ATTableData[ATARI_NUM_DRIVES + 1] =
 
 - (id)tableView:(NSTableView *)aTableView
 objectValueForTableColumn:(NSTableColumn *)aTableColumn
-			row:(int)rowIndex
+			row:(NSInteger)rowIndex
 {
 	if (aTableView == outletAtariDrivesTableView)
 	{
 		NSString *columnId = aTableColumn.identifier;
 		id theValue;
 
-		NSLog(@"get object value for column %s and row %d", columnId.UTF8String, rowIndex);
+		NSLog(@"get object value for column %s and row %d", columnId.UTF8String, (int)rowIndex);
 
 #if 1
 		NSParameterAssert(rowIndex >= 0 && rowIndex < ATARI_NUM_DRIVES);

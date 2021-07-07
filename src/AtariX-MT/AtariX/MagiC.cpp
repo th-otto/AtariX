@@ -33,7 +33,6 @@
 #include "Atari.h"
 //#include "Dialogue68kExc.h"
 //#include "DialogueSysHalt.h"
-#include "PascalStrings.h"
 #include "missing.h"
 #include "_fcntl.h"
 #include "s_endian.h"
@@ -1667,8 +1666,7 @@ Reinstall the application.
 					'C'-'A',							// drvnum
 					CMacXFS::MacDir,					// drvType
 					CGlobals::s_rootfsUrl,				// path
-					(Globals.s_Preferences.m_drvFlags['C'-'A'] & M_DRV_DOSNAMES) ? false : true,	// lange Dateinamen
-					(Globals.s_Preferences.m_drvFlags['C'-'A'] & M_DRV_REVERSE_DIR_ORDER) ? true : false,	// umgekehrte Verzeichnis-Reihenfolge (Problem bei OS X 10.2!)
+					Globals.s_Preferences.m_drvFlags['C'-'A'],	// flags
 					m_RAM68k);
 	*((uint16_t *)(m_RAM68k + _bootdev)) = cpu_to_be16('C'-'A');	// Boot-Laufwerk C:
 
@@ -1711,7 +1709,7 @@ Reinstall the application.
 
 #endif
 
-	return(0);
+	return 0;
 }
 
 
@@ -1797,8 +1795,7 @@ void CMagiC::ChangeXFSDrive(short drvNr)
 	{
 		m_MacXFS.ChangeXFSDriveFlags(
 					drvNr,				// Laufwerknummer
-					(Globals.s_Preferences.m_drvFlags[drvNr] & M_DRV_DOSNAMES) ? false : true,	// lange Dateinamen
-					(Globals.s_Preferences.m_drvFlags[drvNr] & M_DRV_REVERSE_DIR_ORDER) ? true : false	// umgekehrte Verzeichnis-Reihenfolge (Problem bei OS X 10.2!)
+					Globals.s_Preferences.m_drvFlags[drvNr]	// flags
 					);
 	}
 	else
@@ -1809,8 +1806,7 @@ void CMagiC::ChangeXFSDrive(short drvNr)
 					drvNr,				// Laufwerknummer
 					NewType,			// Laufwerktyp: Mac-Verzeichnis oder nichts
 					Globals.s_Preferences.m_drvPath[drvNr],
-					(Globals.s_Preferences.m_drvFlags[drvNr] & M_DRV_DOSNAMES) ? false : true,	// lange Dateinamen
-					(Globals.s_Preferences.m_drvFlags[drvNr] & M_DRV_REVERSE_DIR_ORDER) ? true : false,	// umgekehrte Verzeichnis-Reihenfolge (Problem bei OS X 10.2!)
+					Globals.s_Preferences.m_drvFlags[drvNr],	// flags
 					m_RAM68k);
 		}
 }
@@ -1895,7 +1891,7 @@ int CMagiC::CreateThread( void )
 		return(errl);
 	}
 
-	return(0);
+	return 0;
 }
 
 
@@ -2158,7 +2154,7 @@ OSStatus CMagiC::EmuThread( void )
 //	SendMessageToMainThread(true, kHICommandQuit);		// veraltet?
 
 	m_bEmulatorIsRunning = false;
-	return(0);
+	return 0;
 }
 
 
@@ -2178,7 +2174,7 @@ int CMagiC::IRQCallback(int IRQLine, void *thisPtr)
 	cm->m_bInterruptPending = false;
 	if	(cm->m_bWaitEmulatorForIRQCallback)
 		Asgard68000SetExitImmediately();
-	return(0);
+	return 0;
 }
 #else
 int CMagiC::IRQCallback(int IRQLine)
@@ -2333,7 +2329,7 @@ int CMagiC::SendKeyboard(uint32_t message, bool KeyUp)
 
 
 #ifdef _DEBUG_NO_ATARI_KB_INTERRUPTS
-	return(0);
+	return 0;
 #endif
 
 	if (m_bEmulatorIsRunning)
@@ -2371,7 +2367,7 @@ int CMagiC::SendKeyboard(uint32_t message, bool KeyUp)
 #ifdef _DEBUG_KB_CRITICAL_REGION
 			DebugInfo("CMagiC::SendKeyboard() --- Exited critical region m_KbCriticalRegionId");
 #endif
-			return(0);		// unbekannte Taste
+			return 0;		// unbekannte Taste
 		}
 
 		if	(KeyUp)
@@ -2398,7 +2394,7 @@ int CMagiC::SendKeyboard(uint32_t message, bool KeyUp)
 #endif
 	}
 
-	return(0);	// OK
+	return 0;	// OK
 }
 #endif
 
@@ -2420,7 +2416,7 @@ int CMagiC::SendSdlKeyboard(int sdlScanCode, bool KeyUp)
 	
 	
 #ifdef _DEBUG_NO_ATARI_KB_INTERRUPTS
-	return(0);
+	return 0;
 #endif
 	
 	if (m_bEmulatorIsRunning)
@@ -2450,7 +2446,7 @@ int CMagiC::SendSdlKeyboard(int sdlScanCode, bool KeyUp)
 #ifdef _DEBUG_KB_CRITICAL_REGION
 			DebugInfo("CMagiC::SendKeyboard() --- Exited critical region m_KbCriticalRegionId");
 #endif
-			return(0);		// unbekannte Taste
+			return 0;		// unbekannte Taste
 		}
 		
 		if	(KeyUp)
@@ -2477,7 +2473,7 @@ int CMagiC::SendSdlKeyboard(int sdlScanCode, bool KeyUp)
 #endif
 	}
 	
-	return(0);	// OK
+	return 0;	// OK
 }
 
 
@@ -2501,7 +2497,7 @@ int CMagiC::SendKeyboardShift( uint32_t modifiers )
 
 
 #ifdef _DEBUG_NO_ATARI_KB_INTERRUPTS
-	return(0);
+	return 0;
 #endif
 
 	if (m_bEmulatorIsRunning)
@@ -2568,7 +2564,7 @@ int CMagiC::SendKeyboardShift( uint32_t modifiers )
 #endif
 	}
 
-	return(0);	// OK
+	return 0;	// OK
 }
 
 
@@ -2590,7 +2586,7 @@ int CMagiC::SendKeyboardShift( uint32_t modifiers )
 int CMagiC::SendMousePosition(int x, int y)
 {
 #ifdef _DEBUG_NO_ATARI_MOUSE_INTERRUPTS
-	return(0);
+	return 0;
 #endif
 
 	if (m_bEmulatorIsRunning)
@@ -2623,7 +2619,7 @@ int CMagiC::SendMousePosition(int x, int y)
 #endif
 	}
 
-	return(0);	// OK
+	return 0;	// OK
 }
 
 
@@ -2641,7 +2637,7 @@ int CMagiC::SendMousePosition(int x, int y)
 int CMagiC::SendMouseButton(unsigned int NumOfButton, bool bIsDown)
 {
 #ifdef _DEBUG_NO_ATARI_MOUSE_INTERRUPTS
-	return(0);
+	return 0;
 #endif
 
 	if (m_bEmulatorIsRunning)
@@ -2708,7 +2704,7 @@ int CMagiC::SendMouseButton(unsigned int NumOfButton, bool bIsDown)
 #endif
 	}
 
-	return(0);	// OK
+	return 0;	// OK
 }
 
 
@@ -2726,7 +2722,7 @@ int CMagiC::SendMouseButton(unsigned int NumOfButton, bool bIsDown)
 int CMagiC::SendHz200( void )
 {
 #ifdef _DEBUG_NO_ATARI_HZ200_INTERRUPTS
-	return(0);
+	return 0;
 #endif
 
 	if (m_bEmulatorIsRunning)
@@ -2750,7 +2746,7 @@ int CMagiC::SendHz200( void )
 				OS_SetEvent(
 							pTheMagiC->m_EventId,
 							EMU_EVNT_TERM);
-				return(0);
+				return 0;
 			}
 		}
 #endif
@@ -2766,7 +2762,7 @@ int CMagiC::SendHz200( void )
 			m_InterruptEventsId,
 			EMU_INTPENDING_200HZ);
 	}
-	return(0);	// OK
+	return 0;	// OK
 }
 
 
@@ -2783,7 +2779,7 @@ int CMagiC::SendHz200( void )
 int CMagiC::SendVBL( void )
 {
 #ifdef _DEBUG_NO_ATARI_VBL_INTERRUPTS
-	return(0);
+	return 0;
 #endif
 
 	if (m_bEmulatorIsRunning)
@@ -2799,7 +2795,7 @@ int CMagiC::SendVBL( void )
 			m_InterruptEventsId,
 			EMU_INTPENDING_VBL);
 	}
-	return(0);	// OK
+	return 0;	// OK
 }
 
 
@@ -2814,7 +2810,7 @@ uint32_t CMagiC::AtariInit(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
-	return(0);
+	return 0;
 }
 
 
@@ -2829,7 +2825,7 @@ uint32_t CMagiC::AtariBIOSInit(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
-	return(0);
+	return 0;
 }
 
 
@@ -2874,7 +2870,7 @@ uint32_t CMagiC::AtariVdiInit(uint32_t params, unsigned char *AdrOffset68k)
 		patchppc(AdrOffset68k);
 	}
 #endif
-	return(0);
+	return 0;
 }
 
 
@@ -2899,7 +2895,7 @@ uint32_t CMagiC::AtariExec68k(uint32_t params, unsigned char *AdrOffset68k)
 		uint32_t arg;
 	};
    	#pragma options align=reset
-	New68Context *pNew68Context = (New68Context *) params;
+	New68Context *pNew68Context = (New68Context *)(uintptr_t)params; /* FIXME: not yet 64bit clean */
 
 	if	(!pNew68Context)
 	{
@@ -2915,7 +2911,7 @@ uint32_t CMagiC::AtariExec68k(uint32_t params, unsigned char *AdrOffset68k)
 #else
 		m68k_StopExecution();
 #endif
-		return(0);
+		return 0;
 	}
 
 #if defined(USE_ASGARD_PPC_68K_EMU)
@@ -2989,7 +2985,7 @@ uint32_t CMagiC::AtariDOSFn(uint32_t params, unsigned char *AdrOffset68k)
 	AtariDOSFnParm *theAtariDOSFnParm = (AtariDOSFnParm *) (AdrOffset68k + params);
 #endif
 	DebugInfo("CMagiC::AtariDOSFn(fn = 0x%x)", be16_to_cpu(theAtariDOSFnParm->dos_fnr));
-	return((uint32_t) TOS_EINVFN);
+	return TOS_EINVFN;
 }
 
 
@@ -3062,7 +3058,7 @@ uint32_t CMagiC::AtariSetpalette(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params,AdrOffset68k)
 	DebugWarning("CMagiC::AtariSetpalette() -- nicht unterstützt");
-	return(0);
+	return 0;
 }
 
 
@@ -3077,7 +3073,7 @@ uint32_t CMagiC::AtariSetcolor(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params,AdrOffset68k)
 	DebugWarning("CMagiC::AtariSetcolor() -- nicht unterstützt");
-	return(0);
+	return 0;
 }
 
 
@@ -3128,7 +3124,7 @@ uint32_t CMagiC::AtariVsetRGB(uint32_t params, unsigned char *AdrOffset68k)
 
 	(void) atomic_exchange(p_bVideoBufChanged, 1);
 
-	return(0);
+	return 0;
 }
 
 
@@ -3186,7 +3182,7 @@ uint32_t CMagiC::AtariVgetRGB(uint32_t params, unsigned char *AdrOffset68k)
 #endif
 	}
 
-	return(0);
+	return 0;
 }
 
 
@@ -3246,7 +3242,7 @@ uint32_t CMagiC::AtariSysHalt(uint32_t params, unsigned char *AdrOffset68k)
 
 	SendSysHaltReason(ErrMsg);
 	pTheMagiC->StopExec();
-	return(0);
+	return 0;
 }
 
 
@@ -3309,7 +3305,7 @@ uint32_t CMagiC::AtariSysErr(uint32_t params, unsigned char *AdrOffset68k)
 				AtariPrgFname,
 				act_pd);
 
-	return(0);
+	return 0;
 }
 
 
@@ -3327,7 +3323,7 @@ uint32_t CMagiC::AtariColdBoot(uint32_t params, unsigned char *AdrOffset68k)
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
 	DebugInfo("CMagiC::AtariColdBoot()");
-	return(0);
+	return 0;
 }
 
 
@@ -3369,7 +3365,7 @@ uint32_t CMagiC::AtariExit(uint32_t params, unsigned char *AdrOffset68k)
 		DebugInfo("### VideoRamWriteCounter(%2d) = %d", i, WriteCounters[i]);
 #endif
 #endif
-	return(0);
+	return 0;
 }
 
 /**********************************************************************
@@ -3405,7 +3401,7 @@ uint32_t CMagiC::AtariEnosys(uint32_t params, unsigned char *AdrOffset68k)
 #pragma unused(AdrOffset68k)
 	MyAlert(ALRT_ILLEGAL_FUNC, kAlertStopAlert);
 	pTheMagiC->StopExec();	// fatal error for execution thread
-	return(0);
+	return 0;
 }
 
 
@@ -3480,7 +3476,7 @@ uint32_t CMagiC::AtariError(uint32_t params, unsigned char *AdrOffset68k)
 	 */
 	MyAlert(ALRT_NO_VIDEO_DRIVER, kAlertStopAlert);
 	pTheMagiC->StopExec();	// fatal error for execution thread
-	return(0);
+	return 0;
 }
 
 
@@ -3517,9 +3513,9 @@ uint32_t CMagiC::AtariPrtIn(uint32_t params, unsigned char *AdrOffset68k)
 #pragma unused(AdrOffset68k)
 	n = pThePrint->Read(&c, 1);
 	if	(!n)
-		return(0);
+		return 0;
 	else
-		return(c);
+		return c;
 }
 
 
@@ -3541,9 +3537,9 @@ uint32_t CMagiC::AtariPrtOut(uint32_t params, unsigned char *AdrOffset68k)
 	// Zeitpunkt (200Hz) des letzten Druckerzugriffs merken
 	s_LastPrinterAccess = be32_to_cpu(*((uint32_t *) (AdrOffset68k + _hz_200)));
 	if	(ret == 1)
-		return(0xffffffff);		// OK
+		return -1;		// OK
 	else
-		return(0);				// Fehler
+		return 0;				// Fehler
 }
 
 
@@ -3597,26 +3593,26 @@ uint32_t CMagiC::OpenSerialBIOS(void)
 	// schon geöffnet => OK
 	if	(m_bBIOSSerialUsed)
 	{
-		return(0);
+		return TOS_E_OK;
 	}
 
 	// schon vom DOS geöffnet => Fehler
 	if	(m_MagiCSerial.IsOpen())
 	{
 		DebugError("CMagiC::OpenSerialBIOS() -- schon vom DOS geöffnet => Fehler");
-		return((uint32_t) TOS_ERROR);
+		return TOS_ERROR;
 	}
 
 	if	(-1 == (int) m_MagiCSerial.Open(CGlobals::s_Preferences.m_szAuxPath))
 	{
 		DebugInfo("CMagiC::OpenSerialBIOS() -- kann \"%s\" nicht öffnen.", CGlobals::s_Preferences.m_szAuxPath);
-		return((uint32_t) TOS_ERROR);
+		return TOS_ERROR;
 	}
 
 	m_bBIOSSerialUsed = true;
 	DebugWarning("CMagiC::OpenSerialBIOS() -- Serielle Schnittstelle vom BIOS geöffnet.");
 	DebugWarning("   Jetzt kann sie nicht mehr geschlossen werden!");
-	return(0);
+	return TOS_E_OK;
 }
 
 
@@ -3683,7 +3679,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 	if	(pTheMagiC->OpenSerialBIOS())
 	{
 		DebugInfo("CMagiC::AtariSerConf() -- kann serielle Schnittstelle nicht öffnen => Fehler.");
-		return((uint32_t) TOS_ERROR);
+		return TOS_ERROR;
 	}
 
 	SerConfParm *theSerConfParm = (SerConfParm *) (AdrOffset68k + params);
@@ -3720,38 +3716,38 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 			case TIOCBUFFER:
 				// Inquire/Set buffer settings
 				DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCBUFFER) -- nicht unterstützt");
-				ret = (uint32_t) TOS_EINVFN;
+				ret = TOS_EINVFN;
 				break;
 
 			case TIOCCTLMAP:
 				// Inquire I/O-lines and signaling capabilities
 				DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLMAP) -- nicht unterstützt");
-				ret = (uint32_t) TOS_EINVFN;
+				ret = TOS_EINVFN;
 				break;
 
 			case TIOCCTLGET:
 				// Inquire I/O-lines and signals
 				DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLGET) -- nicht unterstützt");
-				ret = (uint32_t) TOS_EINVFN;
+				ret = TOS_EINVFN;
 				break;
 
 			case TIOCCTLSET:
 				// Set I/O-lines and signals
 				DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLSET) -- nicht unterstützt");
-				ret = (uint32_t) TOS_EINVFN;
+				ret = TOS_EINVFN;
 				break;
 
 			case TIOCGPGRP:
 				//get terminal process group
 				DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCGPGRP) -- nicht unterstützt");
-				ret = (uint32_t) TOS_EINVFN;
+				ret = TOS_EINVFN;
 				break;
 
 			case TIOCSPGRP:
 				//set terminal process group
 				grp = be32_to_cpu(*((uint32_t *) (AdrOffset68k + be32_to_cpu(theSerConfParm->parm))));
 				DebugInfo("CMagiC::AtariSerConf() -- Fcntl(TIOCSPGRP, %d)", (uint32_t) grp);
-				ret = (uint32_t) TOS_EINVFN;
+				ret = TOS_EINVFN;
 				break;
 
 			case TIOCFLUSH:
@@ -3784,7 +3780,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 						break;
 
 					default:
-						ret = (uint32_t) TOS_EINVFN;
+						ret = TOS_EINVFN;
 						break;
 				}
 				break;
@@ -3851,7 +3847,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 
 				*((uint32_t *) (AdrOffset68k + be32_to_cpu(theSerConfParm->parm))) = cpu_to_be32(OldBaudrate);
 				if	((int) ret == -1)
-					ret = (uint32_t) TOS_ERANGE;
+					ret = TOS_ERANGE;
 				break;
 
 			case TIOCGFLAGS:
@@ -3925,7 +3921,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 				nStopBits = flags & 3U;
 				DebugInfo("CMagiC::AtariSerConf() -- %d Stop-Bits%s", nStopBits, (nStopBits == 0) ? " (Synchron-Modus?)" : "");
 				if	((nStopBits == 0) || (nStopBits == 2))
-					return((uint32_t) TOS_ERANGE);
+					return TOS_ERANGE;
 				if	(nStopBits == 3)
 					nStopBits = 2;
 				ret = pTheSerial->Config(
@@ -3954,12 +3950,12 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 							nStopBits,
 							NULL);
 				if	((int) ret == -1)
-					ret = (uint32_t) TOS_ERANGE;
+					ret = TOS_ERANGE;
 				break;
 
 			default:
 				DebugError("CMagiC::AtariSerConf() -- Fcntl(0x%04x -- unbekannt", be16_to_cpu(theSerConfParm->cmd) & 0xffff);
-				ret = (uint32_t) TOS_EINVFN;
+				ret = TOS_EINVFN;
 				break;
 		}
 		return(ret);
@@ -3981,7 +3977,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 	if	(be16_to_cpu(theSerConfParm->baud) >= sizeof(baudtable)/sizeof(baudtable[0]))
 	{
 		DebugError("CMagiC::AtariSerConf() -- ungültige Baudrate von Rsconf()");
-		return((uint32_t) TOS_ERANGE);
+		return TOS_ERANGE;
 	}
 
 	nBits = nBitsTable[(be16_to_cpu(theSerConfParm->ucr) >> 5) & 3];
@@ -4035,10 +4031,10 @@ uint32_t CMagiC::AtariSerIs(uint32_t params, unsigned char *AdrOffset68k)
 	// serielle Schnittstelle öffnen, wenn nötig
 	if	(!pTheMagiC->OpenSerialBIOS())
 	{
-		return(0);
+		return 0;
 	}
 
-	return(pTheSerial->ReadStatus() ? 0xffffffff : 0);
+	return pTheSerial->ReadStatus() ? -1 : 0;
 }
 
 
@@ -4062,10 +4058,10 @@ uint32_t CMagiC::AtariSerOs(uint32_t params, unsigned char *AdrOffset68k)
 	// serielle Schnittstelle öffnen, wenn nötig
 	if	(!pTheMagiC->OpenSerialBIOS())
 	{
-		return(0);
+		return 0;
 	}
 
-	return(pTheSerial->WriteStatus() ? 0xffffffff : 0);
+	return pTheSerial->WriteStatus() ? -1 : 0;
 }
 
 
@@ -4092,7 +4088,7 @@ uint32_t CMagiC::AtariSerIn(uint32_t params, unsigned char *AdrOffset68k)
 	// serielle Schnittstelle öffnen, wenn nötig
 	if	(!pTheMagiC->OpenSerialBIOS())
 	{
-		return(0);
+		return 0;
 	}
 
 	ret = pTheSerial->Read(1, &c);
@@ -4124,7 +4120,7 @@ uint32_t CMagiC::AtariSerOut(uint32_t params, unsigned char *AdrOffset68k)
 	// serielle Schnittstelle öffnen, wenn nötig
 	if	(!pTheMagiC->OpenSerialBIOS())
 	{
-		return(0);
+		return 0;
 	}
 
 	return(pTheSerial->Write(1, (char *) AdrOffset68k + params + 1));
@@ -4152,23 +4148,23 @@ uint32_t CMagiC::AtariSerOpen(uint32_t params, unsigned char *AdrOffset68k)
 	if	(pTheMagiC->m_bBIOSSerialUsed)
 	{
 		DebugInfo("CMagiC::AtariSerOpen() -- schon durch BIOS geöffnet => OK");
-		return(0);
+		return TOS_E_OK;
 	}
 
 	// schon vom DOS geöffnet => Fehler
 	if	(pTheMagiC->m_MagiCSerial.IsOpen())
 	{
 		DebugInfo("CMagiC::AtariSerOpen() -- schon vom DOS geöffnet => Fehler");
-		return((uint32_t) TOS_EACCDN);
+		return TOS_EACCDN;
 	}
 
 	if	(-1 == (int) pTheMagiC->m_MagiCSerial.Open(CGlobals::s_Preferences.m_szAuxPath))
 	{
 		DebugInfo("CMagiC::AtariSerOpen() -- kann \"%s\" nicht öffnen.", CGlobals::s_Preferences.m_szAuxPath);
-		return((uint32_t) TOS_ERROR);
+		return TOS_ERROR;
 	}
 
-	return(0);
+	return TOS_E_OK;
 }
 
 
@@ -4191,20 +4187,20 @@ uint32_t CMagiC::AtariSerClose(uint32_t params, unsigned char *AdrOffset68k)
 
 	// schon durch BIOS geöffnet => OK
 	if	(pTheMagiC->m_bBIOSSerialUsed)
-		return(0);
+		return TOS_E_OK;
 
 	// nicht vom DOS geöffnet => Fehler
 	if	(!pTheMagiC->m_MagiCSerial.IsOpen())
 	{
-		return((uint32_t) TOS_EACCDN);
+		return TOS_EACCDN;
 	}
 
 	if	(pTheMagiC->m_MagiCSerial.Close())
 	{
-		return((uint32_t) TOS_ERROR);
+		return TOS_ERROR;
 	}
 
-	return(0);
+	return TOS_E_OK;
 }
 
 
@@ -4347,38 +4343,38 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 		case TIOCBUFFER:
 			// Inquire/Set buffer settings
 			DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCBUFFER) -- nicht unterstützt");
-			ret = (uint32_t) TOS_EINVFN;
+			ret = TOS_EINVFN;
 			break;
 
 		case TIOCCTLMAP:
 			// Inquire I/O-lines and signaling capabilities
 			DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLMAP) -- nicht unterstützt");
-			ret = (uint32_t) TOS_EINVFN;
+			ret = TOS_EINVFN;
 			break;
 
 		case TIOCCTLGET:
 			// Inquire I/O-lines and signals
 			DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLGET) -- nicht unterstützt");
-			ret = (uint32_t) TOS_EINVFN;
+			ret = TOS_EINVFN;
 			break;
 
 		case TIOCCTLSET:
 			// Set I/O-lines and signals
 			DebugWarning("CMagiC::AtariSerConf() -- Fcntl(TIOCCTLSET) -- nicht unterstützt");
-			ret = (uint32_t) TOS_EINVFN;
+			ret = TOS_EINVFN;
 			break;
 
 		case TIOCGPGRP:
 			//get terminal process group
 			DebugWarning("CMagiC::AtariSerIoctl() -- Fcntl(TIOCGPGRP) -- nicht unterstützt");
-			ret = (uint32_t) TOS_EINVFN;
+			ret = TOS_EINVFN;
 			break;
 
 		case TIOCSPGRP:
 			//set terminal process group
 			grp = be32_to_cpu(*((uint32_t *) (AdrOffset68k + be32_to_cpu(theSerIoctlParm->parm))));
 			DebugInfo("CMagiC::AtariSerIoctl() -- Fcntl(TIOCSPGRP, %d)", (uint32_t) grp);
-			ret = (uint32_t) TOS_EINVFN;
+			ret = TOS_EINVFN;
 			break;
 
 		case TIOCFLUSH:
@@ -4411,7 +4407,7 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 					break;
 
 				default:
-					ret = (uint32_t) TOS_EINVFN;
+					ret = TOS_EINVFN;
 					break;
 			}
 			break;
@@ -4478,7 +4474,7 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 
 			*((uint32_t *) (AdrOffset68k + be32_to_cpu(theSerIoctlParm->parm))) = cpu_to_be32(OldBaudrate);
 			if	((int) ret == -1)
-				ret = (uint32_t) TOS_ERANGE;
+				ret = TOS_ERANGE;
 			break;
 
 		case TIOCGFLAGS:
@@ -4552,7 +4548,7 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 			nStopBits = flags & 3U;
 			DebugInfo("CMagiC::AtariSerIoctl() -- %d Stop-Bits%s", nStopBits, (nStopBits == 0) ? " (Synchron-Modus?)" : "");
 			if	((nStopBits == 0) || (nStopBits == 2))
-				return((uint32_t) TOS_ERANGE);
+				return TOS_ERANGE;
 			if	(nStopBits == 3)
 				nStopBits = 2;
 			ret = pTheSerial->Config(
@@ -4581,16 +4577,16 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 						nStopBits,
 						NULL);
 			if	((int) ret == -1)
-				ret = (uint32_t) TOS_ERANGE;
+				ret = TOS_ERANGE;
 			break;
 
 		default:
 			DebugError("CMagiC::AtariSerIoctl() -- Fcntl(0x%04x -- unbekannt", be16_to_cpu(theSerIoctlParm->cmd) & 0xffff);
-			ret = (uint32_t) TOS_EINVFN;
+			ret = TOS_EINVFN;
 			break;
 	}
 
-	return(ret);
+	return ret;
 }
 
 
@@ -4621,7 +4617,7 @@ uint32_t CMagiC::AtariYield(uint32_t params, unsigned char *AdrOffset68k)
 
 	YieldParm *theYieldParm = (YieldParm *) (AdrOffset68k + params);
 	if	(be32_to_cpu(theYieldParm->num))
-		return(0);
+		return 0;
 
 //	MPYield();
 
@@ -4632,10 +4628,10 @@ uint32_t CMagiC::AtariYield(uint32_t params, unsigned char *AdrOffset68k)
 	if	(err)
 	{
 		DebugError("CMagiC::EmuThread() -- Fehler bei MPWaitForEvent");
-		return(0);
+		return 0;
 	}
 
-	return(0);
+	return 0;
 }
 
 
@@ -4693,7 +4689,7 @@ uint32_t CMagiC::AtariGetKeyboardOrMouseData(uint32_t params, unsigned char *Adr
 		DebugInfo("CMagiC::AtariGetKeyboardOrMouseData() --- Exited critical region m_KbCriticalRegionId");
 #endif
 		DebugError("AtariGetKeyboardOrMouseData() --- Keine Daten");
-		return(0);					// kein Zeichen?
+		return 0;					// kein Zeichen?
 	}
 
 	ret = *m_pKbRead++;
@@ -4749,7 +4745,7 @@ uint32_t CMagiC::MmxDaemon(uint32_t params, unsigned char *AdrOffset68k)
 				m_iNoOfAtariFiles--;
 			}
 			else
-				ret = (uint32_t) TOS_EFILNF;
+				ret = TOS_EFILNF;
 			OS_ExitCriticalRegion(m_AECriticalRegionId);
 			break;
 
@@ -4763,5 +4759,5 @@ uint32_t CMagiC::MmxDaemon(uint32_t params, unsigned char *AdrOffset68k)
 			break;
 	}
 
-	return(ret);
+	return ret;
 }

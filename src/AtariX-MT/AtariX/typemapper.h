@@ -66,7 +66,6 @@ class NativeTypeMapper
 		typename std::map<nativeType, atariType>::iterator it = n2a.find(value);
 
 		// test if present
-		it = n2a.find(value);
 		if (it != n2a.end())
 			return it->second;
 
@@ -75,21 +74,17 @@ class NativeTypeMapper
 		// 32bits as the default hash value
 		atariType aValue = (atariType)(uintptr_t)value;
 
-#if DEBUG_FORCE_NON32BIT
-		// easier NativeTypeMapper functionality debugging
-		aValue &= 0x1fL;
-#endif
 		// make the aValue unique (test if present and increase if positive)
 		while (a2n.find(aValue) != a2n.end())
 		{
 #if DEBUG_FORCE_NON32BIT
-			fprintf(stderr, "NTM: Conflicting mapping %x [%d]\n", aValue, a2n.size());
+			fprintf(stderr, "NTM: Conflicting mapping %lx [%ld]\n", (unsigned long)aValue, (long)a2n.size());
 #endif
 			aValue += 7;
 		}
 
 #if DEBUG_FORCE_NON32BIT
-		fprintf(stderr, "NTM: mapping %x [%d]\n", aValue, a2n.size());
+		fprintf(stderr, "NTM: mapping %p -> %lx [%ld]\n", (void *)value, (unsigned long)aValue, (long)a2n.size());
 #endif
 		// put the values into maps (both direction search possible)
 		a2n.insert(std::make_pair(aValue, value));
@@ -133,14 +128,12 @@ class NativeTypeMapper
 # define MAP32TOVOIDP(x)  memptrMapper.getNative(x)
 # define MAPVOIDPTO32(x)  memptrMapper.get32bit(x)
 
-extern NativeTypeMapper <void *, uint32_t> memptrMapper;
-
 #else
 
-# define MAPNEWVOIDP(x)
+# define MAPNEWVOIDP(x)   ((uint32_t)(x))
 # define MAPDELVOIDP(x)
 # define MAP32TOVOIDP(x)  x
-# define MAPVOIDPTO32(x)  x
+# define MAPVOIDPTO32(x)  ((uint32_t)(x))
 
 #endif
 

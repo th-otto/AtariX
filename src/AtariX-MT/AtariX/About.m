@@ -182,7 +182,7 @@ static NSTextField *urllabel(const char *format, const char *display, const char
 		return nil;
 	}
 	[self cascadeTopLeftFromPoint:NSMakePoint(20, 20)];
-	[self setTitle: NSLocalizedString(@"HypView Versionsinfo", nil)];
+	[self setTitle: NSLocalizedString(@"AtariX Versionsinfo", nil)];
 
 	vbox = [[[NSStackView alloc] init] autorelease];
 	[vbox setSpacing: 10];
@@ -192,10 +192,18 @@ static NSTextField *urllabel(const char *format, const char *display, const char
 	[self setContentView: vbox];
 	hbox = [[[NSStackView alloc] init] autorelease];
 	[hbox setSpacing: 10];
+	[hbox setAlignment: NSLayoutAttributeCenterX];
 	[vbox addView:hbox inGravity: NSStackViewGravityLeading];
 	image = [NSImageView imageViewWithImage: NSApp.applicationIconImage];
+	[image setAlignment: NSLayoutAttributeCenterX];
 	[hbox addView:image inGravity: NSStackViewGravityLeading];
 
+	hbox = [[[NSStackView alloc] init] autorelease];
+	[hbox setSpacing: 10];
+	[hbox setEdgeInsets: NSEdgeInsetsMake(10, 10, 10, 10)];
+	[hbox setAlignment: NSLayoutAttributeCenterX];
+	[vbox addView:hbox inGravity: NSStackViewGravityLeading];
+	
 	vbox2 = [[[NSStackView alloc] init] autorelease];
 	[vbox2 setOrientation: NSUserInterfaceLayoutOrientationVertical];
 	[vbox2 setAlignment: NSLayoutAttributeLeft];

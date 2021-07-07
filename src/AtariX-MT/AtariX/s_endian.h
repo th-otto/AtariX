@@ -24,13 +24,17 @@
 #endif
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#  define cpu_to_be64(x) (x)
 #  define cpu_to_be32(x) (x)
 #  define cpu_to_be16(x) (x)
+#  define be64_to_cpu(x) (x)
 #  define be32_to_cpu(x) (x)
 #  define be16_to_cpu(x) (x)
 #else
+#  define cpu_to_be64(x) ntohll(x)
 #  define cpu_to_be32(x) ntohl(x)
 #  define cpu_to_be16(x) ntohs(x)
+#  define be64_to_cpu(x) htonll(x)
 #  define be32_to_cpu(x) htonl(x)
 #  define be16_to_cpu(x) htons(x)
 #endif

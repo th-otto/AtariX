@@ -27,7 +27,6 @@
 #include <machine/endian.h>
 // Programm-Header
 #include "MyPreferences.h"
-#include "PascalStrings.h"
 #include "Globals.h"
 
 // Schalter

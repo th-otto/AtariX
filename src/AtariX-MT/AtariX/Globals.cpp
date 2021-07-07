@@ -28,27 +28,22 @@
 #include <machine/endian.h>
 // Programm-Header
 #include "Globals.h"
-#include "PascalStrings.h"
-extern "C" {
-#include "MyMoreFiles.h"
-}
-#include "FullPath.h"
 #include "Debug.h"
 
 const char scrapFileName[] = "/GEMSYS/GEMSCRAP/SCRAP.TXT";
 
 
 bool CGlobals::s_bRunning;
-uint8_t CGlobals::s_atariKernelPathUrl[ATARI_PATH_MAX];
-uint8_t CGlobals::s_atariRootfsPathUrl[ATARI_PATH_MAX];
-uint8_t CGlobals::s_atariScrapFileUnixPath[ATARI_PATH_MAX];
+char CGlobals::s_atariKernelPathUrl[MAXPATHNAMELEN];
+char CGlobals::s_atariRootfsPathUrl[MAXPATHNAMELEN];
+char CGlobals::s_atariScrapFileUnixPath[MAXPATHNAMELEN];
 
 /*
  * hier liegt die ausführbare Datei
  * FIXME: only used by printing, for the temp print files
  * FIXME2: there should be a better place for those files
  */
-char CGlobals::s_ThisPathNameUnix[ATARI_PATH_MAX];
+char CGlobals::s_ThisPathNameUnix[MAXPATHNAMELEN];
 
 NumVersion CGlobals::s_ProgramVersion;
 CFURLRef CGlobals::s_MagiCKernelUrl;
@@ -95,12 +90,10 @@ int CGlobals::Init(void)
 	if (s_atariKernelPathUrl[0])
 	{
 		// convert UTF8 encoded byte array containing URL to CFString
-		theString = CFStringCreateWithBytes(
+		theString = CFStringCreateWithCString(
 								NULL,							// CFAllocatorRef alloc,
 								s_atariKernelPathUrl,			// const UInt8 *bytes,
-								strlen((const char *) s_atariKernelPathUrl),	// CFIndex numBytes,
-								kCFStringEncodingUTF8,			// CFStringEncoding encoding,
-								false							// Boolean isExternalRepresentation
+								kCFStringEncodingUTF8			// CFStringEncoding encoding,
 								);
 
 
@@ -115,12 +108,10 @@ int CGlobals::Init(void)
 	}
 
 	// convert UTF8 encoded byte array containing URL to CFString
-	theString = CFStringCreateWithBytes(
+	theString = CFStringCreateWithCString(
 										NULL,							// CFAllocatorRef alloc,
 										s_atariRootfsPathUrl,			// const UInt8 *bytes,
-										strlen((const char *) s_atariRootfsPathUrl),	// CFIndex numBytes,
-										kCFStringEncodingUTF8,			// CFStringEncoding encoding,
-										false							// Boolean isExternalRepresentation
+										kCFStringEncodingUTF8			// CFStringEncoding encoding,
 										);
 	
 	
@@ -140,10 +131,10 @@ int CGlobals::Init(void)
 	// Get Atari scrap file URL
 	if (CFURLGetFileSystemRepresentation(CGlobals::s_rootfsUrl,
 										 true,
-										 s_atariScrapFileUnixPath,
+										 (uint8_t *)s_atariScrapFileUnixPath,
 										 sizeof(s_atariScrapFileUnixPath) - strlen(scrapFileName)))
 	{
-		strcat((char *) s_atariScrapFileUnixPath, scrapFileName);
+		strcat(s_atariScrapFileUnixPath, scrapFileName);
 		DebugInfo("CClipboard::Mac2Atari() --- scrap file is \"%s\".\n", s_atariScrapFileUnixPath);
 	}
 
@@ -167,46 +158,4 @@ int CGlobals::Init(void)
 	// or use CFBundleGetValueForInfoDictionaryKey with the key kCFBundleVersionKey
 
 	return(0);
-}
-
-
-/*****************************************************************
-*
-*  Berechne DOS-Pfad (M:\xxxx) aus FSSpec
-*
-******************************************************************/
-
-OSErr CGlobals::GetDosPath
-(
-	const FSSpec *pSpec,
-	char *pBuf,
-	unsigned uBufLen
-)
-{
-	OSErr err;
-	Handle hFullPath;
-	short FullPathLen;
-	char *s;
-
-
-	err = FSpGetFullPath(pSpec, &FullPathLen, &hFullPath);
-	if	((!err) && (FullPathLen))
-	{
-		HLock(hFullPath);
-		if	((unsigned) FullPathLen < uBufLen-4)
-		{
-			memcpy(pBuf, "M:\\", 3);
-			memcpy(pBuf + 3, (const unsigned char *) (*hFullPath), FullPathLen);
-			pBuf[FullPathLen + 3] = '\0';
-			DebugInfo("CGlobals::GetDosPath() -- Fullpath (Carbon) = %s", pBuf + 3);
-			while((s = strchr(pBuf + 3, ':')) != NULL)
-			{
-				*s = '\\';
-			}
-			DebugInfo("CGlobals::GetDosPath() -- Fullpath (DOS) = %s", pBuf);
-		}
-		DisposeHandle(hFullPath);
-	}
-
-	return(err);
 }

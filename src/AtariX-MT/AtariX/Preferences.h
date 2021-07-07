@@ -33,7 +33,6 @@ class CPreferences
 	~CPreferences();
 	// Initialisierung
 	int Init(const char *name, OSType Creator, OSType PrefsType);
-//	void SetFSSpec(FSSpec *spec);
 	int Open(void);
 	void Update(void);
 	void Close(void);
@@ -54,7 +53,5 @@ class CPreferences
 	// Attribute
 	OSType m_Creator;
 	OSType m_PrefsType;
-	// statische Attribute
-	static FSSpec s_PrefsFolderFspec;
 	// statische Funktionen
 };

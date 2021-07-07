@@ -27,18 +27,11 @@ class CTextConversion
    public:
 	// Initialisierung
 	static int Init( void );
-	static void Atari2MacFilename(unsigned char *s);
-	static unsigned char Atari2MacFilename(unsigned char c);
-	static unsigned char Atari2MacText(unsigned char c);
-	static void Mac2AtariFilename(unsigned char *s);
-	static unsigned char Mac2AtariFilename(unsigned char c);
-	static unsigned char Mac2AtariText(unsigned char c);
+	static void Atari2HostUtf8Copy(char *dst, const char *src, size_t count);
+	static void Host2AtariUtf8Copy(char *dst, const char *src, size_t count);
 
    private:
 	// Funktionen
 	// Attribute
-	static unsigned const char s_tabAtari2MacText[256];
-	static unsigned const char s_tabMac2AtariText[256];
-	static unsigned const char s_tabAtari2MacFilename[256];
-	static unsigned const char s_tabMac2AtariFilename[256];
+	static void charset_conv_error(unsigned short ch);
 };

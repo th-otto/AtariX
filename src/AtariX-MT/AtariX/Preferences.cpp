@@ -29,18 +29,11 @@
 // Programm-Header
 #include "Globals.h"
 #include "Debug.h"
-#include "PascalStrings.h"
 //#include "Preferences.h"
-extern "C" {
-#include "MyMoreFiles.h"
-}
 
 // Schalter
 #define OLDOSVERSIONS	1
 
-
-// statische Attribute:
-FSSpec CPreferences::s_PrefsFolderFspec;
 
 /**********************************************************************
 *
@@ -338,81 +331,6 @@ long CPreferences::GetRsrcNum(CFStringRef key, long deflt, bool bAdd)
 	return(0);
 */
 }
-
-
-/**********************************************************************
-*
-* Holt ein Zeichenketten-Feld
-* Rückgabe: Anzahl der Zeichenketten
-*
-* DOCTYPES: "APP,PRG,TTP,TOS=MgMx/Gem1"
-*
-**********************************************************************/
-
-/* no longer used
-void CPreferences::GetRsrcStringArray
-(
-	const unsigned char *name,
-	char ***str,
-	UInt16 *len,
-	void *pDeflt,
-	short DfltLen
-)
-{
-	Handle hdl;
-	short oldres;
-	SInt16 theID;
-	ResType theType;
-	Str255 theString;
-	SInt16 index;
-
-
-	oldres = CurResFile();			// aktuelle Resourcedatei retten
-	UseResFile(m_PrefsFile);		// Preferences durchsuchen
-	hdl = Get1NamedResource('STR#', name);	// Resource suchen
-
-	*len = 0;
-	index = 0;
-
-	if	((!hdl) && (pDeflt))
-	{
-		AddRsrc(name, 'STR#', pDeflt, DfltLen);
-		hdl = Get1NamedResource('STR#', name);	// Resource suchen
-	}
-
-	if	(hdl)
-	{
-		GetResInfo(hdl, &theID, &theType,  theString);
-		do
-		{
-			GetIndString(theString, theID, (short) (index+1));
-			if	(theString[0])
-			{
-				if	(!*str)
-				{
-					*str = (char **)malloc(MAX_STR_ARRAY * sizeof(char *));
-					if	(!(*str))
-						return;
-				}
-
-				(*str)[index] = (char *) malloc((size_t) (theString[0] + 1));
-				if	(!((*str)[index - 1]))
-					return;
-				p2cstrcpy((*str)[index], theString);
-				index++;
-			}
-		}
-		while((theString[0]) && (index < MAX_STR_ARRAY));
-
-		*len = (UInt16) index;
-		if	(index)
-			realloc(*str, index * sizeof(char *));
-		ReleaseResource(hdl);
-	}
-
-	UseResFile(oldres);
-}
-*/
 
 
 /**********************************************************************

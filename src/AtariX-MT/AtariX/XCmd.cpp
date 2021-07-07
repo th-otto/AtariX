@@ -30,20 +30,27 @@
 // Programm-Header
 #include "Debug.h"
 #include "Globals.h"
-#include "PascalStrings.h"
 #include "XCmd.h"
 #include "Atari.h"
 #include <dirent.h>
 #include <sys/stat.h>
 
-extern "C" {
-#include "MyMoreFiles.h"
-}
 // Schalter
 
 // Tabelle der geladenen Plugins
 CXCmd::tsLoadedPlugin CXCmd::s_Plugins[MAX_PLUGINS];
 
+#if __LP64__
+typedef UInt8                           CFragSymbolClass;
+enum {
+                                        /* Values for type CFragSymbolClass.*/
+  kCodeCFragSymbol              = 0,
+  kDataCFragSymbol              = 1,
+  kTVectorCFragSymbol           = 2,
+  kTOCCFragSymbol               = 3,
+  kGlueCFragSymbol              = 4
+};
+#endif
 
 /**********************************************************************
 *
@@ -89,7 +96,7 @@ CXCmd::~CXCmd()
 
 int CXCmd::Init(void)
 {
-	char dirname[ATARI_PATH_MAX];
+	char dirname[MAXPATHNAMELEN];
 	struct stat st;
 	int err = 0;
 
@@ -123,7 +130,7 @@ int CXCmd::Preload(void)
 {
 	DIR *dir;
 	struct dirent *ent;
-	char filename[ATARI_PATH_MAX];
+	char filename[MAXPATHNAMELEN];
 	struct stat st;
 	int i;
 
@@ -247,7 +254,7 @@ OSErr CXCmd::LoadPlugin
 	struct tsLoadedPlugin *plugin
 )
 {
-	char szPath[ATARI_PATH_MAX];
+	char szPath[MAXPATHNAMELEN];
 	OSErr err;
 	CFURLRef plugInURL;
 	CFStringRef cpUnixPath;
@@ -449,7 +456,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 	const char *pPluginCreator;
 	uint32_t ulPluginVersionMajor;
 	uint32_t ulPluginVersionMinor;
-	char szSearchPath[ATARI_PATH_MAX];
+	char szSearchPath[MAXPATHNAMELEN];
 	uint32_t ulNumOfSym;
 
 

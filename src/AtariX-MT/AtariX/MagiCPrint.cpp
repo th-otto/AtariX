@@ -30,7 +30,6 @@
 #include "Debug.h"
 #include "Globals.h"
 #include "MagicPrint.h"
-#include "PascalStrings.h"
 
 // Schalter
 

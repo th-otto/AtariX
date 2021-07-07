@@ -39,8 +39,6 @@ class CClipboard
 	static int OpenAtariScrapFile(int unixPerm);
 	static const atariCharEntry *FindUtf8(const uint8_t *utf8);
 	static const atariCharEntry *FindAtari(uint8_t c);
-//	static OSErr CheckAtariScrapFile( bool *bChanged );
-//	static void DeleteAtariScrapFile( const char *fname );
 	// Attribute
 	static const CClipboard::atariCharEntry atariCharConvTable[];
 //	static unsigned long s_lastCrDat;

@@ -175,7 +175,7 @@ void EmulationRunner::Config
 		DebugWarning("%s(): atariSerialDevice string empty or too long, ignored", __func__);
 	}
 
-	if ((atariKernelPathUrl) && strlen(atariKernelPathUrl) < ATARI_PATH_MAX)
+	if (atariKernelPathUrl && strlen(atariKernelPathUrl) < MAXPATHNAMELEN)
 	{
 		strcpy((char *) Globals.s_atariKernelPathUrl, atariKernelPathUrl);
 	}
@@ -184,9 +184,9 @@ void EmulationRunner::Config
 		DebugWarning("%s(): atariKernelPathUrl string empty or too long, ignored", __func__);
 	}
 
-	if ((atariRootfsPathUrl) && strlen(atariRootfsPathUrl) < ATARI_PATH_MAX)
+	if (atariRootfsPathUrl && strlen(atariRootfsPathUrl) < MAXPATHNAMELEN)
 	{
-		strcpy((char *) Globals.s_atariRootfsPathUrl, atariRootfsPathUrl);
+		strcpy(Globals.s_atariRootfsPathUrl, atariRootfsPathUrl);
 	}
 	else
 	{

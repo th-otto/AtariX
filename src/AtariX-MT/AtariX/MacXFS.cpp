@@ -43,20 +43,24 @@
 #include "Globals.h"
 #include "MacXFS.h"
 #include "Atari.h"
+#include "maptab.h"
 #include "TextConversion.h"
-#include "PascalStrings.h"
-extern "C" {
-#include "MyMoreFiles.h"
-#include "FullPath.h"
-}
 #include "s_endian.h"
-#include "typemapper.h"
+#include <sys/stat.h>
+#include <utime.h>
+#include <sys/time.h>
+#include <sys/ioctl.h>
 
-#if defined(_DEBUG)
-//#define DEBUG_VERBOSE
+// please remember to leave this define _after_ the reqired system headers!!!
+// some systems does define this to some important value for them....
+#ifndef O_BINARY
+# define O_BINARY 0
 #endif
 
-#define EOS '\0'
+
+#if defined(_DEBUG)
+#define DEBUG_VERBOSE
+#endif
 
 #if DEBUG_68K_EMU
 // Mechanismus zum Herausfinden der Ladeadresse eines Programms
@@ -70,6 +74,166 @@ extern void _DumpAtariMem(const char *filename);
 #endif
 
 
+#undef MAX
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+
+/* directory separator, atari */
+#define IS_DIR_SEP(c) ((c) == '\\' || (c) == '/')
+/* directory separator, host */
+#define DIRSEPARATOR "/"
+
+
+#define HOSTFS_XFS_VERSION   0
+#define HOSTFS_NFAPI_VERSION 1
+
+/*
+ * Should actually be checked by autoconf
+ */
+#define HAVE_REALPATH
+#define HAVE_STRUCT_TM_TM_GMTOFF
+#if defined(MAC_OS_X_VERSION_10_13) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_13
+#define HAVE_FUTIMENS
+#endif
+
+
+#ifdef HAVE_SYS_STATVFS_H
+#  define STATVFS struct statvfs
+#else
+#  define STATVFS struct statfs
+#endif
+
+#ifdef HAVE_SYS_STATVFS_H
+#include <sys/stavfs.h>
+#else
+#include <sys/mount.h>
+#endif
+
+
+/*****************************************************************
+*
+*  Support functions
+*
+******************************************************************/
+
+static char *strd2upath(char *dest)
+{
+	char *result = dest;
+	while (*dest)
+	{
+		if (*dest == '\\' || *dest == '/')
+			*dest = DIRSEPARATOR[0];
+		dest++;
+	}
+	return result;
+}
+
+static char *stru2dpath(char *dest)
+{
+	char *result = dest;
+	while (*dest)
+	{
+		if (*dest == '/')
+			*dest = '\\';
+		dest++;
+	}
+	return result;
+}
+
+#define DriveFromLetter(d) \
+	(((d) >= 'A' && (d) <= 'Z') ? (d - 'A') : \
+	 ((d) >= 'a' && (d) <= 'z') ? (d - 'a') : \
+	 ((d) >= '1' && (d) <= '6') ? (d - '1' + 26) : \
+	 -1)
+#define DriveToLetter(d) ((d) < 26 ? 'A' + (d) : (d) - 26 + '1')
+
+static void datetime2tm(uint32_t dtm, struct tm* ttm)
+{
+	ttm->tm_mday = dtm & 0x1f;
+	ttm->tm_mon	 = ((dtm>>5) & 0x0f) - 1;
+	ttm->tm_year = ((dtm>>9) & 0x7f) + 80;
+	ttm->tm_sec	 = ((dtm>>16) & 0x1f) << 1;
+	ttm->tm_min	 = (dtm>>21) & 0x3f;
+	ttm->tm_hour = (dtm>>27) & 0x1f;
+	ttm->tm_isdst = -1;
+}
+
+static time_t datetime2utc(uint32_t dtm)
+{
+	struct tm ttm;
+	datetime2tm(dtm, &ttm);
+	return mktime(&ttm);
+}
+
+static long gmtoff(time_t t)
+{
+	struct tm *tp;
+
+	if ((tp = localtime(&t)) == NULL)
+		return 0;
+#ifdef HAVE_STRUCT_TM_TM_GMTOFF
+	return tp->tm_gmtoff;
+#else
+	{
+		struct tm gtm;
+		struct tm ltm;
+		time_t lt;
+		long a4, b4, a100, b100, a400, b400, intervening_leap_days, years, days;
+		ltm = *tp;
+		lt = mktime(&ltm);
+	
+		if (lt == (time_t) -1)
+		{
+			/* mktime returns -1 for errors, but -1 is also a
+			   valid time_t value.  Check whether an error really
+			   occurred.  */
+			struct tm tm;
+	
+			if ((tp = localtime(&lt)) == NULL)
+				return 0;
+			tm = *tp;
+			if ((ltm.tm_sec ^ tm.tm_sec) ||
+				(ltm.tm_min ^ tm.tm_min) ||
+				(ltm.tm_hour ^ tm.tm_hour) ||
+				(ltm.tm_mday ^ tm.tm_mday) ||
+				(ltm.tm_mon ^ tm.tm_mon) ||
+				(ltm.tm_year ^ tm.tm_year))
+				return 0;
+		}
+	
+		if ((tp = gmtime(&lt)) == NULL)
+			return 0;
+		gtm = *tp;
+		
+		a4 = (ltm.tm_year / 4) + (1900 / 4) - !(ltm.tm_year & 3);
+		b4 = (gtm.tm_year / 4) + (1900 / 4) - !(gtm.tm_year & 3);
+		a100 = a4 / 25 - (a4 % 25 < 0);
+		b100 = b4 / 25 - (b4 % 25 < 0);
+		a400 = a100 / 4;
+		b400 = b100 / 4;
+		intervening_leap_days = (a4 - b4) - (a100 - b100) + (a400 - b400);
+		years = ltm.tm_year - gtm.tm_year;
+		days = (365 * years + intervening_leap_days + (ltm.tm_yday - gtm.tm_yday));
+	
+		return (60 * (60 * (24 * days + (ltm.tm_hour - gtm.tm_hour)) + (ltm.tm_min - gtm.tm_min)) + (ltm.tm_sec - gtm.tm_sec));
+	}
+#endif
+}
+
+CMacXFS::XfsFsFile::XfsFsFile(const char *root)
+	: parent(NULL),
+	  refCount(1),
+	  childCount(0),
+	  created(false),
+	  locks(0),
+	  name(strdup(root))
+{
+}
+
+CMacXFS::XfsFsFile::~XfsFsFile(void)
+{
+	free(name);
+}
+
 /*****************************************************************
 *
 *  Konstruktor
@@ -79,31 +243,39 @@ extern void _DumpAtariMem(const char *filename);
 CMacXFS::CMacXFS()
 {
 	int i;
-	struct mount_info *drive_m;
-
+	struct mount_info *drv;
+	unsigned int dev;
+	
 	for (i = 0; i < NDRVS; i++)
 	{
-		drives[i].drv_fsspec.vRefNum = 0;    // ungueltig
+		drives[i].drv_valid = false;    // ungueltig
 		drives[i].drv_must_eject = false;
 		drives[i].drv_changed = false;
-		drives[i].drv_longnames = false;
+		drives[i].drv_flags = M_DRV_DOSNAMES;
+		drives[i].drv_type = NoMacXFS;
 		drives[i].host_root = NULL;
 	}
 
 	// Mac-Wurzelverzeichnis machen
-	xfs_drvbits = 1L << ('M'-'A');
-	drive_m = &drives['M'-'A'];
-	drive_m->drv_type = MacRoot;
-	drive_m->drv_valid = true;
-	drive_m->drv_longnames = true;
-	drive_m->drv_rvsDirOrder = true;
-	drive_m->drv_dirID = 0;
-	drive_m->drv_fsspec.vRefNum = -32768;		// ungültig
-	drive_m->drv_fsspec.parID = 0;
-	drive_m->drv_fsspec.name[0] = EOS;
-	drive_m->host_root = strdup("/");
+	dev = DriveFromLetter('M');
+	xfs_drvbits = 1L << dev;
+	drv = &drives[dev];
+	drv->drv_type = MacRoot;
+	drv->drv_valid = true;
+	drv->drv_flags = M_DRV_REVERSE_DIR_ORDER | M_DRV_READONLY; /* XXX */
+	// drive_m->halfSensitive = true;
+	drv->host_root = new XfsFsFile("/");
+	MAPNEWVOIDP(drv->host_root);
+	strcpy(drv->mount_point, "A:\\");
+	drv->mount_point[0] = DriveToLetter(dev);
 
-	DebugInfo("CMacXFS::CMacXFS() -- Drive %c: %s dir order, %s names", 'A' + ('M'-'A'), drive_m->drv_rvsDirOrder ? "reverse" : "normal", drive_m->drv_longnames ? "long" : "8+3");
+	DebugInfo("CMacXFS::%s() -- Drive %c: '%s', root DD=%08lx, dir order=%s, names=%s",
+		__FUNCTION__,
+		DriveToLetter(dev),
+		drv->host_root ? drv->host_root->name : "",
+		(unsigned long)(drv->host_root ? MAPVOIDPTO32(drv->host_root) : 0),
+		drv->drv_flags & M_DRV_REVERSE_DIR_ORDER ? "reverse" : "normal",
+		drv->drv_flags & M_DRV_DOSNAMES ? "8+3" : "long");
 }
 
 
@@ -119,20 +291,37 @@ CMacXFS::~CMacXFS()
 
 
 #ifdef DEBUG_VERBOSE
-static void __dump(const unsigned char *p, int len)
+static void __dump(const char *what, const unsigned char *p, int len)
 {
-	while (len >= 4)
+	DebugInfo("%s", what);
+	while (len >= 8)
 	{
-		DebugInfo(" mem = %02x %02x %02x %02x", p[0], p[1], p[2], p[3]);
-		p += 4;
-		len -= 4;
+		DebugInfo(" mem = %02x %02x %02x %02x %02x %02x %02x %02x", p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+		p += 8;
+		len -= 8;
 	}
 
-	while (len)
+	if (len >= 7)
+	{
+		DebugInfo(" mem = %02x %02x %02x %02x %02x %02x %02x", p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
+	} else if (len >= 6)
+	{
+		DebugInfo(" mem = %02x %02x %02x %02x %02x %02x", p[0], p[1], p[2], p[3], p[4], p[5]);
+	} else if (len >= 5)
+	{
+		DebugInfo(" mem = %02x %02x %02x %02x %02x", p[0], p[1], p[2], p[3], p[4]);
+	} else if (len >= 4)
+	{
+		DebugInfo(" mem = %02x %02x %02x %02x", p[0], p[1], p[2], p[3]);
+	} else if (len >= 3)
+	{
+		DebugInfo(" mem = %02x %02x %02x", p[0], p[1], p[2]);
+	} else if (len >= 2)
+	{
+		DebugInfo(" mem = %02x %02x", p[0], p[1]);
+	} else if (len >= 1)
 	{
 		DebugInfo(" mem = %02x", p[0]);
-		p += 1;
-		len -= 1;
 	}
 }
 #endif
@@ -156,50 +345,29 @@ void CMacXFS::Set68kAdressRange(memptr AtariMemSize)
 *
 ******************************************************************/
 
-/* äöüçé(a°)(ae)(oe)à(ij)(n˜)(a˜)(o/)(o˜) */
-static char const lowers[] = {'\x84','\x94','\x81','\x87','\x82','\x86','\x91','\xb4','\x85','\xc0','\xa4','\xb0','\xb3','\xb1',0};
-static char const uppers[] = {'\x8e','\x99','\x9a','\x80','\x90','\x8f','\x92','\xb5','\xb6','\xc1','\xa5','\xb7','\xb2','\xb8',0};
-char CMacXFS::ToUpper( char c )
+                             /* ä       ö      ü       ç       é        å       æ      œ       à       (ij)    (n˜)    (a˜)    ø       (o˜) */
+static char const lowers[] = { '\x84', '\x94', '\x81', '\x87', '\x82', '\x86', '\x91', '\xb4', '\x85', '\xc0', '\xa4', '\xb0', '\xb3', '\xb1',0};
+static char const uppers[] = { '\x8e', '\x99', '\x9a', '\x80', '\x90', '\x8f', '\x92', '\xb5', '\xb6', '\xc1', '\xa5', '\xb7', '\xb2', '\xb8',0};
+unsigned char CMacXFS::ToUpper(unsigned char c)
 {
 	char *found;
 
 	if (c >= 'a' && c <= 'z')
-		return (char) (c & '\x5f');
-	if ((unsigned char) c >= 128 &&((found = strchr(lowers, c)) != NULL))
+		return c & 0x5f;
+	if (c >= 128 && ((found = strchr(lowers, c)) != NULL))
 		return uppers[found - lowers];
 	return c;
 }
 
-char CMacXFS::ToLower( char c )
+unsigned char CMacXFS::ToLower(unsigned char c)
 {
-	/* äöüçé(a°)(ae)(oe)à(ij)(n˜)(a˜)(o/)(o˜) */
 	char *found;
 
 	if (c >= 'A' && c <= 'Z')
-		return (char) (c | '\x20');
-	if ((unsigned char) c >= 128 &&((found = strchr(uppers, c)) != NULL))
+		return c | 0x20;
+	if ((unsigned char) c >= 128 && (found = strchr(uppers, c)) != NULL)
 		return lowers[found - uppers];
 	return c;
-}
-
-
-/*****************************************************************
-*
-*  (statisch) konvertiert Atari-Dateiname in Mac-Dateinamen und "vice versa"
-*
-******************************************************************/
-
-void CMacXFS::AtariFnameToMacFname(const unsigned char *src, unsigned char *dst)
-{
-	while (*src)
-		*dst++ = CTextConversion::Atari2MacFilename(*src++);
-	*dst = EOS;
-}
-void CMacXFS::MacFnameToAtariFname(const unsigned char *src, unsigned char *dst)
-{
-	while (*src)
-		*dst++ = CTextConversion::Mac2AtariFilename(*src++);
-	*dst = EOS;
 }
 
 
@@ -213,11 +381,7 @@ static void GetTypeAndCreator(const char *name, OSType *pType, OSType *pCreator)
 {
 	name = strrchr(name, '.');
 
-#if TARGET_RT_MAC_MACHO
 	if ((name) && (!strcmp(name, ".PRG") || !strcmp(name, ".prg") || !strcmp(name, ".TOS") || !strcmp(name, ".tos") || !strcmp(name, ".TTP") || !strcmp(name, ".ttp")))
-#else
-	if ((name) && (!stricmp(name, ".PRG") || !stricmp(name, ".TOS") || !stricmp(name, ".TTP")))
-#endif
 	{
 		*pType = 'Gem1';
 	}
@@ -254,15 +418,15 @@ static void GetTypeAndCreator(const char *name, OSType *pType, OSType *pCreator)
 *
 ******************************************************************/
 
-void CMacXFS::date_mac2dos( unsigned long macdate, uint16_t *time, uint16_t *date)
+void CMacXFS::date_mac2dos(time_t macdate, uint16_t *time, uint16_t *date)
 {
-	DateTimeRec dt;
+	struct tm *x;
+	x = localtime(&macdate);
 
-	SecondsToDate(macdate, &dt);
 	if (time)
-		*time = (uint16_t) ((dt.second >> 1) + (dt.minute << 5) + (dt.hour << 11));
+		*time = ((x->tm_sec & 0x3f) >> 1) | ((x->tm_min & 0x3f) << 5) | ((x->tm_hour & 0x1f) << 11);
 	if (date)
-		*date = (uint16_t) ((dt.day) + (dt.month  << 5) + ((dt.year - 1980) << 9));
+		*date = x->tm_mday | ((x->tm_mon + 1) << 5) | (MAX(x->tm_year - 80, 0) << 9);
 }
 
 /*****************************************************************
@@ -271,16 +435,18 @@ void CMacXFS::date_mac2dos( unsigned long macdate, uint16_t *time, uint16_t *dat
 *
 ******************************************************************/
 
-void CMacXFS::date_dos2mac(uint16_t time, uint16_t date, unsigned long *macdate)
+time_t CMacXFS::date_dos2mac(uint16_t time, uint16_t date)
 {
-	DateTimeRec dt;
-	dt.second	= (short) ((time & 0x1f) << 1);
-	dt.minute	= (short) ((time >> 5 ) & 0x3f);
-	dt.hour	= (short) ((time >> 11) & 0x1f);
-	dt.day	= (short) (date & 0x1f);
-	dt.month	= (short) ((date >> 5 ) & 0x0f);
-	dt.year	= (short) (((date >> 9 ) & 0x7f) + 1980);
-	DateToSeconds(&dt, macdate);
+	struct tm tm;
+	
+	tm.tm_sec	= (short) ((time & 0x1f) << 1);
+	tm.tm_min	= (short) ((time >> 5) & 0x3f);
+	tm.tm_hour	= (short) ((time >> 11) & 0x1f);
+	tm.tm_mday	= (short) (date & 0x1f);
+	tm.tm_mon	= (short) ((date >> 5) & 0x0f) - 1;
+	tm.tm_year	= (short) (((date >> 9) & 0x7f) + 80);
+	tm.tm_isdst = -1;
+	return mktime(&tm);
 }
 
 
@@ -296,54 +462,6 @@ int CMacXFS::fname_is_invalid(const char *name)
 	while (*name == '.')		// führende Punkte weglassen
 		name++;
 	return *name == '\0';		// Name besteht nur aus Punkten
-}
-
-
-/*****************************************************************
-*
-*  (statisch) konvertiert Mac-Fehlercodes in MagiC- Fehlercodes
-*
-******************************************************************/
-
-int32_t CMacXFS::cnverr(OSErr err)
-{
-	switch(err)
-	{
-          case noErr:         return TOS_E_OK;        /* 0      no error  */
-          case nsvErr:        return TOS_EDRIVE;      /* -35    no such volume */
-          case fnfErr:        return TOS_EFILNF;      /* -43    file not found */
-          case dirNFErr:      return TOS_EPTHNF;      /* -120   directory not found */
-          case ioErr:         return TOS_EREADF;      /* -36    IO Error */
-          case gfpErr:                                /* -52    get file pos error */
-          case rfNumErr:                              /* -51    Refnum error */
-          case paramErr:                              /* -50    error in user parameter list */
-          case fnOpnErr:      return TOS_EINTRN;      /* -38    file not open */
-          case bdNamErr:                              /* -37    bad name in file system (>31 Zeichen)*/
-          case posErr:                                /* -40    pos before start of file */
-          case eofErr:        return TOS_ERANGE;      /* -39    end of file */
-          case mFulErr:       return TOS_ENSMEM;      /* -41    memory full */
-          case tmfoErr:       return TOS_ENHNDL;      /* -42    too many open files */
-          case wPrErr:        return TOS_EWRPRO;      /* -44    disk is write protected */
-          case notAFileErr:                       /* -1302  is directory, no file! */
-          case wrPermErr:                         /* -61    write permission error */
-
-          case afpAccessDenied:                   // -5000  AFP access denied
-          case afpDenyConflict:                   // -5006  AFP
-          case afpVolLocked:                      // -5031  AFP
-
-          case permErr:                           /* -54    permission error */
-          case opWrErr:                           /* -49    file already open with write permission */
-          case dupFNErr:                          /* -48    duplicate filename */
-          case fBsyErr:                           /* -47    file is busy */
-          case vLckdErr:                          /* -46    volume is locked */
-          case fLckdErr:      return TOS_EACCDN;      /* -45    file is locked */
-          case volOffLinErr:  return TOS_EDRVNR;      /* -53    volume off line (ejected) */
-          case badMovErr:     return TOS_ENSAME;      /* -122   not same volumes or folder move from/to file */
-          case dataVerErr:                        /* read verify error */
-          case verErr:        return TOS_EBADSF;      /* track format verify error */
-	}
-
-	return TOS_ERROR;
 }
 
 
@@ -387,6 +505,183 @@ int32_t CMacXFS::errnoHost2Mint(int unixerrno, int defaulttoserrno)
 
 	return retval;
 }
+
+/**
+ * Convert the unix file stat.st_mode value into a MagiC/MiNT's one.
+ *
+ * File permissions and mode bitmask according
+ * to the FreeMiNT 1.16.x stat.h header file.
+ *
+ *  Name     Mask     Permission
+ * S_IXOTH  0000001  Execute permission for all others.
+ * S_IWOTH  0000002  Write permission for all others.
+ * S_IROTH  0000004  Read permission for all others.
+ * S_IXGRP  0000010  Execute permission for processes with same group ID.
+ * S_IWGRP  0000020  Write permission for processes with same group ID.
+ * S_IRGRP  0000040  Read permission for processes with same group ID.
+ * S_IXUSR  0000100  Execute permission for processes with same user ID.
+ * S_IWUSR  0000200  Write permission for processes with same user ID.
+ * S_IRUSR  0000400  Read permission for processes with same user ID.
+
+ * S_ISVTX  0001000  Sticky bit
+ * S_ISGID  0002000  Alter effective group ID when executing this file.
+ * S_ISUID  0004000  Alter effective user ID when executing this file.
+ *
+ * S_IFSOCK 0010000  File is a FreeMiNTNet socket file.
+ * S_IFCHR  0020000  File is a BIOS (character) special file.
+ * S_IFDIR  0040000  File is a directory.
+ * S_IFBLK  0060000  File is a block special file.
+ * S_IFREG  0100000  File is a regular file.
+ * S_IFIFO  0120000  File is a FIFO (named pipe).
+ * S_IMEM   0140000  File is a memory region.
+ * S_IFLNK  0160000  File is a symbolic link.
+ */
+uint16_t CMacXFS::modeHost2Mint(mode_t m)
+{
+	uint16_t result = 0;
+
+	// permissions
+	if ( m & S_IXOTH ) result |= 00001;
+	if ( m & S_IWOTH ) result |= 00002;
+	if ( m & S_IROTH ) result |= 00004;
+	if ( m & S_IXGRP ) result |= 00010;
+	if ( m & S_IWGRP ) result |= 00020;
+	if ( m & S_IRGRP ) result |= 00040;
+	if ( m & S_IXUSR ) result |= 00100;
+	if ( m & S_IWUSR ) result |= 00200;
+	if ( m & S_IRUSR ) result |= 00400;
+	if ( m & S_ISVTX ) result |= 01000;
+	if ( m & S_ISGID ) result |= 02000;
+	if ( m & S_ISUID ) result |= 04000;
+
+	if ( S_ISSOCK(m) ) result |= _ATARI_S_IFSOCK;
+	if ( S_ISCHR(m)  ) result |= _ATARI_S_IFCHR;
+	if ( S_ISDIR(m)  ) result |= _ATARI_S_IFDIR;
+	if ( S_ISBLK(m)  ) result |= _ATARI_S_IFBLK;
+	if ( S_ISREG(m)  ) result |= _ATARI_S_IFREG;
+	if ( S_ISFIFO(m) ) result |= _ATARI_S_IFIFO;
+	// Linux doesn't have this! if ( S_ISMEM(m)  ) result |= 0140000;
+	if ( S_ISLNK(m)  ) result |= _ATARI_S_IFLNK;
+
+	return result;
+}
+
+/*****************************************************************
+*
+*  (static) convert mint file modes to host
+*
+******************************************************************/
+
+mode_t CMacXFS::modeMint2Host(uint16_t m)
+{
+	mode_t result = 0;
+
+	// permissions
+	if ( m & 00001 ) result |= S_IXOTH;
+	if ( m & 00002 ) result |= S_IWOTH;
+	if ( m & 00004 ) result |= S_IROTH;
+	if ( m & 00010 ) result |= S_IXGRP;
+	if ( m & 00020 ) result |= S_IWGRP;
+	if ( m & 00040 ) result |= S_IRGRP;
+	if ( m & 00100 ) result |= S_IXUSR;
+	if ( m & 00200 ) result |= S_IWUSR;
+	if ( m & 00400 ) result |= S_IRUSR;
+	if ( m & 01000 ) result |= S_ISVTX;
+	if ( m & 02000 ) result |= S_ISGID;
+	if ( m & 04000 ) result |= S_ISUID;
+
+	if ( (m & _ATARI_S_IFMT) == _ATARI_S_IFSOCK) result |= S_IFSOCK;
+	if ( (m & _ATARI_S_IFMT) == _ATARI_S_IFCHR) result |= S_IFCHR;
+	if ( (m & _ATARI_S_IFMT) == _ATARI_S_IFDIR) result |= S_IFDIR;
+	if ( (m & _ATARI_S_IFMT) == _ATARI_S_IFBLK) result |= S_IFBLK;
+	if ( (m & _ATARI_S_IFMT) == _ATARI_S_IFREG) result |= S_IFREG;
+	if ( (m & _ATARI_S_IFMT) == _ATARI_S_IFIFO) result |= S_IFIFO;
+	// Linux doesn't have this!	if ( m & 0140000 ) result |= S_IFMEM;
+	if ( (m & _ATARI_S_IFMT) == _ATARI_S_IFLNK) result |= S_IFLNK;
+
+	return result;
+}
+
+
+int CMacXFS::flagsMagic2Host(uint16 flags)
+{
+	int res = O_RDONLY;
+
+	switch (flags & (OM_RPERM|OM_WPERM))
+	{
+	default:
+	case 0:
+	case OM_RPERM:
+		res = O_RDONLY;
+		break;
+	case OM_WPERM:
+		res = O_WRONLY;
+		break;
+	case OM_RPERM|OM_WPERM:
+		res = O_RDWR;
+		break;
+	}
+	if (flags & _ATARI_O_CREAT)
+		res |= O_CREAT;
+	if (flags & _ATARI_O_TRUNC)
+		res |= O_TRUNC;
+	if (flags & _ATARI_O_EXCL)
+		res |= O_EXCL;
+	if (flags & _ATARI_O_APPEND)
+		res |= O_APPEND;
+	if (flags & _ATARI_O_NONBLOCK)
+		res |= O_NONBLOCK;
+#if 0
+	if (flags & _ATARI_O_NOCTTY) /* not handled by kernel */
+		res |= O_NOCTTY;
+#endif
+
+	return res;
+}
+
+
+int16_t CMacXFS::flagsHost2Magic(int flags)
+{
+	int16_t res = 0; /* default read only */
+
+	switch (flags & O_ACCMODE)
+	{
+	case O_RDONLY:
+	default:
+		res = OM_RPERM;
+		break;
+	case O_WRONLY:
+		res = OM_WPERM;
+		break;
+	case O_RDWR:
+		res = OM_RPERM | OM_WPERM;
+		break;
+	}
+
+	if (flags & O_CREAT)
+		res |= _ATARI_O_CREAT;
+	if (flags & O_TRUNC)
+		res |= _ATARI_O_TRUNC;
+	if (flags & O_EXCL)
+		res |= _ATARI_O_EXCL;
+	if (flags & O_APPEND)
+		res |= _ATARI_O_APPEND;
+	if (flags & O_NONBLOCK)
+		res |= _ATARI_O_NONBLOCK;
+#if 0
+	if (flags & O_NOCTTY)
+		res |= _ATARI_O_NOCTTY; /* not handled by kernel */
+#endif
+
+	return res;
+}
+
+
+uint16_t CMacXFS::modeHost2TOS(mode_t m)
+{
+	return S_ISDIR(m) ? F_SUBDIR : 0;	/* FIXME */
+}
+
 
 /*********************************************************************
 *
@@ -453,17 +748,17 @@ bool CMacXFS::filename_match(char *muster, char *fname)
 
 //	if (c1 == F_ARCHIVE)	
 //		return c1 & c2;
-	c2 &= F_SUBDIR + F_SYSTEM + F_HIDDEN + F_VOLUME;
+	c2 &= F_SUBDIR | F_SYSTEM | F_HIDDEN | F_VOLUME;
 	if (!c2)
 		return true;
 	if ((c2 & F_SUBDIR) && !(c1 & F_SUBDIR))
 		return false;
 	if ((c2 & F_VOLUME) && !(c1 & F_VOLUME))
 		return false;
-	if (c2 & F_HIDDEN+F_SYSTEM)
+	if (c2 & (F_HIDDEN|F_SYSTEM))
 	{
-		c2 &= F_HIDDEN+F_SYSTEM;
-		c1 &= F_HIDDEN+F_SYSTEM;
+		c2 &= F_HIDDEN | F_SYSTEM;
+		c1 &= F_HIDDEN | F_SYSTEM;
 	}
 
 	return (bool) (c1 & c2);
@@ -490,7 +785,7 @@ bool CMacXFS::conv_path_elem(const char *path, char *name)
 	/* max. 8 Zeichen fuer Dateinamen kopieren */
 
 	for	(i = 0; (i < 8) && (*path) &&
-		 (*path != '\\') && (*path != '*') && (*path != '.') && (*path != ' '); i++)
+		 (!IS_DIR_SEP(*path)) && (*path != '*') && (*path != '.') && (*path != ' '); i++)
 	{
 		*name++ = ToUpper(*path++);
 	}
@@ -499,7 +794,7 @@ bool CMacXFS::conv_path_elem(const char *path, char *name)
 
 	if (i == 8)
 	{
-		while ((*path) && (*path != ' ') && (*path != '\\') && (*path != '.'))
+		while ((*path) && (*path != ' ') && (!IS_DIR_SEP(*path)) && (*path != '.'))
 		{
 			path++;
 			truncated = true;
@@ -521,13 +816,13 @@ bool CMacXFS::conv_path_elem(const char *path, char *name)
 
 	/* max. 3 Zeichen fuer Typ kopieren */
 
-	for	(i = 0; (i < 3) && (*path) &&
-		 (*path != '\\') && (*path != '*') && (*path != '.') && (*path != ' '); i++)
+	for	(i = 0; i < 3 && *path &&
+		 !IS_DIR_SEP(*path) && *path != '*' && *path != '.' && *path != ' '; i++)
 	{
 		*name++ = ToUpper(*path++);
 	}
 
-	if ((*path) && (*path != '\\') && (*path != '*'))
+	if (*path && !IS_DIR_SEP(*path) && *path != '*')
 		truncated = true;
 
 	/* Zeichen fuer das Auffuellen ermitteln */
@@ -559,333 +854,103 @@ bool CMacXFS::conv_path_elem(const char *path, char *name)
 *
 *************************************************************/
 
-bool CMacXFS::nameto_8_3 (const unsigned char *macname,
-				unsigned char *dosname,
-				int convmode, bool toAtari)
+bool CMacXFS::nameto_8_3(const char *atariname, char *dosname, int convmode)
 {
 	short i;
 	bool truncated = false;
-
+	unsigned char c;
+	unsigned short ch;
 
  	/* max. 8 Zeichen fuer Dateinamen kopieren */
  	i = 0;
-	while ((i < 8) && (*macname) && (*macname != '.'))
+	while (i < 8 && *atariname && *atariname != '.')
 	{
-		if ((*macname == ' ') || (*macname == '\\'))
+		if (*atariname == ' ')
 		{
-			macname++;
+			atariname++;
 			continue;
 		}
-		if (toAtari)
+		if (IS_DIR_SEP(*atariname))
 		{
-			if (convmode == 0)
-				*dosname++ = CTextConversion::Mac2AtariFilename(*macname++);
-			else if (convmode == 1)
-				*dosname++ = (unsigned char) ToUpper((char) CTextConversion::Mac2AtariFilename(*macname++));
-			else
-				*dosname++ = (unsigned char) ToLower((char) CTextConversion::Mac2AtariFilename(*macname++));
+			break;
 		}
+		if (convmode == 0)
+			c = *atariname++;
+		else if (convmode == 1)
+			c = ToUpper(((unsigned char)*atariname++));
 		else
+			c = ToLower(((unsigned char)*atariname++));
+		ch = atari_to_utf16[c];
+		if (ch < 0x80)
 		{
-			if (convmode == 0)
-				*dosname++ = *macname++;
-			else if (convmode == 1)
-				*dosname++ = (unsigned char) ToUpper((char) (*macname++));
-			else
-				*dosname++ = (unsigned char) ToLower((char) (*macname++));
+			*dosname++ = ch;
+		} else if (ch < 0x800)
+		{
+			*dosname++ = ((ch >> 6) & 0x3f) | 0xc0;
+			*dosname++ = (ch & 0x3f) | 0x80;
+		} else 
+		{
+			*dosname++ = ((ch >> 12) & 0x0f) | 0xe0;
+			*dosname++ = ((ch >> 6) & 0x3f) | 0x80;
+			*dosname++ = (ch & 0x3f) | 0x80;
 		}
 		i++;
 	}
 
-	while ((*macname) && (*macname != '.'))
+	while (*atariname && *atariname != '.')
 	{
-		macname++;		// Rest vor dem '.' ueberlesen
+		atariname++;		// Rest vor dem '.' ueberlesen
 		truncated = true;
 	}
-	if (*macname == '.')
-		macname++;		// '.' ueberlesen
+	if (*atariname == '.')
+		atariname++;		// '.' ueberlesen
 	*dosname++ = '.';			// '.' in DOS-Dateinamen einbauen
 
 	/* max. 3 Zeichen fuer Typ kopieren */
 	i = 0;
-	while ((i < 3) && (*macname) && (*macname != '.'))
+	while (i < 3 && *atariname && *atariname != '.')
 	{
-		if ((*macname == ' ') || (*macname == '\\'))
+		if (*atariname == ' ')
 		{
-			macname++;
+			atariname++;
 			continue;
 		}
-		if (toAtari)
+		if (IS_DIR_SEP(*atariname))
 		{
-			if (convmode == 0)
-				*dosname++ = CTextConversion::Mac2AtariFilename(*macname++);
-			else if (convmode == 1)
-				*dosname++ = (unsigned char) ToUpper((char) CTextConversion::Mac2AtariFilename(*macname++));
-			else
-				*dosname++ = (unsigned char) ToLower((char) CTextConversion::Mac2AtariFilename(*macname++));
+			break;
 		}
+		if (convmode == 0)
+			c = *atariname++;
+		else if (convmode == 1)
+			c = ToUpper((unsigned char)*atariname++);
 		else
+			c = ToLower((unsigned char)*atariname++);
+		ch = atari_to_utf16[c];
+		if (ch < 0x80)
 		{
-			if (convmode == 0)
-				*dosname++ = *macname++;
-			else if (convmode == 1)
-				*dosname++ = (unsigned char) ToUpper((char) (*macname++));
-			else
-				*dosname++ = (unsigned char) ToLower((char) (*macname++));
+			*dosname++ = ch;
+		} else if (ch < 0x800)
+		{
+			*dosname++ = ((ch >> 6) & 0x3f) | 0xc0;
+			*dosname++ = (ch & 0x3f) | 0x80;
+		} else 
+		{
+			*dosname++ = ((ch >> 12) & 0x0f) | 0xe0;
+			*dosname++ = ((ch >> 6) & 0x3f) | 0x80;
+			*dosname++ = (ch & 0x3f) | 0x80;
 		}
 		i++;
 	}
 
 	if (dosname[-1] == '.')		// trailing '.'
-		dosname[-1] = EOS;		//   entfernen
+		dosname[-1] = '\0';		//   entfernen
 	else
-		*dosname = EOS;
+		*dosname = '\0';
 
-	if (*macname)
+	if (*atariname)
 		truncated = true;
 
 	return truncated;
-}
-
-
-/*************************************************************
-*
-* (statisch)
-* wandelt einen Pascal-String um in eine Zeichenkette.
-* Benutzt dabei eine statischen Puffer!!
-*
-*************************************************************/
-
-char *CMacXFS::ps(char *s)
-{
-	static char cs[512];
-
-	strncpy(cs, s + 1, s[0]);
-	cs[(int) s[0]] = EOS;
-	return cs;
-}
-
-
-/*************************************************************
-*
-* (statisch)
-* wandelt eine Zeichenkette um in einen Pascal-String.
-* D.h. initialisiert das Laengenbyte.
-*
-*************************************************************/
-
-void CMacXFS::sp(char *s)
-{
-	s[0] = (char) strlen(s+1);
-}
-
-
-/*************************************************************
-*
-* Wandelt dirID, drv und Dateinamen in einen FSSpec um.
-* Wenn das Dateisystem keine langen Namen unterstuetzt, wird
-* der Name gekuerzt.
-* Wenn <fromAtari> == TRUE, wird der Dateiname, d.h. Umlaute,
-* konvertiert
-*
-*************************************************************/
-
-long CMacXFS::cfss
-(
-	int drv,
-	long dirID,
-	short vRefNum,
-	unsigned char *name,
-	FSSpec *fs,
-	bool fromAtari
-)
-{
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)		// Abfrage eigentlich unnoetig
-		return TOS_EDRIVE;
-
-	fs->vRefNum = vRefNum;
-	fs->parID = dirID;
-	if (drives[drv].drv_longnames)
-	{
-		// copy up to 62 characters and nul-terminate the destination
-		strlcpy((char *) fs->name + 1, (char *) name, sizeof(fs->name) - 1);
-	}
-	else
-	{
-		// bzw. in 8+3 wandeln
-		nameto_8_3(name, fs->name + 1, 2, false);
-	}
-
-	if (fromAtari)
-	{
-		// convert character set from Atari to MacOS
-		AtariFnameToMacFname(fs->name + 1, fs->name + 1);
-	}
-
-	sp((char *) fs->name);
-
-	return TOS_E_OK;
-}
-
-
-/*************************************************************
-*
-* initialisiert die Strukturen fuer Laufwerk <n> des XFS.
-* Ein kompletter Pfad wird umgewandelt in eine DirID.
-* Das erste Zeichen des Pfads muss frei sein.
-*
-*************************************************************/
-
-OSErr CMacXFS::fsspec2DirID(int drv)
-{
-	OSErr err;
-	FSSpec *fs;
-	CInfoPBPtr pb;
-
-	fs = &drives[drv].drv_fsspec;
-	pb = &drives[drv].drv_pbrec;
-
-	pb -> hFileInfo.ioVRefNum = fs -> vRefNum;
-	pb -> hFileInfo.ioNamePtr = fs -> name;
-	pb -> hFileInfo.ioFDirIndex = 0;
-	pb -> hFileInfo.ioDirID = fs -> parID;
-	if (pb->hFileInfo.ioNamePtr[0] == 0)
-		pb->hFileInfo.ioFDirIndex = -1;
-	err = PBGetCatInfoSync (pb);
-	if (err)
-		return err;
-	if (!(pb -> hFileInfo.ioFlAttrib & ioDirMask))
-		return -1;    /* kein SubDir */
-	drives[drv].drv_dirID = pb -> dirInfo.ioDrDirID;
-	return 0;
-}
-
-/*************************************************************
-*
-* Löst einen MagiC-Alias auf.
-* Eingabe:
-*		fs		FSSpec des Alias
-*		buflen	max. Laenge des Symlink inkl. EOS
-*		buf		NULL:
-*					Der Symlink wird dereferenziert,
-*					der Ziel-FSSpec wieder nach <fs>
-*					geschrieben. Ggf. wird ELINK
-*					geliefert und der mx_symlink
-*					initialisiert.
-*				Puffer fuer Symlink: (fuer Freadlink)
-*					Der Symlink wird gelesen, wenn
-*					er vom Finder erstellt war, wird
-*					TOS_EACCDN geliefert.
-*
-* Rueckgabe:
-*		fs		ggf. FSSpec der Datei
-*		retcode	TOS_E_OK:	fs ist gueltig
-*				ELINK: xfs_symlink ist gueltig
-*				TOS_EACCDN: Datei ist kein Alias oder ein
-*					(ungueltiger) Finder-Alias.
-*
-* Zurueckgegeben wird ein MagiC-Fehlercode
-*
-*************************************************************/
-
-int32_t CMacXFS::resolve_symlink( FSSpec *fs, uint16_t buflen, char *buf )
-{
-	short host_fd;
-	Handle myhandle;
-	AliasHandle myalias;
-	Boolean wasChanged;
-	OSType AliasUserType;
-	Size AliasSize;
-	char *s;
-	uint16_t len;
-	OSErr err;
-	int32_t doserr;
-
-	short saveRefNum = CurResFile();
-
-
-	host_fd = FSpOpenResFile(fs, fsRdPerm);
-	if (host_fd == -1)
-		return TOS_EACCDN;
-
-	/* Die Ressource #0 des Typs 'alis' holen	*/
-	/* -------------------------------------	*/
-	
-	myhandle = Get1Resource('alis', 0);
-	if (myhandle)
-	{
-		myalias = (AliasHandle) myhandle;
-
-		if (!buf)
-		{
-			/* Der Mac soll den Alias dereferenzieren	*/
-			/* ------------------------------------	*/
-			err = ResolveAlias (NULL, myalias, fs, &wasChanged);
-			doserr = cnverr(err);
-		}
-		else
-			doserr = TOS_EFILNF;
-
-		if (doserr)
-		{
-			/* Der Mac kann den Alias nicht dereferenzieren,	*/
-			/* Wir holen deshalb den DOS-Pfad und geben ihn an	*/
-			/* den MagiC-Kernel zurueck.					*/
-			/* ------------------------------------------------	*/
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-			// Compilat für i86 erfordert als Minimal-OS-Version 10.4.
-			// Im SDK 10.4 ist die Alias-Struktur "opaque", d.h. man
-			// kommt nicht mehr an den <userType> dran.
-			AliasUserType = GetAliasUserType(myalias);
-			AliasSize = GetAliasSize(myalias);
-#else
-			AliasUserType = (*myalias)->userType;
-			AliasSize = (*myalias)->aliasSize;
-#endif
-			// ntohl: konvertiere network (= big endian) nach host (aktuelle CPU)
-			if (ntohl(AliasUserType) == 'MgMc')
-			{
-				s = *myhandle + AliasSize;
-				len = (unsigned short) (strlen(s) + 1);
-				if (!buf)
-				{
-					if (len & 1)
-						len++;
-					buflen = 256;
-					mx_symlink.len = cpu_to_be16(len);
-					buf = mx_symlink.data;
-				/*	doserr = ELINK;	*/
-					doserr = TOS_EFILNF;
-				}
-				else
-				{
-					doserr = TOS_E_OK;
-				}
-
-				if (len <= buflen)
-				{
-					strcpy(buf, s);
-				}
-				else
-				{
-					doserr = TOS_ERANGE;
-				}
-			}
-			else
-			{
-				doserr = TOS_EACCDN;
-			}
-		}
-	}
-	else
-	{
-		doserr = TOS_EACCDN;		/* keine 'alis'-Ressource */
-	}
-
-	CloseResFile(host_fd);
-	UseResFile (saveRefNum);
-	return doserr;
 }
 
 
@@ -907,23 +972,13 @@ int32_t CMacXFS::resolve_symlink( FSSpec *fs, uint16_t buflen, char *buf )
 
 int32_t CMacXFS::xfs_sync(uint16_t drv)
 {
-	OSErr err;
-	ParamBlockRec pb;
+	DebugInfo("CMacXFS::xfs_sync(drv=%d)", drv);
 
-
-#ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_sync(drv = %d)", (int) drv);
-#endif
-
-	if (drv >= NDRVS || (pb.ioParam.ioRefNum = drives[drv].drv_fsspec.vRefNum) == 0)
+	if (drv >= NDRVS || !drives[drv].drv_valid)
 		return TOS_EDRIVE;
-
-	pb.ioParam.ioNamePtr = NULL;		// !!!
-//	if (UseAsynchronousDiskIO)
-//		err = PBFlushVolAsync (pb);
-//	else
-		err = PBFlushVolSync (&pb);
-	return cnverr(err);
+		
+	/* NYI */
+	return TOS_EINVFN;
 }
 
 
@@ -951,66 +1006,28 @@ void CMacXFS::xfs_pterm (PD *pd)
 *
 *************************************************************/
 
-OSErr CMacXFS::getInfo (CInfoPBPtr pb, FSSpec *fs)
+int32_t CMacXFS::drv_open(uint16_t drv)
 {
-	pb->hFileInfo.ioVRefNum = fs->vRefNum;
-	pb->hFileInfo.ioNamePtr = fs->name;
-	pb->hFileInfo.ioFDirIndex = 0;
-	pb->hFileInfo.ioDirID = fs->parID;
-	if (pb->hFileInfo.ioNamePtr[0] == 0) pb->hFileInfo.ioFDirIndex = -1;
-	return PBGetCatInfoSync (pb);
-}
-
-int32_t CMacXFS::drv_open (uint16_t drv, bool onlyMountedVols)
-{
-	HVolumeParam pbh;
-	OSErr err;
-
-//	checkForNewDrive (drv);
-
-	if (drv == 'M'-'A')
-		return TOS_E_OK;
-
+	struct stat st;
+	
 	if (drv >= NDRVS || !drives[drv].drv_valid)
 		return TOS_EDRIVE;
 
-	// convert modern FSRef to ancient FFSpec
-	err = FSGetCatalogInfo(
-					&drives[drv].xfs_path,
-					kFSCatInfoNone,		// FSCatalogInfoBitmap whichInfo,
-					NULL,				// FSCatalogInfo *catalogInfo,
-					NULL,				// HFSUniStr255 *outName,
-					&drives[drv].drv_fsspec,
-					NULL				// FSRef *parentRef
-					);
-	if (err)
+	if (drives[drv].host_root == NULL ||
+		stat(drives[drv].host_root->name, &st) != 0 || !S_ISDIR(st.st_mode))
 	{
-		DebugError("CMacXFS::drv_open(): Cannot convert FSRef to FSSpec");
+		DebugError("CMacXFS::drv_open(): Cannot stat %s", drives[drv].host_root ? drives[drv].host_root->name : "");
 		return TOS_EDRVNR;
 	}
-
-	fsspec2DirID (drv);
-	if (drives[drv].drv_fsspec.vRefNum == 0)
-		return TOS_EDRIVE;
-
-	// Ermitteln, ob Volume "locked" ist.
-	pbh.ioVolIndex = 0;
-	pbh.ioNamePtr = nil;
-	pbh.ioVRefNum = drives[drv].drv_fsspec.vRefNum;
-	pbh.ioVAtrb = 0;
-	PBHGetVInfoSync ((HParmBlkPtr)&pbh);
-	drives[drv].drv_readOnly = (pbh.ioVAtrb & 0x8080) != 0;
 
 	return TOS_E_OK;
 }
 
-int32_t CMacXFS::xfs_drv_open (uint16_t drv, MXFSDD *dd, int32_t flg_ask_diskchange)
+int32_t CMacXFS::xfs_drv_open(uint16_t drv, MXFSDD *dd, int32_t flg_ask_diskchange)
 {
 	int32_t	err;
 
-#ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_drv_open(drv = %d, flag = %d)", (int) drv, (int) flg_ask_diskchange);
-#endif
+	DebugInfo("CMacXFS::xfs_drv_open(drv=%d, flag=%d)", drv, (int) flg_ask_diskchange);
 
 	if (flg_ask_diskchange)		// Diskchange- Status ermitteln
 	{
@@ -1022,44 +1039,16 @@ int32_t CMacXFS::xfs_drv_open (uint16_t drv, MXFSDD *dd, int32_t flg_ask_diskcha
 
 	drives[drv].drv_changed = false;		// Diskchange reset
 
-	err = drv_open(drv, false);
+	err = drv_open(drv);
 	if (err)
 		return err;
 
-	// note that dirID and vRefNum remain in CPU natural byte order, i.e. little endian on x86
+	dd->dirID = MAPVOIDPTO32(drives[drv].host_root);
+	dd->vRefNum = 0;
 
-	dd->dirID = drives[drv].drv_dirID;
-	dd->vRefNum = drives[drv].drv_fsspec.vRefNum;
-
-#ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_drv_open => (dd.dirID = %ld, vRefNum = %d)", dd->dirID, (int) dd->vRefNum);
-#endif
+	DebugInfo("CMacXFS::xfs_drv_open => (DD=%08lx, vRefNum=%d)", (unsigned long)dd->dirID, dd->vRefNum);
 
 	return TOS_E_OK;
-}
-
-
-/*************************************************************
-*
-* Rechnet eine Volume-Nummer in ein Atari-Laufwerk um.
-* Rückgabe TOS_EDRIVE, wenn nicht gefunden
-*
-* Nur aufgerufen von Path2DD.
-* drv zeigt auf Atari-Speicher, also bigendian
-*
-*************************************************************/
-
-int32_t CMacXFS::vRefNum2drv(short vRefNum, uint16_t *drv)
-{
-	uint16_t i;
-
-	for	(i = 0; i < NDRVS; i++)
-		if (drives[i].drv_fsspec.vRefNum == vRefNum)
-		{
-			*drv = cpu_to_be16(i);
-			return TOS_E_OK;
-		}
-	return TOS_EDRIVE;
 }
 
 
@@ -1075,105 +1064,19 @@ int32_t CMacXFS::xfs_drv_close(uint16_t drv, uint16_t mode)
 {
 	if (drv >= NDRVS)
 		return TOS_EDRIVE;
-	if (drv == 'M'-'A')
-		return mode ? TOS_E_OK : TOS_EACCDN;
-	if (mode == 0 && drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
+	if (mode == 0 && !drives[drv].drv_valid)    /* ungueltig */
 		return TOS_EDRIVE;
 
-	if (mode == 0 && drives[drv].drv_fsspec.vRefNum == -1)
+	if (mode == 0 && drv == DriveFromLetter('C'))
 	{
 		// Mac-Boot-Volume darf nicht ungemountet werden.
 		return TOS_EACCDN;
-	}
-	else
+	} else
 	{
 		if (drives[drv].drv_type == MacDrive)
 			drives[drv].drv_valid = false;	// macht Alias ungültig
-		drives[drv].drv_fsspec.vRefNum = 0;
 		return TOS_E_OK;
 	}
-}
-
-
-/*************************************************************
-*
-* Berechnet manuell einen FSSpec Schritt fuer Schritt, um auch
-* Aliase aufloesen zu koennen.
-* Der Pfad ist immer relativ und beginnt mit einem ':', sowohl
-* das Laengenbyte ist eingetragen als auch der Pfad
-* nullterminiert.
-* Bei einem Befehl "chdir mist\schrott" wird der Mac-Pfad
-* "mist:schrott" uebergeben. Wenn nun "schrott" ein Alias
-* ist, wird der Alias von "schrott" zurueckgegeben.
-*
-*************************************************************/
-
-int32_t CMacXFS::MakeFSSpecManually( short vRefNum, long reldir,
-					char *macpath,
-					FSSpec *fs)
-{
-	Str63 dirname;
-	char *s,*t;		// Laufzeiger
-	unsigned long len;
-	OSErr err;
-	int32_t doserr;
-	CInfoPBRec pb;
-
-
-	s = macpath+2;	// Laengenbyte und ':' ueberlesen
-	while ((t = strchr(s, ':')) != NULL)
-	{
-		len = (unsigned long) (t - s);
-		memcpy(dirname+1, s, len);		// ein Pfadelement
-		dirname[0] = (unsigned char) len;
-		s = t+1;
-
-		/* Eine Verzeichnisebene durchsuchen */
-		/* ---------------------------------- */
-
-		err = FSMakeFSSpec(vRefNum, reldir, dirname, fs);
-		if (err)
-			return cnverr(err);		// darf eigentlich nicht passieren
-		pb.hFileInfo.ioVRefNum = fs->vRefNum;
-		pb.hFileInfo.ioNamePtr = fs->name;
-		pb.hFileInfo.ioFDirIndex = 0;
-		pb.hFileInfo.ioDirID = fs->parID;
-		if (pb.hFileInfo.ioNamePtr[0] == 0) pb.hFileInfo.ioFDirIndex = -1;
-		err = PBGetCatInfoSync (&pb);
-		if (err)
-			return cnverr(err);			// nix gefunden
-
-		/* ggf. Alias aufloesen */
-		/* ------------------- */
-
-		if (pb.hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias)
-		{
-			doserr = resolve_symlink( fs, 0, NULL );
-	
-			if (!doserr)		/* Der Mac hat dereferenziert! */
-			{
-				pb.hFileInfo.ioVRefNum = fs->vRefNum;
-				pb.hFileInfo.ioNamePtr = fs->name;
-				pb.hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-				pb.hFileInfo.ioDirID = fs->parID;
-				if (pb.hFileInfo.ioNamePtr[0] == 0) pb.hFileInfo.ioFDirIndex = -1;
-				err = PBGetCatInfoSync (&pb);
-				if (err)
-					return cnverr(err);			// nix gefunden
-			} else
-			{
-				return doserr;		/* Fehler */
-			}
-		}
-		reldir = pb.hFileInfo.ioDirID;
-		vRefNum = fs->vRefNum;
-	}
-
-	len = strlen(s);				// Restpfad
-	memcpy(dirname+1, s, len);
-	dirname[0] = (unsigned char) len;
-	err = FSMakeFSSpec(vRefNum, reldir, dirname, fs);
-	return cnverr(err);
 }
 
 
@@ -1186,10 +1089,10 @@ int32_t CMacXFS::MakeFSSpecManually( short vRefNum, long reldir,
 *    "subdir1\magx_acc.zip".
 *
 * Die Datei liegt tatsächlich in
-*    "AWS 95:magix:MAGIX_A:subdir1:magx_acc.zip"
+*    "/AWS 95/magix/MAGIX_A/subdir1/magx_acc.zip"
 *
 * Dabei ist
-*    "AWS 95:magix:MAGIX_A"
+*    "/AWS 95/magix/MAGIX_A"
 * Das Mac-Äquivalent zu "A:\"
 *
 * <reldir> ist bereits die DirID des Mac-Verzeichnisses.
@@ -1245,284 +1148,192 @@ int32_t CMacXFS::MakeFSSpecManually( short vRefNum, long reldir,
 int32_t CMacXFS::xfs_path2DD
 (
 	uint16_t mode,
-	uint16_t drv, MXFSDD *rel_dd, char *pathname,
+	uint16_t dev, MXFSDD *rel_dd, char *pathname,
 	char **restpfad, MXFSDD *symlink_dd, char **symlink,
 	MXFSDD *dd,
 	uint16_t *dir_drive
 )
 {
 #pragma unused(symlink_dd)
-	OSErr err;
 	int32_t doserr;
-	FSSpec fs;
-	CInfoPBRec pb;
-	unsigned char macpath[256];
-	unsigned char *s,*t,*u;
+	char macpath[MAXPATHNAMELEN];
+	char *s, *t, *u;
 	unsigned char c;
-	bool get_parent;
-	short vRefNum;
-	int32_t reldir = rel_dd->dirID;
-
+	XfsFsFile *reldir;
+	XfsFsFile *newFsFile;
+	XfsCookie fc;
+	struct stat st;
+	char mac_dirname[MAXPATHNAMELEN];
 
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_path2DD(drv = %d, pathname = \"%s\")", (int) drv, pathname);
+	DebugInfo("CMacXFS::xfs_path2DD(drv=%d, DD=%08lx, pathname=\"%s\", mode=%d)", dev, (unsigned long)rel_dd->dirID, pathname, mode);
 #endif
 
-	if (drv >= NDRVS)
+	fetchXFSC(&fc, dev, rel_dd);
+	
+	if (fc.drv == NULL)    /* ungueltig */
 		return TOS_EDRIVE;
-	if (drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
-		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (fc.drv->drv_changed)
 		return TOS_E_CHNG;
 
-	vRefNum = rel_dd->vRefNum;
+	reldir = fc.index;
 
 	/* Hier schon einmal das Laufwerk setzen, das wir zurückliefern	*/
 	/* Wenn wir einen Alias verfolgen, kann sich das noch ändern	*/
 	/* -------------------------------------------------------------	*/
 
-	*dir_drive = cpu_to_be16(drv);
+	*dir_drive = cpu_to_be16(dev);
 
 	/* Der relative DOS-Pfad wird umgewandelt in einen relativen	*/
 	/* Mac-Pfad. Eintraege "." und ".." werden beruecksichtigt.		*/
 	/* ------------------------------------------------------------ */
 
-	s = macpath + 1;		// 1 Byte fuer Laenge lassen
-	*s++ = ':';				// alle Pfade sind Mac-relativ
-	t = (unsigned char *) pathname;
+	cookie2Pathname(fc.drv, reldir, NULL, macpath, true);
+	s = macpath + strlen(macpath);
+	if (s[-1] != *DIRSEPARATOR)
+		*s++ = *DIRSEPARATOR;				// alle Pfade sind Mac-relativ
+	t = pathname;
 	u = s;
 	while (*pathname)
 	{
-		c = CTextConversion::Atari2MacFilename((unsigned char) (*pathname++));	// 9.6.96
-		if (c == '\\')
+		c = *pathname++;	// 9.6.96
+		
+		/*
+		 * Note: cannot use Atari2HostUtf8Copy here,
+		 * because we need to pass back the pathname in *restpfad
+		 */
+		if (IS_DIR_SEP(c))
 		{
-			if ((t[0] == '.') && ((unsigned char *) pathname == t + 2))
+			t = pathname;	// letztes Element Atari
+			if (IS_DIR_SEP(*pathname))
+			{
+				// war leeres Element => ignorieren
+				continue;
+			} else if (t[0] == '.' && pathname == t + 2)
+			{
 				s -= 2;	// war Element "." => entfernen
-			else
-			if ((t[0] == '.') && (t[1] == '.') && ((unsigned char *) pathname == t + 3))
+				continue;
+			} else if (t[0] == '.' && t[1] == '.' && pathname == t + 3)
 			{
 				// war Element ".."
 				s -= 3;	// zunaechst aus Mac-Pfad entfernen
-				if (s > macpath + 2)
+				if (s > macpath + 2 && reldir->parent != NULL)
 				{
 					// ich kann zurueckgehen
 					s--;
 					do	
 						s--;
-					while (*s != ':');	// gehe zurueck
-				}
-				else
+					while (*s != *DIRSEPARATOR);	// gehe zurueck
+					reldir = reldir->parent;		// parent anwaehlen
+					continue;
+				} else
 				{
 					// ich kann nicht zurueckgehen
-					if (reldir == drives[drv].drv_dirID)
-					{
-						// bin schon root
-						*restpfad = (char *) t;
-						*symlink = NULL;
-						return ELINK;
-					}
-					err = FSMakeFSSpec(vRefNum, reldir, NULL, &fs);
-					if (err)
-						goto was_doserr;
-					reldir = fs.parID;		// parent anwaehlen
+					// bin schon root
+					*restpfad = t;
+					*symlink = NULL;
+					return ELINK;
 				}
 			}
-			t = (unsigned char *) pathname;	// letztes Element Atari
-			u = s;						// letztes Element Mac ohne ':'
-			*s++ = ':';
-		}
-		else
-		if (c == ':')
-			return TOS_EPTHNF;				// Doppelpunkt nicht erlaubt
-		else
-			*s++ = c;
-	}
-	*s = EOS;
-
-	if (!mode) 			/* Dateinamen noch nicht bearbeiten */
-		*u = EOS;			/* Dateinamen abtrennen vom Mac-Pfad */
-	else
-	{
-		get_parent = false;			// nicht den parent!
-		if ((u[0] == ':') && (u[1] == '.') && (!u[2]))
-			*u = EOS;				// letztes Element "." => abtrennen
-		else
-		if ((u[0] == '.') && (!u[1]))
-			*u = EOS;				// einziges Element "." => abtrennen
-		else
-		if ((u[0] == ':') && (u[1] == '.') && (u[2] == '.') && (!u[3]))
-			goto parent;			// letztes Element ".." => abtrennen
-		else
-		if ((u[0] == '.') && (u[1] == '.') && (!u[2]))
+			*s = '\0';
+			if (fc.drv->drv_flags & M_DRV_DOSNAMES)
+				nameto_8_3(u, mac_dirname, 1);
+			else
+				CTextConversion::Atari2HostUtf8Copy(mac_dirname, u, MAXPATHNAMELEN);
+			if ((newFsFile = new XfsFsFile(mac_dirname)) == NULL)
+			{
+				DebugError("MacXFS: malloc() failed!");
+				return TOS_ENSMEM;
+			}
+			MAPNEWVOIDP(newFsFile);
+			newFsFile->parent = reldir;
+			reldir->childCount++;
+			reldir = newFsFile;
+			*s++ = *DIRSEPARATOR;
+			u = s;						// letztes Element Mac
+		} else if (c == ':')
 		{
-			parent:
-			*u = EOS;				// einziges Element ".." => abtrennen
-			get_parent = true;
+			return TOS_EPTHNF;				// Doppelpunkt nicht erlaubt
+		} else
+		{
+			*s++ = c;
 		}
 	}
+	*s = '\0';
 
-	sp((char *) macpath);
+	newFsFile = reldir;
+	if (!mode) 			/* Dateinamen noch nicht bearbeiten */
+	{
+		*u = '\0';
+	} else
+	{
+		if (s[-1] != *DIRSEPARATOR)
+		{
+			if (fc.drv->drv_flags & M_DRV_DOSNAMES)
+				nameto_8_3(u, mac_dirname, 1);
+			else
+				CTextConversion::Atari2HostUtf8Copy(mac_dirname, u, MAXPATHNAMELEN);
+			if ((newFsFile = new XfsFsFile(mac_dirname)) == NULL)
+			{
+				DebugError("MacXFS: malloc() failed!");
+				return TOS_ENSMEM;
+			}
+			MAPNEWVOIDP(newFsFile);
+			newFsFile->parent = reldir;
+			reldir->childCount++;
+			reldir = newFsFile;
+			*s++ = *DIRSEPARATOR;
+			*s = '\0';
+			u = s;						// letztes Element Mac
+		}
+	}
 
 	/* Jetzt ist der Pfad in einen Mac-Pfad umgewandelt.	*/
 	/* Wir versuchen zunaechst, die dirID mit nur		*/
 	/* einem Aufruf zu bestimmen						*/
 	/* ---------------------------------------------------	*/
-
-	if ((rel_dd->vRefNum == -32768) && (rel_dd->dirID == 0))	// Mac-Root
+	cookie2Pathname(fc.drv, reldir, u, mac_dirname, true);
+#ifdef DEBUG_VERBOSE
+	DebugInfo("CMacXFS::xfs_path2DD(%s -> \"%s\")", macpath, mac_dirname);
+#endif
+	
+	if (stat(mac_dirname, &st) != 0)
 	{
-		if (!strcmp((char *) (macpath + 1), ":"))					// noch Mac-Root
-		{
-			pb.hFileInfo.ioFlAttrib = ioDirMask;
-			reldir = rel_dd->dirID;
-			vRefNum = rel_dd->vRefNum;
-			goto giveback;
-		}
-
-		// Pfad absolut machen
-		memmove(macpath + 1, macpath + 2, strlen((char *) (macpath + 2)));		// ":" eliminieren
-		macpath[strlen((char *) macpath) - 1] = EOS;
-		macpath[0]--;
-
-		// Macke in FSMakeMSSpec ausbügeln für Wurzelverzeichnis eines Volumes
-		if (!strchr((char *) (macpath + 1), ':'))
-		{
-			strcat((char *) (macpath + 1), ":");
-			macpath[0]++;
-		}
-//		DebugStr(macpath);
-	}
-
-	err = FSMakeFSSpec(vRefNum, reldir, (unsigned char *) macpath, &fs);
-
-	/* Wenn das Verzeichnis nicht gefunden wurde, kann	*/
-	/* es sein, dass eines der Verzeichnisse ein Alias ist.*/
-	/* ---------------------------------------------------	*/
-
-	if (err == dirNFErr)
-	{
-		doserr = MakeFSSpecManually(vRefNum, reldir, (char *) macpath, &fs);
-		if (doserr)
-			goto was_doserr2;
-		if (vRefNum2drv(fs.vRefNum, dir_drive))
-			err = nsvErr;
-		else
-			err = noErr;
-	}
-
-	if (err)
-		goto was_doserr;
-
-	vRefNum = fs.vRefNum;
-
-	/* Wir holen uns jetzt die Informationen ueber das	*/
-	/* letzte Pfadelement.							*/
-	/* ---------------------------------------------------	*/
-
-	pb.hFileInfo.ioVRefNum = fs.vRefNum;
-	pb.hFileInfo.ioNamePtr = fs.name;
-	pb.hFileInfo.ioFDirIndex = 0;
-	pb.hFileInfo.ioDirID = fs.parID;
-	if (!pb.hFileInfo.ioNamePtr[0])
-		pb.hFileInfo.ioFDirIndex = -1;
-	err = PBGetCatInfoSync (&pb);
-
-	if (err)
-	{
-		was_doserr:
-		doserr = cnverr(err);
-		was_doserr2:
+		doserr = errnoHost2Mint(errno, TOS_EFILNF);
 		if (doserr == TOS_EFILNF)
 		     doserr = TOS_EPTHNF;
 		return doserr;
-	}
+	}		
 
-	/* ggf. Alias aufloesen */
-	/* ------------------- */
-
-	if (pb.hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias)
-	{
-		doserr = resolve_symlink(&fs, 0, NULL );
-
-		if (!doserr)		/* Der Mac hat dereferenziert! */
-		{
-			pb.hFileInfo.ioVRefNum = fs.vRefNum;
-			pb.hFileInfo.ioNamePtr = fs.name;
-			pb.hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-			pb.hFileInfo.ioDirID = fs.parID;
-			if (!pb.hFileInfo.ioNamePtr[0])
-				pb.hFileInfo.ioFDirIndex = -1;
-			err = PBGetCatInfoSync (&pb);
-			if ((!err) && (vRefNum2drv(fs.vRefNum, dir_drive)))
-				err = nsvErr;
-			if (err)
-				return cnverr(err);			// nix gefunden
-		}
-		else
-			goto was_doserr2;		/* Fehler */
-	}
-
-	reldir = pb.hFileInfo.ioDirID;
-
-	giveback:
 	if (mode)                                       /* Verzeichnis */
 	{
-		if (!(pb.hFileInfo.ioFlAttrib & ioDirMask))
+		if (!S_ISDIR(st.st_mode))
 			return TOS_EPTHNF;                         /* kein SubDir */
 		*restpfad = pathname + strlen(pathname);     /* kein Restpfad */
-		if (get_parent)
-		{
-
-			if (reldir == drives[drv].drv_dirID)
-			{	// bin schon root
-				*symlink = NULL;
-				return ELINK;
-			}
-
-			err = FSMakeFSSpec(vRefNum, reldir, NULL, &fs);
-			if (err)
-				goto was_doserr;
-			reldir = fs.parID;		// parent anwaehlen
-
-			if (reldir == fsRtParID)
-			{
-				vRefNum = -32768;
-				reldir = 0;
-			}
-		}
-	}
-	else
+	} else
 	{
-		*restpfad = (char *) t;                               /* Restpfad */
+		*restpfad = t;                               /* Restpfad */
 	}
 
-	dd->dirID = reldir;
-	dd->vRefNum = vRefNum;
+	dd->dirID = MAPVOIDPTO32(newFsFile);
+	dd->vRefNum = 0;
 
 	return TOS_E_OK;
 }
 
 
-char CMacXFS::getArchiveMask (CInfoPBRec *pb)
-{
-	if ((pb->hFileInfo.ioFlAttrib & ioDirMask) ||			// falls es ein Dir ist …
-		 (pb->hFileInfo.ioFlBkDat >= pb->hFileInfo.ioFlMdDat))	// oder seit der letzten Änderung gesichert wurde …
-	{
-		return 0;
-	}
-	else
-	{
-		return F_ARCHIVE;		// Archiv-Bit wird bei ungesicherten Dateien gesetzt.
-	}
-}
-
-Byte CMacXFS::mac2DOSAttr (CInfoPBRec *pb)
 // Attribute von Mac nach DOS konvertieren
 // 17.6.96: wertet nun auch hidden-flag aus
+unsigned char CMacXFS::mac2DOSAttr(struct stat *st)
 {
-	Byte attr;
-	attr = (Byte) (pb->hFileInfo.ioFlAttrib & (F_RDONLY + F_SUBDIR));
-	attr |= getArchiveMask (pb);
-	if (pb->hFileInfo.ioFlFndrInfo.fdFlags & kIsInvisible)	// 17.6.96 invisible?
+	unsigned char attr;
+	
+	attr = 0;
+	if ((st->st_mode & S_IWUSR) == 0)
+		attr |= F_RDONLY;
+	if (S_ISDIR(st->st_mode))
+		attr |= F_SUBDIR;
+	if (st->st_flags & UF_HIDDEN)
 		attr |= F_HIDDEN;
 	return attr;
 }
@@ -1542,180 +1353,109 @@ Byte CMacXFS::mac2DOSAttr (CInfoPBRec *pb)
 *
 *************************************************************/
 
-int32_t CMacXFS::_snext(uint16_t drv, MAC_DTA *dta)
+int32_t CMacXFS::_snext(MAC_DTA *dta)
 {
-	Str255 VolumeName;
-	HVolumeParam pbh;
-	FSSpec fs;		/* fuer Aliase */
-	CInfoPBRec pb;
-	int32_t doserr;
-	OSErr err;
-	unsigned char macname[256];		// Pascalstring Mac-Dateiname
-	char atariname[256];			// C-String Atari-Dateiname (lang)
-	unsigned char dosname[14], cmpname[14];	// intern, 8+3
-	bool first = !drives[drv].drv_rvsDirOrder && !drives[drv].drv_readOnly;
+	char atariname[MAXPATHNAMELEN];			// C-String Atari-Dateiname (lang)
+	char dosname[14];
+	struct dirent *dirEntry;
+	DIR *dir;
+	char fpathName[MAXPATHNAMELEN];
+	_MAC_DTA *macdta;
+	struct stat st;
 
+	if (dta->macdta.magic != DTA_MAGIC)
+		return TOS_EINTRN;
 
-	DebugInfo("CMacXFS::_snext() -- pattern = %.11s", dta->macdta.sname);
+	macdta = dta->macdta.macdta;
+	dir = macdta->hostDir;
 
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
-		return TOS_EDRIVE;
-
-	if ((dta->macdta.vRefNum == -32768) && (dta->macdta.dirID == 0))	// Mac-Root
-	{
-		pbh.ioNamePtr = VolumeName;
-
-		for	(;;)
-		{
-			pbh.ioVolIndex = (short) dta->macdta.index;
-			err = PBHGetVInfoSync ((HParmBlkPtr)&pbh);
-			if (err)
-				break;	// keine weiteren Volumes
-
-			dta->macdta.index++;
-			pstrcpy(macname, pbh.ioNamePtr);
-			/* Datei gefunden, passen Name und Attribut ? */
-			macname[macname[0]+1] = EOS;
-			MacFnameToAtariFname(macname + 1,
-							(unsigned char *) atariname);	// Umlaute wandeln
-			if (conv_path_elem(atariname, (char *) dosname))		// Konvertier. fuer Vergleich
-				continue;			/* Dateiname zu lang */
-
-			dosname[11] = F_SUBDIR;
-
-			if (filename_match(dta->macdta.sname, (char *) dosname))
-			{
-				pb.hFileInfo.ioFlMdDat = pbh.ioVLsMod;
-				goto doit;
-			}
-		}
-
-		dta->macdta.sname[0] = EOS;                  /* DTA ungueltig machen */
-		return TOS_ENMFIL;
-	}
+	DebugInfo("CMacXFS::_snext() -- pattern=%.11s", macdta->sname);
 
 	/* suchen */
 	/* ------ */
 
-	pb.hFileInfo.ioNamePtr = macname;
-	do
+	for (;;)
 	{
-		again:
-
-		/* Ende des Verzeichnisses erreicht (index == 0):	*/
-		/* --------------------------------------------	*/
-
-		if (dta->macdta.index == 0)
+		/* Verzeichniseintrag lesen. */
+		if ((dirEntry = readdir(dir)) == NULL)
 		{
-			dta->macdta.sname[0] = EOS;                  /* DTA ungueltig machen */
+			/* Ende des Verzeichnisses erreicht */
+			/* --------------------------------------------	*/
+			macdta->sname[0] = '\0';                  /* DTA ungueltig machen */
 			return TOS_EFILNF;
 		}
 
-		/* Verzeichniseintrag (PBREC) lesen.		*/
-		/* --------------------------------	*/
-		pb.hFileInfo.ioVRefNum = dta->macdta.vRefNum;
-		pb.hFileInfo.ioFDirIndex = (short) dta->macdta.index;
-		pb.hFileInfo.ioDirID = dta->macdta.dirID;
-		/* notwendige Initialisierung fuer Verzeichnisse (sonst Muell!) */
-		pb.hFileInfo.ioFlLgLen = 0;
-		pb.hFileInfo.ioFlPyLen = 0;
-		err = PBGetCatInfoSync(&pb);
-		if (err)
+		/*
+		 * Skip "." & ".." when at root dir;
+		 * they are typically not present in Atari filesystems
+		 */
+		if (!macdta->fc.index->parent)
 		{
-			DebugInfo("CMacXFS::_snext() -- PBGetCatInfoSync() => %d", err);
-			dta->macdta.sname[0] = EOS;                  /* DTA ungueltig machen */
-			return cnverr(err);
+			if (dirEntry->d_name[0] == '.' &&
+				(!dirEntry->d_name[1] ||
+				  (dirEntry->d_name[1] == '.' && !dirEntry->d_name[2])))
+				continue;
 		}
 
-		if (drives[drv].drv_rvsDirOrder)
-		{
-			dta->macdta.index--;
-		}
-		else
-		{
-			dta->macdta.index++;
-		}
+		macdta->index++;
 
 		/* Datei gefunden, passen Name und Attribut ? */
-		/* geht nicht wegen Compilerfehler in 1.2.2: */
-		/* conv_path_elem(cs(macname), dosname); */
 
-		macname[macname[0] + 1] = EOS;
-		MacFnameToAtariFname(macname + 1, (unsigned char *) atariname);	// Umlaute wandeln
-/*
-		if (atariname[0] == '.')
-			DebugInfo("CMacXFS::_snext() -- name = %s", atariname);
-*/
+		CTextConversion::Host2AtariUtf8Copy(atariname, dirEntry->d_name, sizeof(atariname));
 		DebugInfo("CMacXFS::_snext() -- directory entry found: \"%s\"", atariname);
 
-		if (conv_path_elem(atariname, (char *) dosname))		// Konvertier. fuer Vergleich
+		if (conv_path_elem(atariname, dosname))		// Konvertier. fuer Vergleich
 		{
 			DebugInfo("CMacXFS::_snext() -- skip long filename \"%s\"", atariname);
-			goto again;			/* Dateiname zu lang */
+			continue;			/* Dateiname zu lang */
 		}
 
+		
 		/* Schon hier muessen wir eventuelle Aliase	*/
 		/* dereferenzieren, damit der Attributvergleich	*/
 		/* moeglich ist (Attr aus Datei, nicht Alias!)	*/
 		/* -----------------------------------------	*/
-		if (pb.hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias)
+		if (dirEntry->d_type == DT_LNK)
 		{
 			DebugInfo("CMacXFS::_snext() -- dereference Alias %s", atariname);
 
-			/* FSSpec erstellen und Alias dereferenzieren	*/
+			/* Alias dereferenzieren	*/
 			/* ----------------------------------------	*/
-			cfss(drv, dta->macdta.dirID, dta->macdta.vRefNum, macname + 1, &fs, false);
-			doserr = resolve_symlink( &fs, 0, NULL );
-
-			if (!doserr)		/* Der Mac hat dereferenziert! */
-			{
-				pb.hFileInfo.ioVRefNum = fs.vRefNum;
-				pb.hFileInfo.ioNamePtr = fs.name;
-				pb.hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-				pb.hFileInfo.ioDirID = fs.parID;
-				if (pb.hFileInfo.ioNamePtr[0] == 0) pb.hFileInfo.ioFDirIndex = -1;
-				err = PBGetCatInfoSync (&pb);
-				if (err)
-				{
-					dta->macdta.sname[0] = EOS;                  /* DTA ungueltig machen */
-					return cnverr(err);
-				}
-				pb.hFileInfo.ioNamePtr = (unsigned char*)macname;
-			}
-		}
-
-		dosname[11] = mac2DOSAttr(&pb);
-		
-		if (first)
+			cookie2Pathname(&macdta->fc, NULL, fpathName, true);
+			strcat(fpathName, DIRSEPARATOR);
+			strcat(fpathName, dirEntry->d_name);
+			if (stat(fpathName, &st) != 0)
+				continue;
+			dosname[11] = mac2DOSAttr(&st);
+		} else
 		{
-			first = false;
-			if (nameto_8_3(macname + 1, cmpname, 1, true))
-				goto again;		// mußte Dateinamen kürzen!
-
-			if (!strncmp (dta->mxdta.dta_name, (char *) cmpname, 12))
-				goto again;
+			cookie2Pathname(&macdta->fc, NULL, fpathName, true);
+			strcat(fpathName, DIRSEPARATOR);
+			strcat(fpathName, dirEntry->d_name);
+			if (stat(fpathName, &st) != 0)
+			{
+				DebugInfo("stats %s failed", fpathName);
+				continue;
+			}
+			dosname[11] = mac2DOSAttr(&st);
 		}
+		if (filename_match(macdta->sname, dosname))
+			break;
 	}
-	while (!filename_match(dta->macdta.sname, (char *) dosname));
 
 	/* erfolgreich: DTA initialisieren. Daten liegen nur in der Data fork */
 	/* ------------------------------------------------------------------ */
 
-//	keine Ahnung, was das sollte:
-//	if (!drives[drv].drv_rvsDirOrder && !drives[drv].drv_readOnly)
-//		--dta->macdta.index;		// letzten Eintrag das nächste Mal nochmal lesen!
-
 doit:
-	dta->mxdta.dta_attribute = (char) dosname[11];
-	dta->mxdta.dta_len = cpu_to_be32((uint32_t) ((dosname[11] & F_SUBDIR) ? 0L : pb.hFileInfo.ioFlLgLen));
-	/* Datum ist ioFlMdDat bzw. ioDrMdDat */
-	date_mac2dos(pb.hFileInfo.ioFlMdDat,	(uint16_t *) &(dta->mxdta.dta_time),
-								(uint16_t *) &(dta->mxdta.dta_date));
+	dta->mxdta.dta_attribute = dosname[11];
+	dta->mxdta.dta_len = cpu_to_be32((uint32_t) ((dosname[11] & F_SUBDIR) ? 0 : st.st_size));
+	date_mac2dos(st.st_mtime, &dta->mxdta.dta_time, &dta->mxdta.dta_date);
 
 	dta->mxdta.dta_time = cpu_to_be16(dta->mxdta.dta_time);
 	dta->mxdta.dta_date = cpu_to_be16(dta->mxdta.dta_date);
 
-	nameto_8_3 (macname + 1, (unsigned char *) dta->mxdta.dta_name, 1, true);
+	nameto_8_3(atariname, dta->mxdta.dta_name, 1);
+	DebugInfo("CMacXFS::_snext() -- return: \"%s\"", dta->mxdta.dta_name);
 	return TOS_E_OK;
 }
 
@@ -1729,50 +1469,45 @@ doit:
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_sfirst(uint16_t drv, MXFSDD *dd, char *name,
+int32_t CMacXFS::xfs_sfirst(XfsCookie *fc, char *name,
                     MAC_DTA *dta, uint16_t attrib)
 {
-	if (drv >= NDRVS)
+	char fpathName[MAXPATHNAMELEN];
+	DIR *dir;
+	int32_t err;
+
+	if (fc->drv == NULL)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_fsspec.vRefNum == 0)
-		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (fc->drv->drv_changed)
 		return TOS_E_CHNG;
 
-//	DebugInfo("CMacXFS::xfs_sfirst(%s, attrib = %d)", name, (int) attrib);
-
+	dta->macdta.magic = 0;
 	/* Unschoenheit im Kernel ausbügeln: */
-	dta->mxdta.dta_drive = (char) drv;
-	conv_path_elem(name, dta->macdta.sname);	// Suchmuster -> DTA
+	dta->mxdta.dta_drive = fc->dev;
 	dta->mxdta.dta_name[0] = 0;		//  gefundenen Namen erstmal löschen
-	dta->macdta.sattr = (char) attrib;			// Suchattribut
-	dta->macdta.dirID = dd->dirID;
-	dta->macdta.vRefNum = dd->vRefNum;
-
-	if (drives[drv].drv_rvsDirOrder)
+	cookie2Pathname(fc, NULL, fpathName, true);
+	DebugInfo("CMacXFS::xfs_sfirst(%s, attrib=0x%04x)", fpathName, attrib);
+	dir = host_opendir(fpathName);
+	if (dir == NULL)
+		return errnoHost2Mint(errno, TOS_EPTHNF);
+	dta->macdta.magic = DTA_MAGIC;
+	dta->macdta.macdta = new _MAC_DTA;
+	dta->macdta.macdta->hostDir = dir;
+	dta->macdta.macdta->sattr = (char) attrib;			// Suchattribut
+	conv_path_elem(name, dta->macdta.macdta->sname);	// Suchmuster -> DTA
+	dta->macdta.macdta->fc = *fc;
+	err = _snext(dta);
+	/*
+	 * when not looking for a pattern, we are done with this directory
+	 */
+	if (strchr(dta->macdta.macdta->sname, '?') == NULL)
 	{
-		CInfoPBRec pb;
-		//Str255 name2;
-		OSErr err;
-
-		pb.hFileInfo.ioNamePtr = nil;
-		pb.hFileInfo.ioVRefNum = drives[drv].drv_fsspec.vRefNum;
-		pb.hFileInfo.ioFDirIndex = -1; // get info of directory
-		pb.hFileInfo.ioDirID = dd->dirID;
-		err = PBGetCatInfoSync (&pb);
-		if (err)
-		{
-			dta->macdta.sname[0] = EOS;                  // DTA ungueltig machen
-			return cnverr (err);
-		}
-		dta->macdta.index = pb.dirInfo.ioDrNmFls;      // letzte Datei zuerst, dann weiter rückwärts
+		closedir(dta->macdta.macdta->hostDir);
+		delete dta->macdta.macdta;
+		dta->macdta.macdta = NULL;
+		dta->macdta.magic = 0;
 	}
-	else
-	{
-		dta->macdta.index = 1;						// erste Datei
-	}
-
-	return _snext(drv, dta);
+	return err;
 }
 
 
@@ -1783,22 +1518,30 @@ int32_t CMacXFS::xfs_sfirst(uint16_t drv, MXFSDD *dd, char *name,
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_snext(uint16_t drv, MAC_DTA *dta)
+int32_t CMacXFS::xfs_snext(uint16_t dev, MAC_DTA *dta)
 {
 	int32_t err;
 
-	if (drv >= NDRVS)
+	if (dta->macdta.magic != DTA_MAGIC)
+		return TOS_EINTRN;
+	if (dev != dta->macdta.macdta->fc.dev)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_fsspec.vRefNum == 0)
-		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (dta->macdta.macdta->fc.drv->drv_changed)
 		return TOS_E_CHNG;
 
-	if (!dta->macdta.sname[0])
-		return TOS_ENMFIL;
-	err = _snext(drv, dta);
+	if (!dta->macdta.macdta->sname[0])
+		err = TOS_ENMFIL;
+	else
+		err = _snext(dta);
 	if (err == TOS_EFILNF)
 		err = TOS_ENMFIL;
+	if (err == TOS_ENMFIL)
+	{
+		closedir(dta->macdta.macdta->hostDir);
+		delete dta->macdta.macdta;
+		dta->macdta.macdta = NULL;
+		dta->macdta.magic = 0;
+	}
 	return err;
 }
 
@@ -1822,181 +1565,65 @@ int32_t CMacXFS::xfs_snext(uint16_t drv, MAC_DTA *dta)
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
-			uint16_t omode, uint16_t attrib)
+int32_t CMacXFS::xfs_fopen(XfsCookie *fc, const char *name, uint16_t omode, uint16_t attrib)
 {
-	FSSpec fs;
-	FInfo finfo;
-	OSErr err;
-	int32_t doserr;
-	SignedByte perm;
-	/* HParamBlockRec pb; */
-	short host_fd;
-	unsigned char dosname[20];
-
+	int host_fd;
+	char fpathName[MAXPATHNAMELEN];
 
 #if DEBUG_68K_EMU
 	if (!strcmp(name, ATARI_PRG_TO_TRACE))
 		trigger = 1;
 #endif
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_fopen(„%s“, drv = %d, omode = %d)", name, (int) drv, (int) omode);
-	__dump((const unsigned char *) dd, sizeof(*dd));
+	DebugInfo("CMacXFS::xfs_fopen('%s', drv=%d, omode=%d)", name, fc->dev, omode);
 #endif
 
 #ifdef DEMO
-	if (omode & O_CREAT)
+	if (omode & _ATARI_O_CREAT)
 	{
 		(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
 		return TOS_EWRPRO;
 	}
 #endif
 
-	if (drv >= NDRVS)
+	if (fc->drv == NULL)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_fsspec.vRefNum == 0)
-		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (fc->drv->drv_changed)
 		return TOS_E_CHNG;
 
 	if (fname_is_invalid(name))
 		return TOS_EACCDN;
 
-	if (!drives[drv].drv_longnames)
+	int flags = flagsMagic2Host(omode);
+	if ((fc->drv->drv_flags & M_DRV_READONLY) && (flags & O_CREAT))
+		return TOS_EWRPRO;
+		 
+	cookie2Pathname(fc, name, fpathName, true);
+	
+#ifdef NOTYET
+	if (!fc->index->created && (flags & O_CREAT))
 	{
-		// keine langen Namen: nach Großschrift und 8+3
-		nameto_8_3 ((unsigned char *) name, dosname, 2, false);
-		name = (char *) dosname;
+		// if xfs_creat()'ed file is now opened with O_CREAT
+		// then set the special index->created to true
+		fc->index->created = true;
+
+		// clear the O_EXCL and O_CREAT flags
+		flags &= ~(O_CREAT|O_EXCL);
 	}
+#endif
 
-	// Note that dirID and vRefNum always are in the host's natural byte order,
-	// so we do not have to endian-convert here
-	cfss(drv, dd->dirID, dd->vRefNum, (unsigned char *) name, &fs, true);
-
-	/* Datei erstellen, wenn noetig */
-	/* ---------------------------- */
-
-	if (omode & O_CREAT)
-	{
-		OSType creator, type;
-		creator = MyCreator;
-		type = 'TEXT';
-		GetTypeAndCreator ((char*) fs.name + 1, &type, &creator);
-		err = FSpCreate(&fs, creator, type, smSystemScript);
-
-		if (err == dupFNErr)        /* Datei existiert schon */
-		{
-			if (omode & O_EXCL)
-				return TOS_EACCDN;
-			err = FSpDelete(&fs);
-			if (!err)
-				err = FSpCreate(&fs, creator, type, smSystemScript);
-		}
-
-		/* Dateiattribute aendern, wenn noetig */
-		/* ----------------------------------- */
-
-		if ((!err) && (attrib & (F_RDONLY+F_HIDDEN)))
-		{
-			doserr = xfs_attrib(drv, dd, name, 1 /*write*/, attrib);
-			if (doserr >= 0)
-				doserr = 0;
-			if (doserr)
-				err = permErr;
-		}
-
-		if (err)
-			return cnverr(err);
-	}
-
-
-	/* Open-Modus festlegen. Problem: Der Mac hat unzureichende	*/
-	/* Moeglichkeiten, den Modus zu spezifizieren. Deshalb z.B.:	*/
-
-	/* exklusiv lesen, andere duerfen weder lesen noch schreiben	*/
-	/* (OM_RPERM + OM_RDENY + OM_WDENY) => fsRdPerm			*/
-	/*							(exklusiv lesen)		*/
-
-	/* exklusiv schreiben, andere weder lesen noch schreiben		*/
-	/* (OM_WPERM + OM_RDENY + OM_WDENY) => fsWrPerm		*/
-	/*							(exclusive write)		*/
-
-	/* gemeinsames Lesen, andere duerfen nicht schreiben		*/
-	/* (OM_RPERM + OM_WDENY) => fsRdWrShPerm				*/
-	/*	(!! ACHTUNG)				(shared read+write)	*/
-
+	host_fd = open(fpathName, flags|O_BINARY, 0644);
+	if (host_fd < 0)
+		return errnoHost2Mint(errno, TOS_EFILNF);
 	/*
-		Genauer: Wenn der Atari nicht WDENY _und_ RDENY angibt, darf
-		die Datei z.B. von anderen Prozessen gelesen werden.
-		Deshalb wird dann immer fsRdWrShPerm ausgefuehrt. Damit sind
-		saemtliche Sicherheitsmechanismen zum Teufel, da andere Prozesse
-		nun auch schreiben duerfen.
-	*/
-
-	if ((omode & (OM_RDENY+OM_WDENY)) == (OM_RDENY+OM_WDENY))
-		// niemand sonst darf lesen oder schreiben
+	 * The host_fd member in MAC_FD is signed 16 bit,
+	 * make sure we can store the fd there
+	 */
+	if (host_fd > 0x7fff)
 	{
-		if ((omode & (OM_WPERM+OM_RPERM)) == OM_WPERM+OM_RPERM)
-			perm = fsRdWrPerm;	// Lesen und Schreiben
-		else
-		if (omode & OM_WPERM)
-			perm = fsWrPerm;		// kein Lesen, nur Schreiben
-		else
-			perm = fsRdPerm;		// nur Lesen, kein Schreiben
+		close(host_fd);
+		return TOS_ENHNDL;
 	}
-	else
-	// andere dürfen auch Lesen und/oder Schreiben
-	{
-		perm = fsRdWrShPerm;
-	}
-
-	/* Bevor wir irgendetwas treiben, muessen wir feststellen,	*/
-	/* ob es sich bei der Datei um einen Alias handelt!		*/
-	/* ------------------------------------------------------ */
-
-	err = FSpGetFInfo (&fs, &finfo);
-	if (err)
-		return cnverr(err);
-	if (finfo.fdFlags & kIsAlias)
-	{
-		doserr = resolve_symlink( &fs, 0, NULL);
-		if (doserr)
-			return doserr;
-	}
-
-	err = FSpOpenDF(&fs, perm, &host_fd);
-
-	if ((cnverr (err) == TOS_EACCDN) && (perm == fsRdWrShPerm) && ((omode & OM_WPERM) == 0))
-		// Datei ist entw. schreibgeschützt oder bereits zum exkl. Lesen/Schreiben geöffnet.
-		// Da der User nur lesen wollte, probieren wir´s deshalb mal mit exkl. Lesen
-		// für den Fall, daß die Datei lediglich schreibgeschützt ist (mehrere exkl.
-		// Leser erlaubt das Mac-FS nämlich).
-	{
-		if (FSpOpenDF(&fs, fsRdPerm, &host_fd) == noErr)
-			err = 0;	// hat geklappt!
-	}
-
-/*
-	pb.ioParam.ioVRefNum = drives[drv].drv_fsspec.vRefNum;
-	pb.ioParam.ioNamePtr = fs.name;
-	pb.ioParam.ioPermssn = perm;
-	pb.ioParam.ioMisc = 0;
-	pb.fileParam.ioDirID = dirID;
-	err = PBHOpen(&pb, FALSE);
-*/
-	if (err)
-		return cnverr(err);
-
-	if (omode & O_TRUNC)
-	{
-		err = SetEOF(host_fd, 0L);
-		if (err)
-		{
-			FSClose(host_fd);
-			return cnverr(err);
-		}
-	}
-
 #if DEBUG_68K_EMU
 	if (trigger == 1)
 	{
@@ -2004,6 +1631,38 @@ int32_t CMacXFS::xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
 		trigger++;
 	}
 #endif
+
+	/* Datei erstellen, wenn noetig */
+	/* ---------------------------- */
+
+	if (omode & _ATARI_O_CREAT)
+	{
+#if 0
+		/*
+		 * don't do that. It will create a resource fork in the file,
+		 * and Atari-Programs can't handle that
+		 */
+		OSType creator, type;
+		creator = MyCreator;
+		type = 'TEXT';
+		GetTypeAndCreator (fpathName, &type, &creator);
+		err = FSpCreate(&fs, creator, type, smSystemScript);
+#endif
+
+		/* Dateiattribute aendern, wenn noetig */
+		/* ----------------------------------- */
+
+		if (attrib & F_HIDDEN)
+		{
+			struct stat st;
+			
+			if (fstat(host_fd, &st) != 0 || fchflags(host_fd, st.st_flags | UF_HIDDEN) != 0)
+			{
+				close(host_fd);
+				return errnoHost2Mint(errno, TOS_EACCDN);
+			}
+		}
+	}
 
 	/*
 	 * has to be swapped, because it is written on the Atari-side to the FD
@@ -2021,27 +1680,30 @@ int32_t CMacXFS::xfs_fopen(char *name, uint16_t drv, MXFSDD *dd,
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_fdelete(uint16_t drv, MXFSDD *dd, char *name)
+int32_t CMacXFS::xfs_fdelete(XfsCookie *dir, const char *name)
 {
 #ifdef DEMO
-	#pragma unused(drv, dd, name)
+	#pragma unused(dir, name)
 	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
 	return TOS_EWRPRO;
 #else
-	FSSpec fs;
-	OSErr err;
+	char fpathName[MAXPATHNAMELEN];
 
-	if (drv >= NDRVS)
+	if (dir->drv == NULL)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_fsspec.vRefNum == 0)
-		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (dir->drv->drv_changed)
 		return TOS_E_CHNG;
+	if (dir->drv->drv_flags & M_DRV_READONLY)
+		return TOS_EWRPRO;
 
-//	DebugInfo("CMacXFS::xfs_fdelete(name = %s)", name);
-	cfss(drv, dd->dirID, dd->vRefNum, (unsigned char *) name, &fs, true);
-	err = FSpDelete(&fs);
-	return cnverr(err);
+	cookie2Pathname(dir, name, fpathName, true); // get the cookie filename
+
+//	DebugInfo("CMacXFS::xfs_fdelete(name=%s)", fpathName);
+
+	if (unlink(fpathName))
+		return errnoHost2Mint(errno, TOS_EFILNF);
+
+	return TOS_E_OK;
 #endif
 }
 
@@ -2062,204 +1724,137 @@ int32_t CMacXFS::xfs_fdelete(uint16_t drv, MXFSDD *dd, char *name)
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_link(uint16_t drv, char *nam1, char *nam2,
-               MXFSDD *dd1, MXFSDD *dd2, uint16_t mode, uint16_t dst_drv)
+int32_t CMacXFS::xfs_link(XfsCookie *fromDir, char *fromname, XfsCookie *toDir, char *toname, uint16_t mode)
 {
 #ifdef DEMO
-	#pragma unused(drv, nam1, nam2, dd1, dd2, mode, dst_drv)
+	#pragma unused(fromDir, fromname, toDir, toname, mode)
 	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
 	return TOS_EWRPRO;
 #else
-	long doserr;
-	FSSpec fs1,fs2;
-	FInfo fi;
-	Str63 name;
-	OSErr err;
-	int diffnames;
-	unsigned char tempname[256];
 
-
-	memcpy(tempname, "\pmmac&&&", 9);
-
-	if (drv >= NDRVS ||
-		dst_drv >= NDRVS ||
-		drives[drv].drv_fsspec.vRefNum == 0 || drives[dst_drv].drv_fsspec.vRefNum == 0)
+	if (fromDir->drv == NULL || toDir->drv == NULL)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_changed || drives[dst_drv].drv_changed)
+	if (fromDir->drv->drv_changed || toDir->drv->drv_changed)
 		return TOS_E_CHNG;
-	if (drives[drv].drv_fsspec.vRefNum != drives[dst_drv].drv_fsspec.vRefNum)
-		return TOS_ENSAME;		// !AK: 23.1.97
 	// auf demselben Volume?
-	if (dd1->vRefNum != dd2->vRefNum)
+	if (fromDir->dev != toDir->dev)
 		return TOS_ENSAME;
-	if (fname_is_invalid(nam2))
+	if (fname_is_invalid(toname))
 		return TOS_EACCDN;
+	if ((fromDir->drv->drv_flags & M_DRV_READONLY) || (toDir->drv->drv_flags & M_DRV_READONLY))
+		return TOS_EWRPRO;
+
+	char ffromName[MAXPATHNAMELEN];
+	cookie2Pathname(fromDir, fromname, ffromName, true);
+
+	char ftoName[MAXPATHNAMELEN];
+	cookie2Pathname(toDir, toname, ftoName, true);
 
 	if (mode)
-		return TOS_EINVFN;          // keine Hardlinks
-
-	/* Beide Namen ins Mac-Format wandeln */
-
-	doserr = cfss(drv, dd1->dirID, dd1->vRefNum, (unsigned char *) nam1, &fs1, true);
-	if (doserr)
-		return doserr;
-	doserr = cfss(dst_drv, dd2->dirID, dd2->vRefNum, (unsigned char *) nam2, &fs2, true);
-	if (doserr)
-		return doserr;
-
-	diffnames = strcmp((char *) fs1.name + 1, (char *) fs2.name + 1);
-
-	again:
-	fs1.parID = dd1->dirID;		// Quellname
-
-	if (dd1->dirID == dd2->dirID)			// rename
 	{
-		err = FSpRename(&fs1, fs2.name);
-
-		// T&C setzen:
-		if (!err)
-		{
-			FSpGetFInfo (&fs2, &fi);
-			GetTypeAndCreator ((char *) fs2.name + 1, &fi.fdType, &fi.fdCreator);
-			fi.fdCreator = MyCreator ;
-			fi.fdType = 'TEXT';
-			FSpSetFInfo (&fs2, &fi);
-		}
-
-	}
-	else
-	{					// move
-		CMovePBRec r;
-
-
-		// Bei unterschiedlichen Namen muessen wir erst testen,
-		// ob die Zieldatei im Zielverzeichnis existiert
-		// ----------------------------------------------------
-
-		if (diffnames)
-		{
-			err = FSpGetFInfo (&fs2, &fi);
-			if (err != fnfErr)		// file not found ??
-			{
-				if (!err)			// Datei existiert => TOS_EACCDN
-					err = permErr;
-				goto ende;			// Aufruf abbrechen
-			}
-		}
-
-		/* Wir verschieben jetzt die Quelldatei mit demselben Namen	*/
-		/* ins neue Verzeichnis. Das kann natürlich schief gehen. 		*/
-		/* -----------------------------------------------------------	*/
-
-		r.ioNamePtr = fs1.name;
-		r.ioVRefNum = fs1.vRefNum;
-		r.ioDirID = fs1.parID;
-		r.ioNewName = nil;		// Zielverzeichnis: ioNewDirID
-		r.ioNewDirID = dd2->dirID;
-		err = PBCatMoveSync(&r);
-
-		if (!diffnames)		// umbenennen ?
-			goto ende;			// nein, wir sind fertig
-
-		// Wenn beim Verschieben der Quellname im Zielverzeichnis
-		// schon existiert, muessen wir erst die Quelldatei in
-		// einen Temporaernamen umbenennen, sie dann in das
-		// Zielverzeichnis schieben und dort umbenennen
-		// ------------------------------------------------------
-
-		if (err == dupFNErr)
-		{
-			err = FSpRename (&fs1, tempname);
-			if (!err)
-			{
-				r.ioNamePtr = tempname;
-				err = PBCatMoveSync(&r);
-
-				if (!err)
-				{
-					// Datei liegt mit Temporaernamen im Zielverzeichnis
-					dd1->dirID = dd2->dirID;
-					strcpy((char *) fs1.name, (char *) tempname);	// Quellname
-					goto again;
-				}
-				else
-				{
-
-					// Verschieben ging nicht.
-					// Datei wieder in fs1.name umbenennen
-					// -----------------------------------
-
-					strcpy((char *) name, (char *) fs1.name);
-					strcpy((char *) fs1.name, (char *) tempname);
-					FSpRename(&fs1, name);
-				}
-			}
-		}
-
-		// Wenn das Verschieben geklappt hat und die Zieldatei
-		// einen anderen Namen als die Quelldatei hat, muessen wir
-		// sie nach dem Verschieben noch umbenennen.
-		// -------------------------------------------------------
-
-		if (!err)				// move and rename
-		{
-			dd1->dirID = dd2->dirID;		// Quelldatei jetzt in dirID2
-			goto again;			// zum Umbenennen
-		}
-	}
-ende:
-	return cnverr(err);
+		if (link(ffromName, ftoName) != 0)
+			return errnoHost2Mint(errno, TOS_EFILNF);
+	} else
+	{
+		if (rename(ffromName, ftoName) != 0)
+			return errnoHost2Mint(errno, TOS_EFILNF);
+	}	
+	return TOS_E_OK;
 #endif
 }
 
 
 /*************************************************************
 *
-* Wandelt CInfoPBRec => XATTR
+* Wandelt struct stat => XATTR
 *
 * (Fuer Fxattr und Dxreaddir)
 *
 *************************************************************/
 
-void CMacXFS::cinfo_to_xattr(CInfoPBRec * pb, XATTR *xattr, uint16_t drv)
+void CMacXFS::convert_to_xattr(struct stat *st, XATTR *xattr)
 {
-#pragma unused(drv)
-	xattr->attr = cpu_to_be16(mac2DOSAttr(pb));
+	uint64 blksize, blocks;
 
-	if (pb->hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias)
-		xattr->mode = cpu_to_be16(_ATARI_S_IFLNK);		// symlink
-	else
-	if (xattr->attr & cpu_to_be16(F_SUBDIR))
-		xattr->mode = cpu_to_be16(_ATARI_S_IFDIR);		// subdir
-	else
-		xattr->mode = cpu_to_be16(_ATARI_S_IFREG);		// regular file
+	xattr->attr = cpu_to_be16(mac2DOSAttr(st));
+	xattr->mode = cpu_to_be16(modeHost2Mint(st->st_mode));
 
-		
-
-	xattr->mode |= cpu_to_be16(0777);				// rwx fuer user/group/world
-	if (xattr->attr & cpu_to_be16(F_RDONLY))
-		xattr->mode &= cpu_to_be16(~(0222));		// Schreiben verboten
-
-	xattr->index = cpu_to_be32((uint32_t) pb->hFileInfo.ioDirID);
-	xattr->dev = cpu_to_be16((uint16_t) pb->hFileInfo.ioVRefNum);
+	xattr->index = cpu_to_be32((uint32_t) st->st_ino);
+	xattr->dev = cpu_to_be16((uint16_t) st->st_dev);
 	xattr->reserved1 = 0;
-	xattr->nlink = cpu_to_be16(1);
-	xattr->uid = xattr->gid = 0;
+	xattr->nlink = cpu_to_be16(st->st_nlink);
+	xattr->uid = cpu_to_be16(st->st_uid);
+	xattr->gid = cpu_to_be16(st->st_gid);
 	// F_SUBDIR-Abfrage ist unbedingt nötig!
-	xattr->size = cpu_to_be32((uint32_t) ((be16_to_cpu(xattr->attr) & F_SUBDIR) ?
-								0 : pb->hFileInfo.ioFlLgLen));	// Log. Laenge Data Fork
-	xattr->blksize = cpu_to_be32(512);			// ?????
-	xattr->nblocks = cpu_to_be32((uint32_t) (pb->hFileInfo.ioFlPyLen / 512));	// Phys. Länge / Blockgröße
-	date_mac2dos(pb->hFileInfo.ioFlMdDat, &(xattr->mtime), &(xattr->mdate));
+	if (be16_to_cpu(xattr->attr) & F_SUBDIR)
+		xattr->size = 0;
+	else if ((uint64_t)st->st_size >= 0x100000000ULL)
+		xattr->size = cpu_to_be32(0xFFFFFFFFUL); /* too large to be expressed in 32 bits */
+	else
+		xattr->size = cpu_to_be32((uint32_t)st->st_size);
+	blksize = st->st_blksize;
+	xattr->blksize = cpu_to_be32(blksize);
+	/*
+	 * st->st_blocks is always in number of 512 bytes,
+	 * regardless of blksize
+	 */
+	blocks = (st->st_blocks * 512 + blksize - 1) / blksize;
+	if (blocks >= 0x100000000ULL)
+		blocks = 0xFFFFFFFFUL;
+	xattr->nblocks = cpu_to_be32(blocks);	// Phys. Länge / Blockgröße
+	date_mac2dos(st->st_mtime, &xattr->mtime, &xattr->mdate);
 	xattr->mtime = cpu_to_be16(xattr->mtime);
 	xattr->mdate = cpu_to_be16(xattr->mdate);
-	xattr->atime = xattr->mtime;
-	xattr->adate = xattr->mdate;
-	date_mac2dos(pb->hFileInfo.ioFlCrDat, &(xattr->ctime), &(xattr->cdate));
+	date_mac2dos(st->st_atime, &xattr->atime, &xattr->adate);
+	xattr->atime = cpu_to_be16(xattr->atime);
+	xattr->adate = cpu_to_be16(xattr->adate);
+	date_mac2dos(st->st_ctime, &xattr->ctime, &xattr->cdate);
 	xattr->ctime = cpu_to_be16(xattr->ctime);
 	xattr->cdate = cpu_to_be16(xattr->cdate);
 	xattr->reserved2 = 0;
 	xattr->reserved3[0] = xattr->reserved3[1] = 0;
+}
+
+#if (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
+#  define st_atimensec st_atimespec.tv_nsec
+#  define st_mtimensec st_mtimespec.tv_nsec
+#  define st_ctimensec st_ctimespec.tv_nsec
+#endif
+
+void CMacXFS::convert_to_stat64(struct stat *st, MINT_STAT64 *statp)
+{
+	statp->_st_dev = cpu_to_be64(st->st_dev); // FIXME: this is Linux's one
+	statp->_st_ino = cpu_to_be32(st->st_ino); // FIXME: this is Linux's one
+	statp->_st_mode = cpu_to_be32(modeHost2Mint(st->st_mode));
+	statp->_st_nlink = cpu_to_be32(st->st_nlink);
+	statp->_st_uid = cpu_to_be32(st->st_uid); // FIXME: this is Linux's one
+	statp->_st_gid = cpu_to_be32(st->st_gid); // FIXME: this is Linux's one
+	statp->_st_rdev = cpu_to_be64(st->st_rdev); // FIXME: this is Linux's one
+
+	statp->_st_atime = cpu_to_be64(st->st_atime);
+	statp->_st_atime_ns = cpu_to_be32(st->st_atimensec);
+	statp->_st_mtime = cpu_to_be64(st->st_mtime);
+	statp->_st_mtime_ns = cpu_to_be32(st->st_mtimensec);
+	statp->_st_ctime = cpu_to_be64(st->st_ctime);
+	statp->_st_ctime_ns = cpu_to_be32(st->st_ctimensec);
+
+	statp->_st_size = cpu_to_be64(st->st_size);
+	uint64 blksize, blocks;
+	blksize = st->st_blksize;
+    if (blksize <= 512)
+		blksize = 512;
+	blocks = st->st_blocks;
+	statp->_st_blocks = cpu_to_be64(blocks);
+	statp->_st_blksize = cpu_to_be32(blksize);
+	statp->_st_flags = cpu_to_be32(0);
+	statp->_st_gen = cpu_to_be32(0);
+	statp->_st_reserved[0] = cpu_to_be32(0);
+	statp->_st_reserved[1] = cpu_to_be32(0);
+	statp->_st_reserved[2] = cpu_to_be32(0);
+	statp->_st_reserved[3] = cpu_to_be32(0);
+	statp->_st_reserved[4] = cpu_to_be32(0);
+	statp->_st_reserved[5] = cpu_to_be32(0);
+	statp->_st_reserved[6] = cpu_to_be32(0);
 }
 
 
@@ -2271,125 +1866,65 @@ void CMacXFS::cinfo_to_xattr(CInfoPBRec * pb, XATTR *xattr, uint16_t drv)
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_xattr(uint16_t drv, MXFSDD *dd, char *name,
-				XATTR *xattr, uint16_t mode)
+int32_t CMacXFS::xfs_xattr(XfsCookie *fc, const char *name, XATTR *xattr, uint16_t mode)
 {
-	FSSpec fs;
-	CInfoPBRec pb;
-	OSErr err;
-	int32_t doserr;
-	unsigned char fname[64];
+	struct stat st;
+	char fname[MAXPATHNAMELEN];
+	int err;
 
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_xattr(drv = %d, „%s“, mode = 0x%04x)", (int) drv, name, (int) mode);
-	__dump((const unsigned char *) dd, sizeof(*dd));
-//	__dump((const unsigned char *) xattr, sizeof(*xattr));
+	DebugInfo("CMacXFS::xfs_xattr(drv=%d, '%s', mode=0x%04x)", fc->dev, name, mode);
 #endif
 
-	if (drv >= NDRVS)
+	if (fc->drv == NULL)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_fsspec.vRefNum == 0)
-		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (fc->drv->drv_changed)
 		return TOS_E_CHNG;
 
-	if (drives[drv].drv_longnames)
+	if (!(fc->drv->drv_flags & M_DRV_DOSNAMES))
 	{
-		if ((name[0] == '.') && (!name[1]))
-			fname[1] = EOS;		// "." wie leerer Name
-		else
-			AtariFnameToMacFname((unsigned char *) name, fname + 1);
+		if (name[0] == '.' && !name[1])
+			name = "";		// "." wie leerer Name
 	}
-	else
-	{
-		nameto_8_3((unsigned char *) name, fname + 1, 1, false);
-		AtariFnameToMacFname(fname + 1, fname + 1);
-	}
-	sp((char *) fname);
-
-	if ((dd->vRefNum == -32768) && (dd->dirID == 0))	// Mac-Root
-	{
-//		DebugStr(fname);
-		if (fname[1])
-		{
-			strcat((char *) (fname + 1), ":");		// MacOS-Unschönheit ausbügeln
-			fname[0]++;
-			err = FSMakeFSSpec(0, 0, fname, &fs);	// abs. Pfad
-			if (err)
-				return cnverr(err);
-			xattr->attr = cpu_to_be16(F_SUBDIR);			// Volume-Root
-			xattr->mode = cpu_to_be16(S_IFDIR + 0777);	// rwx fuer user/group/world
-			xattr->dev = cpu_to_be16((uint16_t) fs.vRefNum);
-			xattr->index = cpu_to_be32(fsRtDirID);		// Volume-Root
-		}
-		else
-		{
-			xattr->attr = cpu_to_be16(F_SUBDIR + F_RDONLY);
-			xattr->mode = cpu_to_be16(S_IFDIR + 0555);	// r-x fuer user/group/world
-			xattr->dev = cpu_to_be16((uint16_t) dd->vRefNum);
-			xattr->index = cpu_to_be32(fsRtParID);		// Wurzel
-		}
-
-		xattr->reserved1 = 0;
-		xattr->nlink = cpu_to_be16(1);
-		xattr->uid = xattr->gid = 0;
-		xattr->size = 0;
-		xattr->blksize = cpu_to_be16(512);
-		xattr->nblocks = 0;
-		xattr->mtime = 0;		// kein Datum/Uhrzeit
-		xattr->mdate = 0;
-		xattr->atime = xattr->mtime;
-		xattr->adate = xattr->mdate;
-		xattr->ctime = 0;
-		xattr->cdate = 0;
-		xattr->reserved2 = 0;
-		xattr->reserved3[0] = xattr->reserved3[1] = 0;
-		return TOS_E_OK;
-	}
-
-	pb.hFileInfo.ioNamePtr = fname;
-	pb.hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-	pb.hFileInfo.ioDirID = dd->dirID;
-	pb.hFileInfo.ioVRefNum = dd->vRefNum;
-	/* notwendige Initialisierung fuer Verzeichnisse (sonst Muell!) */
-	pb.hFileInfo.ioFlLgLen = 0;
-	pb.hFileInfo.ioFlPyLen = 0;
-	if (pb.hFileInfo.ioNamePtr[0] == 0) pb.hFileInfo.ioFDirIndex = -1;
-	err = PBGetCatInfoSync (&pb);
-	if (err)
-		return cnverr(err);
+	cookie2Pathname(fc, name, fname, true);
 
 	/* Im Modus 0 muessen Aliase dereferenziert werden	*/
 	/* ------------------------------------------------	*/
+	if (mode == 0)
+		err = stat(fname, &st);
+	else
+		err = lstat(fname, &st);
+	if (err != 0)
+		return errnoHost2Mint(errno, TOS_EFILNF);
 
-	doserr = TOS_E_OK;
-	if ((!mode) && (pb.hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias))
-	{
-
-		/* FSSpec erstellen und Alias dereferenzieren	*/
-		/* ----------------------------------------	*/
-
-		cfss(drv, dd->dirID, dd->vRefNum, fname + 1, &fs, false);
-		doserr = resolve_symlink( &fs, 0, NULL );
-
-		if (!doserr)		/* Der Mac hat dereferenziert! */
-		{
-			pb.hFileInfo.ioVRefNum = fs.vRefNum;
-			pb.hFileInfo.ioNamePtr = fs.name;
-			pb.hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-			pb.hFileInfo.ioDirID = fs.parID;
-			if (pb.hFileInfo.ioNamePtr[0] == 0) pb.hFileInfo.ioFDirIndex = -1;
-			err = PBGetCatInfoSync (&pb);
-			if (err)
-				return cnverr(err);
-		}
-	}
-
-	if (!doserr)
-		cinfo_to_xattr(&pb, xattr, drv);
-	return doserr;
+	convert_to_xattr(&st, xattr);
+	return TOS_E_OK;
 }
 
+
+int32_t CMacXFS::xfs_stat64(XfsCookie *fc, const char *name, MINT_STAT64 *statp)
+{
+	struct stat st;
+	char fname[MAXPATHNAMELEN];
+
+	if (fc->drv == NULL)
+		return TOS_EDRIVE;
+	if (fc->drv->drv_changed)
+		return TOS_E_CHNG;
+
+	if (!(fc->drv->drv_flags & M_DRV_DOSNAMES))
+	{
+		if (name[0] == '.' && !name[1])
+			name = "";		// "." wie leerer Name
+	}
+	cookie2Pathname(fc, name, fname, true);
+
+	if (lstat(fname, &st) != 0)
+		return errnoHost2Mint(errno, TOS_EFILNF);
+
+	convert_to_stat64(&st, statp);
+	return TOS_E_OK;
+}
 
 /*************************************************************
 *
@@ -2405,22 +1940,16 @@ int32_t CMacXFS::xfs_xattr(uint16_t drv, MXFSDD *dd, char *name,
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_attrib(uint16_t drv, MXFSDD *dd, char *name, uint16_t rwflag, uint16_t attr)
+int32_t CMacXFS::xfs_attrib(XfsCookie *fc, const char *name, uint16_t rwflag, uint16_t attr)
 {
-	FSSpec fs;
-	CInfoPBRec pb;
-	OSErr err;
-	int32_t doserr;
-	unsigned char fname[64];
+	struct stat st;
 	int oldattr;
+	char fpathName[MAXPATHNAMELEN];
 
-
-#ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_attrib(„%s“, drv = %d, wrmode = %d, attr = 0x%04x)", name, (int) drv, (int) rwflag, (int) attr);
-#endif
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
+	DebugInfo("CMacXFS::xfs_attrib('%s', drv=%d, wrmode=%d, attr=0x%04x)", name, fc->dev, rwflag, attr);
+	if (fc->drv == NULL)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (fc->drv->drv_changed)
 		return TOS_E_CHNG;
 
 #ifdef DEMO
@@ -2430,101 +1959,64 @@ int32_t CMacXFS::xfs_attrib(uint16_t drv, MXFSDD *dd, char *name, uint16_t rwfla
 		return TOS_EWRPRO;
 	}
 #endif
+	if (rwflag && (fc->drv->drv_flags & M_DRV_READONLY))
+		return TOS_EWRPRO;
+
+	cookie2Pathname(fc, name, fpathName, true);
 	
-	if (drives[drv].drv_longnames)
-	{
-		AtariFnameToMacFname((unsigned char *) name, fname + 1);
-	}
-	else
-	{
-		nameto_8_3 ((unsigned char *) name, fname + 1, 1, false);
-		AtariFnameToMacFname(fname + 1, fname + 1);
-	}
-
-	sp((char *) fname);
-	pb.hFileInfo.ioVRefNum = dd->vRefNum;
-	pb.hFileInfo.ioNamePtr = (unsigned char *) fname;
-	pb.hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-	pb.hFileInfo.ioDirID = dd->dirID;
-	if (pb.hFileInfo.ioNamePtr[0] == 0)
-		pb.hFileInfo.ioFDirIndex = -1;
-	err = PBGetCatInfoSync(&pb);
-	if (err)
-		return cnverr(err);
-
-	/* Aliase muessen dereferenziert werden	*/
-	/* -------------------------------------	*/
-
-	if (pb.hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias)
-	{
-		cfss(drv, dd->dirID, dd->vRefNum, fname+1, &fs, false);
-		doserr = resolve_symlink( &fs, 0, NULL );
-
-		if (!doserr)		/* Der Mac hat dereferenziert! */
-		{
-			pb.hFileInfo.ioVRefNum = fs.vRefNum;
-			pb.hFileInfo.ioNamePtr = fs.name;
-			pb.hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-			pb.hFileInfo.ioDirID = fs.parID;
-			if (pb.hFileInfo.ioNamePtr[0] == 0) pb.hFileInfo.ioFDirIndex = -1;
-			err = PBGetCatInfoSync (&pb);
-			if (err)
-				return cnverr(err);
-		}
-		else
-		{
-			return doserr;		/* Fehler */
-		}
-	}
-
+	/*
+	 * Fattrib() is only supposed to change flags of
+	 * symlink targets, nit th elink itself
+	 */
+	if (stat(fpathName, &st) != 0)
+		return errnoHost2Mint(errno, TOS_EACCDN);
+	
 	/* Normale Datei, oder Alias ist dereferenziert	*/
 	/* ------------------------------------------	*/
 
-	oldattr = mac2DOSAttr (&pb);
+	oldattr = mac2DOSAttr(&st);
 	if (rwflag)
 	{
-		if (pb.hFileInfo.ioFlAttrib & ioDirMask)
+		if (oldattr & F_SUBDIR)
 		{			// !AK 4.10.98
 			/* Bei Verzeichnissen ist nur HIDDEN änderbar */
 			if ((attr & ~F_HIDDEN) != (oldattr & ~F_HIDDEN))
-				err = permErr;
+				return TOS_EACCDN;
 		}
 
-		pb.hFileInfo.ioDirID = pb.hFileInfo.ioFlParID;
-		if (!err && (oldattr & F_RDONLY) != (attr & F_RDONLY))
+		if ((oldattr & F_RDONLY) != (attr & F_RDONLY))
 		{
 			if (attr & F_RDONLY)
-				err = PBHSetFLockSync((HParmBlkPtr)&pb);
+				st.st_mode &= ~(S_IWUSR | S_IWGRP | S_IWOTH);
 			else
-				err = PBHRstFLockSync((HParmBlkPtr)&pb);
+				st.st_mode |= S_IWUSR | S_IWGRP | S_IWOTH;
+			if (chmod(fpathName, st.st_mode) != 0)
+				return errnoHost2Mint(errno, TOS_EACCDN);
 		}
 		
 		// Archiv-Bit:
-		if (!err && (oldattr & F_ARCHIVE) != (attr & F_ARCHIVE))
+		if ((oldattr & F_ARCHIVE) != (attr & F_ARCHIVE))
 		{
 			if (attr & F_ARCHIVE)
-			{
-				if (pb.hFileInfo.ioFlBkDat == pb.hFileInfo.ioFlMdDat)
-					pb.hFileInfo.ioFlBkDat = 0;
-			}
+				st.st_flags &= ~SF_ARCHIVED;
 			else
-				pb.hFileInfo.ioFlBkDat = pb.hFileInfo.ioFlMdDat;
-			err = PBSetCatInfoSync (&pb);
+				st.st_flags |= SF_ARCHIVED;
+			if (chflags(fpathName, st.st_flags) != 0)
+				return errnoHost2Mint(errno, TOS_EACCDN);
 		}
 		
 		// !AK 6.2.99: Hidden-Bit auch für Ordner
-		if (!err && (oldattr & F_HIDDEN) != (attr & F_HIDDEN))
+		if ((oldattr & F_HIDDEN) != (attr & F_HIDDEN))
 		{
 			if (attr & F_HIDDEN)
-				pb.hFileInfo.ioFlFndrInfo.fdFlags |= kIsInvisible;
+				st.st_flags |= UF_HIDDEN;
 			else
-				pb.hFileInfo.ioFlFndrInfo.fdFlags &= ~kIsInvisible;
-			err = PBSetCatInfoSync (&pb);
+				st.st_flags &= ~UF_HIDDEN;
+			if (chflags(fpathName, st.st_flags) != 0)
+				return errnoHost2Mint(errno, TOS_EACCDN);
 		}
 	}
 
-	if (err)
-		return cnverr(err);
 	return oldattr;
 }
 
@@ -2535,10 +2027,15 @@ int32_t CMacXFS::xfs_attrib(uint16_t drv, MXFSDD *dd, char *name, uint16_t rwfla
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_fchown(uint16_t drv, MXFSDD *dd, char *name,
-                    uint16_t uid, uint16_t gid)
+int32_t CMacXFS::xfs_fchown(XfsCookie *fc, const char *name, uint16_t uid, uint16_t gid)
 {
-#pragma unused(drv, dd, name, uid, gid)
+#pragma unused(name, uid, gid)
+	if (fc->drv == NULL)
+		return TOS_EDRIVE;
+	if (fc->drv->drv_changed)
+		return TOS_E_CHNG;
+	if (fc->drv->drv_flags & M_DRV_READONLY)
+		return TOS_EWRPRO;
 	return TOS_EINVFN;
 }
 
@@ -2549,9 +2046,21 @@ int32_t CMacXFS::xfs_fchown(uint16_t drv, MXFSDD *dd, char *name,
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_fchmod(uint16_t drv, MXFSDD *dd, char *name, uint16_t fmode)
+int32_t CMacXFS::xfs_fchmod(XfsCookie *fc, const char *name, uint16_t fmode)
 {
-#pragma unused(drv, dd, name, fmode)
+#pragma unused(name, fmode)
+	char fpathName[MAXPATHNAMELEN];
+
+	if (fc->drv == NULL)
+		return TOS_EDRIVE;
+	if (fc->drv->drv_changed)
+		return TOS_E_CHNG;
+	if (fc->drv->drv_flags & M_DRV_READONLY)
+		return TOS_EWRPRO;
+	cookie2Pathname(fc, name, fpathName, true);
+
+    if (chmod(fpathName, modeMint2Host(fmode)))
+		return errnoHost2Mint(errno, TOS_EACCDN);
 	return TOS_EINVFN;
 }
 
@@ -2562,40 +2071,34 @@ int32_t CMacXFS::xfs_fchmod(uint16_t drv, MXFSDD *dd, char *name, uint16_t fmode
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_dcreate(uint16_t drv, MXFSDD *dd, char *name)
+int32_t CMacXFS::xfs_dcreate(XfsCookie *fc, const char *name)
 {
-	FSSpec fs;
-	OSErr err;
-	long ndirID;
-
-
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_dcreate(„%s“, drv = %d)", name, (int) drv);
+	DebugInfo("CMacXFS::xfs_dcreate('%s', drv=%d)", name, fc->dev);
 #endif
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
+	if (fc->drv == NULL)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (fc->drv->drv_changed)
 		return TOS_E_CHNG;
 	if (fname_is_invalid(name))
 		return TOS_EACCDN;
 
 #ifdef DEMO
 
-	#pragma unused(fs, err, ndirID)
 	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
 	return TOS_EWRPRO;
 
 #else
 
-	cfss(drv, dd->dirID, dd->vRefNum, (unsigned char *) name, &fs, true);
-	err = FSpDirCreate(&fs, -1, &ndirID);
+	char fpathName[MAXPATHNAMELEN];
 
-	// Versuch, das Inkonsistenzproblem bei OS X 10.2 zu beheben
-/*
-	if (!err)
-		FlushVol(NULL, dd->vRefNum);
-*/
-	return cnverr(err);
+	if (fc->drv->drv_flags & M_DRV_READONLY)
+		return TOS_EWRPRO;
+
+	cookie2Pathname(fc, name, fpathName, true);
+	if (mkdir(fpathName, 0755) != 0)
+		errnoHost2Mint(errno, TOS_EFILNF);
+	return TOS_E_OK;
 
 #endif
 }
@@ -2610,34 +2113,27 @@ int32_t CMacXFS::xfs_dcreate(uint16_t drv, MXFSDD *dd, char *name)
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_ddelete(uint16_t drv, MXFSDD *dd)
+int32_t CMacXFS::xfs_ddelete(XfsCookie *fc)
 {
+	if (fc->drv == NULL)
+		return TOS_EDRIVE;
+	if (fc->drv->drv_changed)
+		return TOS_E_CHNG;
 #ifdef DEMO
 
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
-		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
-		return TOS_E_CHNG;
-	
-	#pragma unused(dd)
 	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
 	return TOS_EWRPRO;
 	
 #else
 
-	FSSpec fs;
-	OSErr err;
+	char fpathName[MAXPATHNAMELEN];
 
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
-		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
-		return TOS_E_CHNG;
-
-	err = FSMakeFSSpec(dd->vRefNum, dd->dirID, NULL, &fs);
-	if (!err)
-		err = HDelete(fs.vRefNum, fs.parID, fs.name);
-	return cnverr(err);
-
+	if (fc->drv->drv_flags & M_DRV_READONLY)
+		return TOS_EWRPRO;
+	cookie2Pathname(fc, NULL, fpathName, true);
+	if (rmdir(fpathName) != 0)
+		return errnoHost2Mint(errno, TOS_EFILNF);
+	return TOS_E_OK;
 #endif
 }
 
@@ -2648,75 +2144,36 @@ int32_t CMacXFS::xfs_ddelete(uint16_t drv, MXFSDD *dd)
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_DD2name(uint16_t drv, MXFSDD *dd, char *buf, uint16_t bufsiz)
+int32_t CMacXFS::xfs_DD2name(XfsCookie *fc, char *buf, uint16_t bufsiz)
 {
-	FSSpec fs;
-	OSErr err;
-	int32_t doserr;
+    char fpathName[MAXPATHNAMELEN];
+    char pathName[MAXPATHNAMELEN];
 	uint16_t len;
-	MXFSDD par_dd;
 
-	if (drv >= NDRVS)
+	DebugInfo("CMacXFS::xfs_DD2name(drv=%d, DD=%08lx)", fc->dev, (unsigned long)MAPVOIDPTO32(fc->index));
+	if (fc->drv == NULL)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_fsspec.vRefNum == 0)
-		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (fc->drv->drv_changed)
 		return TOS_E_CHNG;
 
-	if (drv == 'M'-'A')
+	if (fc->index->parent == NULL)          /* root ? */
 	{
-		if (dd->vRefNum == -32768)	// Mac-Root
-			goto root;
-		if (dd->dirID == fsRtDirID)			// Wurzelverzeichnis eines Volumes
-		{
-			HVolumeParam pb;
-
-			pb.ioVolIndex = 0;
-			pb.ioVRefNum = dd->vRefNum;
-			pb.ioNamePtr = fs.name;
-			err = PBHGetVInfoSync ((HParamBlockRec*)&pb);
-			if (err)
-				return cnverr(err);
-			len = fs.name[0];
-			if (len > bufsiz)
-				return TOS_ERANGE;
-			goto doit;
-		}
-	}
-	if (dd->dirID == drives[drv].drv_dirID)          /* root ? */
-	{
-	root:
 		len = 1;
 		if (len > bufsiz)
 			return TOS_ERANGE;
-		buf[0] = EOS;
+		buf[0] = '\0';
 		return TOS_E_OK;
 	}
-	err = FSMakeFSSpec(dd->vRefNum, dd->dirID, NULL, &fs);
-	if (err)
-		return cnverr(err);
-	len = fs.name[0];
+
+    cookie2Pathname(fc, NULL, fpathName, false); // get the cookie filename
+
+	CTextConversion::Host2AtariUtf8Copy(pathName, fpathName, sizeof(pathName));
+	len = strlen(pathName) + 1;
 	if (len > bufsiz)
 		return TOS_ERANGE;
-	par_dd.vRefNum = dd->vRefNum;
-	par_dd.dirID = fs.parID;
-	doserr = xfs_DD2name(drv, &par_dd, buf, (uint16_t) (bufsiz - len));
-	if (doserr)
-		return doserr;
-
-doit:
-	if (buf[strlen(buf)-1] != '\\')
-		strcat(buf, "\\");
-	fs.name[fs.name[0]+1] = EOS;
-
-// Umlaute konvertieren 9.6.96
-
-	while (*buf)
-		buf++;
-	MacFnameToAtariFname(fs.name+1, (unsigned char *) buf);
-
-//	alte Version: strcat(buf, (char*)fs.name+1);
-
+	stru2dpath(pathName);
+	memcpy(buf, pathName, len);
+	
 	return TOS_E_OK;
 }
 
@@ -2730,37 +2187,22 @@ doit:
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_dopendir(MAC_DIRHANDLE *dirh, uint16_t drv, MXFSDD *dd,
-				uint16_t tosflag)
+int32_t CMacXFS::xfs_dopendir(MAC_DIRHANDLE *dirh, XfsCookie *fc, uint16_t tosflag)
 {
-	dirh -> dhdd.dirID = dd->dirID;
-	dirh -> dhdd.vRefNum = dd->vRefNum;
-	dirh -> tosflag = tosflag;
+	char fpathName[MAXPATHNAMELEN];
 
-	if ((dd->vRefNum == -32768) && (dd->dirID == 0))	// Mac-Root
-		dirh->index = 1;
-	else
-	if (drives[drv].drv_rvsDirOrder)
-	{
-		CInfoPBRec pb;
-		//Str255 name2;
-		OSErr err;
-		
-		pb.hFileInfo.ioNamePtr = nil;
-		pb.hFileInfo.ioVRefNum = dd->vRefNum;
-		pb.hFileInfo.ioDirID = dd->dirID;
-		pb.hFileInfo.ioFDirIndex = -1; // get info of directory
-		err = PBGetCatInfoSync(&pb);
-		if (err)
-		{
-			return cnverr(err);
-		}
-		dirh -> index = pb.dirInfo.ioDrNmFls;      // letzte Datei zuerst, dann weiter rückwärts
-	}
-	else
-	{
-		dirh -> index = 1;
-	}
+	DebugInfo("CMacXFS::xfs_dopendir(drv=%d, DD=%08lx)", fc->dev, (unsigned long)MAPVOIDPTO32(fc->index));
+	if (fc->drv == NULL)
+		return TOS_EDRIVE;
+
+	dirh->fc = *fc;
+	dirh->tosflag = tosflag;
+	dirh->index = 0;
+	cookie2Pathname(&dirh->fc, NULL, fpathName, true);
+
+	dirh->hostDir = host_opendir(fpathName);
+	if (dirh->hostDir == NULL)
+		return errnoHost2Mint(errno, TOS_EPTHNF);
 
 	return TOS_E_OK;
 }
@@ -2784,152 +2226,62 @@ int32_t CMacXFS::xfs_dopendir(MAC_DIRHANDLE *dirh, uint16_t drv, MXFSDD *dd,
 int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 		uint16_t size, char *buf, XATTR *xattr, int32_t *xr)
 {
-	Str255 VolumeName;
-	HVolumeParam pbh;
-	CInfoPBRec pb;
-	OSErr err;
-	unsigned char macname[256];
+	struct dirent *dirEntry;
+	struct stat st;
+	char atariname[MAXPATHNAMELEN];			// C-String Atari-Dateiname (lang)
+	uint16_t len;
 
+	if (dirh->hostDir == NULL)
+		return TOS_EIHNDL;
 
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
-		return TOS_EDRIVE;
+again:
+	/*
+	 * Skip "." & ".." when at root dir;
+	 * they are typically not present in Atari filesystems
+	 */
+	do {
+		if ((dirEntry = readdir(dirh->hostDir)) == NULL)
+			return TOS_ENMFIL;
+	} while (!dirh->fc.index->parent &&
+			  (dirEntry->d_name[0] == '.' &&
+				(!dirEntry->d_name[1] ||
+				  (dirEntry->d_name[1] == '.' && !dirEntry->d_name[2]))));
 
-	again:
-	if (dirh->index == 0)
-	{
-		return TOS_ENMFIL;
-	}
+	// OS X verwendet die Dateien .DS_Store, um irgendwelche Attribute
+	// zu verwalten. Die Dateien sollten ausgeblendet werden.
+	if (strcmp(dirEntry->d_name, ".DS_Store") == 0)
+		goto again;
 
-	if ((dirh->dhdd.vRefNum == -32768) && (dirh->dhdd.dirID == 0))	// Mac-Root
-	{
-		pbh.ioNamePtr = VolumeName;
-		for	(;;)
-		{
-			pbh.ioVolIndex = (short) dirh->index;
-			err = PBHGetVInfoSync ((HParmBlkPtr)&pbh);
-			if (err)
-				break;	// keine weiteren Volumes
-			pstrcpy(macname, pbh.ioNamePtr);
-			if (xattr)
-			{
-				xattr->attr = cpu_to_be16(F_SUBDIR);
-				xattr->mode = cpu_to_be16(S_IFDIR);				// subdir
-				xattr->mode |= cpu_to_be16(0777);				// rwx fuer user/group/world
-				xattr->index = 0;
-				xattr->dev = cpu_to_be16((uint16_t) pbh.ioVRefNum);
-				xattr->reserved1 = 0;
-				xattr->nlink = cpu_to_be16(1);
-				xattr->uid = xattr->gid = 0;
-				xattr->size = 0;
-				xattr->blksize = cpu_to_be32((uint32_t) pbh.	ioVAlBlkSiz);
-				xattr->nblocks = cpu_to_be32(pbh.ioVNmAlBlks);
-				date_mac2dos(pbh.ioVLsMod, &(xattr->mtime), &(xattr->mdate));
-				xattr->mtime = cpu_to_be16(xattr->mtime);
-				xattr->mdate = cpu_to_be16(xattr->mdate);
-				xattr->atime = xattr->mtime;
-				xattr->adate = xattr->mdate;
-				date_mac2dos(pbh.ioVCrDate, &(xattr->ctime), &(xattr->cdate));
-				xattr->ctime = cpu_to_be16(xattr->ctime);
-				xattr->cdate = cpu_to_be16(xattr->cdate);
-				xattr->reserved2 = 0;
-				xattr->reserved3[0] = xattr->reserved3[1] = 0;
-				*xr = cpu_to_be32(TOS_E_OK);
-				xattr = NULL;
-			}
-			dirh->index++;
-			goto doit;
-		}
-		dirh->index = 0;	// ungültig machen
-		return TOS_ENMFIL;
-	}
-
-	/* suchen */
-	/* ------ */
-
-	pb.hFileInfo.ioNamePtr = (unsigned char *) macname;
-	pb.hFileInfo.ioVRefNum = dirh->dhdd.vRefNum;
-	if (drives[drv].drv_rvsDirOrder)
-	{
-		// scan index num, num - 1, num - 2, ..., 1
-		pb.hFileInfo.ioFDirIndex = (short) dirh->index--;
-	}
-	else
-	{
-		// scan index 1, 2, ..., num
-		pb.hFileInfo.ioFDirIndex = (short) dirh->index++;
-	}
-	pb.hFileInfo.ioDirID = dirh->dhdd.dirID;
-	/* notwendige Initialisierung fuer Verzeichnisse (sonst Muell!) */
-	pb.hFileInfo.ioFlLgLen = 0;
-	pb.hFileInfo.ioFlPyLen = 0;
-	err = PBGetCatInfoSync(&pb);		// hier später mal asynchron
-
-	// Carbon-Fehler von MacOS X bei Wurzelverzeichnis einer Netzwerkverbindung
-	// umgehen (Anzahl Dateien ist um 1 zu hoch!)
-	if ((err == fnfErr) && drives[drv].drv_rvsDirOrder && (dirh->index > 0))
-	{
-		DebugError("CMacXFS::xfs_dreaddir() -- Bug im MacOS. Versuche zu umgehen (1. Wdh)");
-		// wir machen es einfach nochmal
-		pb.hFileInfo.ioFDirIndex = (short) dirh->index--;
-		err = PBGetCatInfoSync (&pb);		// hier später mal asynchron
-	}
-	if ((err == fnfErr) && drives[drv].drv_rvsDirOrder && (dirh->index > 0))
-	{
-		DebugError("CMacXFS::xfs_dreaddir() -- Bug im MacOS. Versuche zu umgehen (2. Wdh)");
-		// wir machen es einfach ein drittes Mal
-		pb.hFileInfo.ioFDirIndex = (short) dirh->index--;
-		err = PBGetCatInfoSync (&pb);		// hier später mal asynchron
-	}
-	if ((err == fnfErr) && drives[drv].drv_rvsDirOrder && (dirh->index > 0))
-	{
-		DebugError("CMacXFS::xfs_dreaddir() -- Bug im MacOS. Versuche zu umgehen (3. Wdh)");
-		// wir machen es einfach ein viertes Mal
-		pb.hFileInfo.ioFDirIndex = (short) dirh->index--;
-		err = PBGetCatInfoSync (&pb);		// hier später mal asynchron
-	}
-
-	if (err)
-	{
-		dirh->index = 0;                  /* dirh ungueltig machen */
-		if (err == fnfErr)
-			return TOS_ENMFIL;		// special error code for D(x)readdir() Fsnext()
-		else
-			return cnverr(err);
-	}
-
-	doit:
-	macname[macname[0] + 1] = EOS;
 	if (dirh->tosflag)
 	{
 		if (size < 13)
 			return TOS_ERANGE;
-		if (nameto_8_3(macname + 1, (unsigned char *) buf, 1, true))
+		CTextConversion::Host2AtariUtf8Copy(atariname, dirEntry->d_name, sizeof(atariname));
+		if (nameto_8_3(atariname, buf, 1))
 			goto again;		// musste Dateinamen kuerzen
-	}
-	else
+	} else
 	{
-
-		// OS X verwendet die Dateien .DS_Store, um irgendwelche Attribute
-		// zu verwalten. Die Dateien sollten ausgeblendet werden.
-
-		if (!memcmp(macname, "\p.DS_Store", 10))
-			goto again;
-		if (size < macname[0] + 5)
+		CTextConversion::Host2AtariUtf8Copy(atariname, dirEntry->d_name, sizeof(atariname));
+		len = strlen(atariname);
+		if (size < len + 5)
 			return TOS_ERANGE;
-		strncpy(buf, (char *) &(pb.hFileInfo.ioDirID), 4);
+		(*(uint32_t *)buf) = cpu_to_be32(dirEntry->d_ino);
 		buf += 4;
-		MacFnameToAtariFname(macname + 1, (unsigned char *) buf);
-
-/*
-		if (buf[0] == '.')
-			DebugInfo("CMacXFS::xfs_dreaddir() -- name = %s", buf);
-*/
+		strcpy(buf, atariname);
 	}
 
 	if (xattr)
 	{
-		cinfo_to_xattr( &pb, xattr, drv);
-		*xr = cpu_to_be32(TOS_E_OK);
+		if (fstatat(dirfd(dirh->hostDir), dirEntry->d_name, &st, AT_SYMLINK_NOFOLLOW) != 0)
+		{
+			if (xr)
+				*xr = cpu_to_be32(errnoHost2Mint(errno, TOS_EACCDN));
+		} else
+		{
+			convert_to_xattr(&st, xattr);
+			if (xr)
+				*xr = cpu_to_be32(TOS_E_OK);
+		}
 	}
 
 	return TOS_E_OK;
@@ -2944,9 +2296,11 @@ int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 
 int32_t CMacXFS::xfs_drewinddir(MAC_DIRHANDLE *dirh, uint16_t drv)
 {
-	if (drives[drv].drv_rvsDirOrder)
-		return xfs_dopendir(dirh, drv, &dirh->dhdd, dirh->tosflag);
-	dirh -> index = 1;
+#pragma unused(drv)
+	if (dirh->hostDir == NULL)
+		return TOS_EIHNDL;
+	rewinddir(dirh->hostDir);
+	dirh->index = 0;
 	return TOS_E_OK;
 }
 
@@ -2960,7 +2314,11 @@ int32_t CMacXFS::xfs_drewinddir(MAC_DIRHANDLE *dirh, uint16_t drv)
 int32_t CMacXFS::xfs_dclosedir(MAC_DIRHANDLE *dirh, uint16_t drv)
 {
 #pragma unused(drv)
-	dirh->dhdd.dirID = -1L;
+	if (dirh->hostDir == NULL)
+		return TOS_EIHNDL;
+	if (closedir(dirh->hostDir))
+		return errnoHost2Mint(errno, TOS_EPTHNF);
+	dirh->hostDir = NULL;
 	return TOS_E_OK;
 }
 
@@ -3007,19 +2365,28 @@ int32_t CMacXFS::xfs_dpathconf(uint16_t drv, MXFSDD *dd, uint16_t which)
 #pragma unused(dd)
 	switch(which)
 	{
-		case	DP_MAXREQ:	return DP_XATTRFIELDS;
-		case	DP_IOPEN:	return 100;	// ???
-		case	DP_MAXLINKS:	return 1;
-		case	DP_PATHMAX:	return ATARI_PATH_MAX;
-		case	DP_NAMEMAX:	return drv < NDRVS && drives[drv].drv_longnames ? 31 : 12;
-		case	DP_ATOMIC:	return 512;	// ???
-		case	DP_TRUNC:	return drv < NDRVS && drives[drv].drv_longnames ? DP_AUTOTRUNC : DP_DOSTRUNC;
-		case	DP_CASE:		return drv < NDRVS && drives[drv].drv_longnames ? DP_CASEINSENS : DP_CASECONV;
-		case	DP_MODEATTR:	return F_RDONLY+F_SUBDIR+F_ARCHIVE+F_HIDDEN
-							+DP_FT_DIR+DP_FT_REG+DP_FT_LNK;
-		case	DP_XATTRFIELDS:return DP_INDEX+DP_DEV+DP_NLINK+DP_BLKSIZE
-							+DP_SIZE+DP_NBLOCKS
-							+DP_CTIME+DP_MTIME;
+	case DP_MAXREQ:
+		return DP_XATTRFIELDS;
+	case DP_IOPEN:
+		return 0x7fff;	// ???
+	case DP_MAXLINKS:
+		return LINK_MAX;
+	case DP_PATHMAX:
+		return MAXPATHNAMELEN;
+	case DP_NAMEMAX:
+		return drv < NDRVS && drives[drv].drv_flags & M_DRV_DOSNAMES ? 12 : NAME_MAX;
+	case DP_ATOMIC:
+		return 512;	// ???
+	case DP_TRUNC:
+		return drv < NDRVS && drives[drv].drv_flags & M_DRV_DOSNAMES ? DP_DOSTRUNC : DP_AUTOTRUNC;
+	case DP_CASE:
+		return drv < NDRVS && drives[drv].drv_flags & M_DRV_DOSNAMES ? DP_CASECONV : DP_CASEINSENS;
+	case DP_MODEATTR:
+		return F_RDONLY | F_SUBDIR | F_ARCHIVE | F_HIDDEN | DP_FT_DIR | DP_FT_REG | DP_FT_LNK | DP_FT_BLK | DP_FT_CHR | DP_FT_SOCK | DP_FT_FIFO | DP_MODEBITS;
+	case DP_XATTRFIELDS:
+		return DP_INDEX | DP_DEV | DP_NLINK | DP_UID | DP_GID | DP_BLKSIZE | DP_SIZE | DP_NBLOCKS | DP_ATIME | DP_CTIME | DP_MTIME;
+	case DP_VOLNAMEMAX:
+		return NAME_MAX;
 	}
 	return TOS_EINVFN;
 }
@@ -3036,25 +2403,34 @@ int32_t CMacXFS::xfs_dpathconf(uint16_t drv, MXFSDD *dd, uint16_t which)
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_dfree(uint16_t drv, int32_t dirID, uint32_t data[4])
+int32_t CMacXFS::host_statvfs(const char *fpathName, void *buff)
 {
-#pragma unused(dirID)
-	XVolumeParam xpb;		// für Platten > 2G
-	union
-	{
-		unsigned long long bytes;
-		UnsignedWide wbytes;
-	} wbu;
-	OSErr err;
+	DebugInfo("MacXFS: fs_dfree (%s)", fpathName);
 
+#ifdef HAVE_SYS_STATVFS_H
+	if (statvfs(fpathName, (STATVFS *)buff))
+#else
+	if (statfs(fpathName, (STATVFS *)buff))
+#endif
+		return errnoHost2Mint(errno, TOS_EFILNF);
+
+	return TOS_E_OK;
+}
+
+
+int32_t CMacXFS::xfs_dfree(XfsCookie *fc, uint32_t data[4])
+{
+	char fpathName[MAXPATHNAMELEN];
 
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_dfree(drv = %d, dirID = 0x%08x)", (int) drv, (int) dirID);
+	DebugInfo("CMacXFS::xfs_dfree(drv = %d, dirID = 0x%08lx)", fc->dev, (unsigned long)MAPVOIDPTO32(fc->index));
 #endif
 
-	if (drv >= NDRVS)
+	if (fc->drv == NULL)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_type == MacRoot)
+	if (fc->drv->drv_changed)
+		return TOS_E_CHNG;
+	if (fc->drv->drv_type == MacRoot)
 	{
 		// 2G frei, d.h. 4 M Blöcke à 512 Bytes
 		data[0] = cpu_to_be32((2 * 1024) * 2 * 1024);	// # freie Blöcke
@@ -3063,28 +2439,17 @@ int32_t CMacXFS::xfs_dfree(uint16_t drv, int32_t dirID, uint32_t data[4])
 		data[3] = cpu_to_be32(1);						// Sektoren pro Cluster
 		return TOS_E_OK;
 	}
+	cookie2Pathname(fc->drv, fc->drv->host_root, NULL, fpathName, true);
 
-	if (drives[drv].drv_fsspec.vRefNum == 0)
-		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
-		return TOS_E_CHNG;
+	STATVFS buff;
+	int32_t res = host_statvfs(fpathName, &buff);
+	if (res != TOS_E_OK)
+		return res;
 
-	xpb.ioVolIndex = 0;       /* ioRefNum ist gueltig */
-	xpb.ioVRefNum = drives[drv].drv_fsspec.vRefNum;
-	xpb.ioNamePtr = NULL;
-	err = PBXGetVolInfo(&xpb, 0);			// hier später mal asynchron
-	if (err)
-		return cnverr(err);
-
-//		wbu.wbytes = xpb.ioVFreeBytes;		// CWPRO 3
-	wbu.bytes = xpb.ioVFreeBytes;		// CWPRO 5
-	data[0] = cpu_to_be32((uint32_t) (wbu.bytes / xpb.ioVAlBlkSiz));	// # freie Blöcke
-
-//		wbu.wbytes = xpb.ioVTotalBytes;		// CWPRO 3
-	wbu.bytes = xpb.ioVTotalBytes;		// CWPRO 5
-	data[1] = cpu_to_be32((uint32_t) (wbu.bytes / xpb.ioVAlBlkSiz));	// # alle Blöcke
-	data[2] = cpu_to_be32(xpb.ioVAlBlkSiz);				// Bytes pro Sektor
-	data[3] = cpu_to_be32(1);								// Sektoren pro Cluster
+	data[0] = cpu_to_be32(buff.f_bavail); /* b_free */
+	data[1] = cpu_to_be32(buff.f_blocks); /* b_total */
+	data[2] = cpu_to_be32(buff.f_bsize); /* b_secsize */
+	data[3] = cpu_to_be32(1); /* b_clssize */
 	return TOS_E_OK;
 }
 
@@ -3107,139 +2472,76 @@ int32_t CMacXFS::xfs_wlabel(uint16_t drv, MXFSDD *dd, char *name)
 	return TOS_EINVFN;
 }
 
-int32_t CMacXFS::xfs_rlabel(uint16_t drv, MXFSDD *dd, char *name, uint16_t bufsiz)
+int32_t CMacXFS::xfs_rlabel(uint16_t dev, MXFSDD *dd, char *name, uint16_t bufsiz)
 {
 #pragma unused(dd)
-	HVolumeParam pb;
-	unsigned char buf[256];
-	OSErr err;
-
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
+	mount_info *drv;
+	size_t hostrootlen;;
+	
+	if (dev >= NDRVS || !(drv = &drives[dev])->drv_valid)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_type == MacRoot)
-		return TOS_EFILNF;
-	if (drives[drv].drv_changed)
+	if (drv->drv_changed)
 		return TOS_E_CHNG;
-
-	pb.ioVolIndex = 0;       /* ioRefNum ist gueltig */
-	pb.ioVRefNum = drives[drv].drv_fsspec.vRefNum;
-	pb.ioNamePtr = buf;
-	err = PBHGetVInfoSync ((HParmBlkPtr) &pb);	// hier später mal asychron
-	if (err)
-		return cnverr(err);
-	buf[buf[0] + 1] = EOS;
-	if (buf[0] + 1 > bufsiz)
-		return TOS_ERANGE;
-	MacFnameToAtariFname(buf + 1, (unsigned char *) name);
-	return TOS_E_OK;
-}
-
-
-/*************************************************************
-*
-* Wandelt einen DOS-Pfad in das Mac-Aequivalent um. Diese
-* Funktion wird verwendet, um dem Finder zu ermoeglichen,
-* Aliase zu verwenden, die von MagicMac erstellt wurden.
-*
-* Der Mac-Name wird ganz normal als NUL-terminierter String
-* erstellt, nicht als Pascal-String.
-*
-*************************************************************/
-
-OSErr CMacXFS::PathNameFromDirID( long dirid, short vrefnum,
-	char *fullpathname)
-{
-	DirInfo block;
-	Str255 dirname;
-	char dirnamec[255];
-	OSErr err;
-
-	fullpathname[0] = EOS;
-	block.ioDrParID = dirid;
-	block.ioNamePtr = dirname;
-	do
+	if (drv->drv_type == MacRoot)
 	{
-		block.ioVRefNum = vrefnum;
-		block.ioFDirIndex = -1;
-		block.ioDrDirID = block.ioDrParID;
-		err = PBGetCatInfoSync ((CInfoPBPtr) &block);
-		if (err)
-			return err;
-		memcpy(dirnamec, dirname+1, dirname[0]);
-		dirnamec[dirname[0]] = EOS;
-		strcat(dirnamec, ":");
-		memmove(fullpathname + dirname[0] + 1,
-				fullpathname, strlen(fullpathname) + 1);
-		memcpy(fullpathname, dirnamec, (unsigned long) (dirname[0] + 1));
-	}
-	while (block.ioDrDirID != 2);
-	return 0;
-}
-
-int32_t CMacXFS::dospath2macpath( uint16_t drv, MXFSDD *dd,
-		char *dospath, char *macname)
-{
-	MXFSDD rel_dd;
-	MXFSDD my_dd;
-	MXFSDD symlink_dd;
-	int32_t reldir = dd->dirID;
-	short vRefNum = dd->vRefNum;
-	int32_t doserr;
-	OSErr err;
-	char *restpfad;
-	char *symlink;
-
-	FSSpec spec;
-	Handle hFullPath;
-	short fullPathLength;
-
-
-	if (dospath[0] && (dospath[1] == ':'))
-		dospath += 2;
-	if (*dospath == '\\')			// absoluter Pfad
-	{
-		reldir = drives[drv].drv_dirID;
-		vRefNum = drives[drv].drv_fsspec.vRefNum;
-		dospath++;
+		CFURLRef url;
+		CFStringRef prop;
+		
+		url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFStringCreateWithCString(NULL, drv->host_root->name, kCFStringEncodingUTF8), kCFURLPOSIXPathStyle, 1);
+		prop = NULL;
+		if (CFURLCopyResourcePropertyForKey(url, kCFURLVolumeNameKey, &prop, NULL))
+		{
+			const char *volumename = CFStringGetCStringPtr(prop, kCFStringEncodingUTF8);
+			CTextConversion::Host2AtariUtf8Copy(name, volumename, bufsiz);
+			CFRelease(prop);
+			CFRelease(url);
+			return TOS_E_OK;
+		}
+		CFRelease(url);
 	}
 
-	rel_dd.dirID = reldir;
-	rel_dd.vRefNum = vRefNum;
-	doserr = xfs_path2DD(0, drv, &rel_dd, dospath,
-			&restpfad, &symlink_dd, &symlink, &my_dd, &drv );
+	/*
+	 * use the last component of the mounted folder
+	 */
+	hostrootlen = strlen(drv->host_root->name);
+	char *startchar = drv->host_root->name;	//	position on start of name
+	char *poschar = &startchar[hostrootlen - 1];	//	position on last character
+	if (poschar > startchar && *poschar == *DIRSEPARATOR)
+	{
+		//	ignore an ending slash
+		--poschar;
+	}
+	if (poschar > startchar && *poschar == ':')
+	{
+		//	ignore an ending ":" from dos drive letters
+		--poschar;
+	}
+	char *endchar = poschar;	//	remember this position as the end of hostRoot to copy
+	//	search backwards for bounding slash
+	while (poschar > startchar && *poschar != *DIRSEPARATOR)
+		--poschar;
+	if (*poschar == *DIRSEPARATOR)
+		//	move to character behind that slash
+		++poschar;
+		
+	if (poschar <= endchar)
+	{
+		// there are some characters inbetween to copy
+		hostrootlen = endchar - poschar + 2;
+		if (bufsiz == 0 || hostrootlen > bufsiz)
+			return TOS_ERANGE;
+		CTextConversion::Host2AtariUtf8Copy(name, poschar, hostrootlen);
+		return TOS_E_OK;
+	}
 
-	if (doserr < TOS_E_OK)
-		return doserr;
-
-	// neu:
-
-	// erstelle aus der DirID ein FSSpec
-	err = FSMakeFSSpec(my_dd.vRefNum, my_dd.dirID, nil, &spec);
-	if (err)
-		return cnverr(err);
-
-	// erstelle aus der DirID einen Pfad
-
-	err = FSpGetFullPath(&spec, &fullPathLength, &hFullPath);
-	if (err)
-		return cnverr(err);
-
-	if (fullPathLength > ATARI_PATH_MAX)
-		return TOS_EPTHOV;
-
-	memcpy(macname, *hFullPath, fullPathLength);
-	macname[fullPathLength] = '\0';
-	if (*restpfad)
-		strcat(macname, restpfad);
-
-	if (hFullPath)
-		DisposeHandle(hFullPath);
-/*
-	err = PathNameFromDirID( my_dd.dirID, my_dd.vRefNum, macname);
-	if (!err && *restpfad)
-		strcat(macname, restpfad);
-*/
-	return cnverr(err);
+	if (bufsiz > 0)
+	{
+		//	there is no label name to extract
+		//	fall back to a default label
+		CTextConversion::Host2AtariUtf8Copy(name, "MACFS", bufsiz);
+		return TOS_E_OK;
+	}
+	return TOS_ERANGE;
 }
 
 
@@ -3252,13 +2554,13 @@ int32_t CMacXFS::dospath2macpath( uint16_t drv, MXFSDD *dd,
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to)
+int32_t CMacXFS::xfs_symlink(XfsCookie *fc, const char *name, const char *toname)
 {
 #ifdef DEMO
 
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
+	if (fc->drv == NULL)    /* ungueltig */
 		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (fc->drv->drv_changed)
 		return TOS_E_CHNG;
 	if (fname_is_invalid(name))
 		return TOS_EACCDN;
@@ -3269,127 +2571,99 @@ int32_t CMacXFS::xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to)
 
 #else
 
-	bool symlink_ok;
-	uint16_t dst_drv;
-	bool is_macpath;
-	char fullpath[256];
-	AliasHandle newalias;
-	OSErr err;
-	short host_fd;
-	FSSpec fs;
-	CInfoPBRec pb;
-	OSType creator, type;
-	unsigned char dosname[20];
-	Str255 resname;
-	unsigned char macname[65];
-	char *onlyname;
-	FInfo	fi;
-	short	saveRefNum;
+	char ffromName[MAXPATHNAMELEN];
+	char ftoName[MAXPATHNAMELEN];
+	char ftoname[MAXPATHNAMELEN];
 
-
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
+	if (fc->drv == NULL)    /* ungueltig */
 		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (fc->drv->drv_changed)
 		return TOS_E_CHNG;
 	if (fname_is_invalid(name))
 		return TOS_EACCDN;
+	if (fc->drv->drv_flags & M_DRV_READONLY)
+		return TOS_EWRPRO;
 
-	/* pruefen, ob der Symlink auf ein Mac-Laufwerk zeigt */
-	/* -------------------------------------------------- */
+	cookie2Pathname(fc, name, ffromName, true);
+	CTextConversion::Atari2HostUtf8Copy(ftoname, toname, sizeof(ftoname));
+	strd2upath(ftoname);
+	strcpy(ftoName, ftoname);
 
-	symlink_ok = false;		/* wir sind erstmal pessimistisch */
-	dst_drv = (uint16_t) (ToUpper(*to)-'A');
-	is_macpath = true;
-	if (/*(dst_drv >= 0) &&*/ (dst_drv < NDRVS) && (to[1] == ':'))
-	{	// Laufwerk angegeben
-		if (drives[dst_drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
-			is_macpath = false;
-	}
-
-	onlyname = strrchr(to, '\\');
-	if (onlyname)
+	if (ftoName[0] == '\0' || ffromName[0] == '\0')
+		return TOS_EFILNF;
+	
+	if (ftoName[0] == '\0' || ffromName[0] == '\0')
+		return TOS_EFILNF;
+	
+	if (ftoName[0] != '/' && ftoName[1] != ':')
 	{
-		onlyname++;
-	}
-	else
+		// relative symlink. Use it as is
+	} else
 	{
-		if (to[0] && to[1] == ':')
-			onlyname = to + 2;
-		else
-			onlyname = to;
+		// search among the mount points to find suitable link...
+
+		size_t nameLen = strlen(ftoname);
+		/* convert U:/c/... to c:/... */
+		if (nameLen >= 4 && strncasecmp(ftoname, "u:/", 3) == 0 &&
+			DriveFromLetter(ftoname[3]) >= 0 &&
+			(ftoname[4] == '\0' || ftoname[4] == '/'))
+		{
+			ftoname[0] = ftoname[3];
+			memmove(ftoname + 2, ftoname + 4, nameLen - 3);
+			nameLen -= 2;
+		} else
+		/* convert /c/... to c:/... */
+		if (nameLen >= 2 && ftoname[0] == '/' &&
+			DriveFromLetter(ftoname[1]) >= 0 &&
+			(ftoname[2] == '\0' || ftoname[2] == '/'))
+		{
+			ftoname[0] = ftoname[1];
+			ftoname[1] = ':';
+		}
+		if (nameLen == 2)
+		{
+			strcat(ftoname, "/");
+			nameLen++;
+		}
+		
+		{
+			bool found = false;
+			int i;
+			for (i = 0; i < NDRVS; i++)
+			{
+				struct mount_info *drv = &drives[i];
+				if (!drv->drv_valid)
+					continue;
+				if (ftoname[1] == ':' &&
+					toupper(ftoname[0]) == DriveToLetter(i) &&
+					ftoname[2] == *DIRSEPARATOR)
+				{
+					// target drive found; replace MiNTs mount point
+					// with the hosts root directory
+					int len = MAXPATHNAMELEN;
+					strcpy(ftoName, drv->host_root->name);
+					int hrLen = strlen(drv->host_root->name);
+					if (hrLen < len)
+						strncpy(ftoName + hrLen, ftoname + 3, len - hrLen);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+			{
+				// undo a possible _unx2dos() conversion from MiNTlib
+				if (toupper(ftoName[0]) == 'U' && ftoName[1] == ':')
+					memmove(ftoName, ftoName + 2, strlen(ftoName + 2) + 1);
+			}
+		}
+		if (ftoName[0] == '/' && DriveFromLetter(ftoname[1]) >= 0 &&
+			(ftoName[2] == '\0' || ftoName[2] == '/'))
+			ftoName[1] = tolower(ftoName[1]);
 	}
+	
+	DebugInfo("xfs_symlink: \"%s\" --> \"%s\"", ffromName, ftoName);
 
-	if (is_macpath)
-	{
-		symlink_ok = (! dospath2macpath( dst_drv, dd,
-				to, fullpath));
-	}
-
-	/* Wenn das Ziellaufwerk kein Mac-Volume ist oder der Pfad irgendwie	*/
-	/* sonst nicht in Ordnung ist, setzen wir einen Dummy-Namen als		*/
-	/* Alias fuer den Finder ein.								*/
-	/* -----------------------------------------------------------------	*/
-
-	if (!symlink_ok)
-		strcpy(fullpath, "dummy:dummy");
-
-	err = NewAliasMinimalFromFullPath((short) strlen(fullpath),
-							fullpath,
-							NULL,
-							NULL,
-							&newalias);
-	if (err)
-		return cnverr(err);
-
-	/* Der Alias braucht nicht umkopiert zu werden, wir vergroessern	*/
-	/* einfach den Speicherblock, damit wir genug Platz fuer die	*/
-	/* Zeichenkette <to> haben.							*/
-	/* Wir setzen unsere Kennung und kopieren den DOS-Pfad 1:1	*/
-	/* hinter den Alias.								*/
-	/* ------------------------------------------------------------	*/
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	// Compilat für i86 erfordert als Minimal-OS-Version 10.4.
-	// Im SDK 10.4 ist die Alias-Struktur "opaque", d.h. man
-	// kommt nicht mehr an den <userType> dran.
-	{
-		Size AliasSize;
-
-		AliasSize = GetAliasSize(newalias);
-		SetHandleSize((Handle) newalias, (long) (AliasSize + strlen(to) + 1));
-		SetAliasUserType(newalias, htonl('MgMc'));
-		AliasSize = GetAliasSize(newalias);
-		memcpy(((char *) (*newalias)) + AliasSize,
-				to, strlen(to) + 1);
-	}
-#else
-	SetHandleSize((Handle) newalias, (long) ((*newalias)->aliasSize + strlen(to) + 1));
-	(*newalias)->userType = htonl('MgMc');
-	memcpy(((char *) (*newalias)) + (*newalias)->aliasSize, to, strlen(to) + 1);
-#endif
-
-	/* FFSpec erstellen */
-	/* --------------- */
-
-	if (!drives[drv].drv_longnames)
-	{	// keine langen Namen: nach Gross-Schrift und 8+3
-		nameto_8_3 ((unsigned char *) name, dosname, 2, false);
-		name = (char *) dosname;
-	}
-	cfss(drv, dd->dirID, dd->vRefNum, (unsigned char *) name, &fs, true);
-
-	/* Testen, ob die Datei schon existiert. Nach MagiC-Konvention */
-	/* darf Fsymlink() niemals eine existierende Datei beeinflussen */
-	/* ---------------------------------------------------------- */
-
-	err = FSpGetFInfo (&fs, &fi);
-	if (err != fnfErr)		// file not found ??
-	{
-		if (!err)			// Datei existiert => TOS_EACCDN
-			err = permErr;
-		goto ende;			// Aufruf abbrechen
-	}
-
+#ifdef NOTYET
 	/* Datei erstellen */
 	/* -------------- */
 
@@ -3397,52 +2671,19 @@ int32_t CMacXFS::xfs_symlink(uint16_t drv, MXFSDD *dd, char *name, char *to)
 	{
 		type = 'fdrp';
 		creator = 'MACS';
-	}
-	else
+	} else
 	{
 		GetTypeAndCreator (name, &type, &creator);		// Datei
 		type = 'TEXT';
 		creator = MyCreator;
 	}
 	FSpCreateResFile(&fs, creator, type, smSystemScript);
+#endif
 
-	/* Resource 'alis' erstellen */
-	/* ---------------------- */
+	if (symlink(ftoName, ffromName))
+		return errnoHost2Mint(errno, TOS_EFILNF);
 
-	saveRefNum = CurResFile ();
-	host_fd = FSpOpenResFile(&fs, fsWrPerm);
-	if (host_fd == -1)
-	{
-		err = permErr;
-		goto ende;
-	}
-	strlcpy((char *) (resname + 1), onlyname, sizeof(resname) - 1 - 6);
-	strcat((char *) (resname + 1), " Alias");
-	sp((char *) resname);
-	AddResource((Handle) newalias, 'alis', 0, resname);
-	CloseResFile(host_fd);
-
-	/* Finder-Flags fuer Alias setzen (umstaendlich!!!) */
-
-	strlcpy((char *) (macname + 1), name, sizeof(macname) - 1);
-	AtariFnameToMacFname(macname + 1, macname + 1);
-	sp((char *) macname);
-	pb.hFileInfo.ioNamePtr = macname;
-	pb.hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-	pb.hFileInfo.ioDirID = dd->dirID;
-	pb.hFileInfo.ioVRefNum = dd->vRefNum;
-	if (pb.hFileInfo.ioNamePtr[0] == 0) pb.hFileInfo.ioFDirIndex = -1;
-	err = PBGetCatInfoSync (&pb);
-	if (err)
-		goto ende;
-	pb.hFileInfo.ioFlFndrInfo.fdFlags |= kIsAlias;	// symlink
-	pb.hFileInfo.ioDirID = dd->dirID;		// Boese Falle !
-	err = PBSetCatInfoSync (&pb);
-
-ende:
-	DisposeHandle((Handle) newalias);
-	UseResFile (saveRefNum);
-	return cnverr(err);
+	return TOS_E_OK;
 
 #endif
 }
@@ -3454,71 +2695,30 @@ ende:
 *
 *************************************************************/
 
-int32_t CMacXFS::xfs_readlink(uint16_t drv, MXFSDD *dd, char *name,
+int32_t CMacXFS::xfs_readlink(XfsCookie *fc, const char *name,
 				char *buf, uint16_t bufsiz)
 {
-	FSSpec fs;
-
+	char fpathName[MAXPATHNAMELEN];
+	char target[MAXPATHNAMELEN];
 
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_readlink(„%s“, drv = %d, dirID = %d, buf = 0x%04x, bufsize = %d)", name, (int) drv, (int) dd->dirID, (int) buf, bufsiz);
+	DebugInfo("CMacXFS::xfs_readlink('%s', drv = %d, dirID = %p, buf = %p, bufsize = %d)", name, fc->dev, fc->index, (void *) buf, bufsiz);
 #endif
 
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)    /* ungueltig */
+	if (fc->drv == NULL)    /* ungueltig */
 		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (fc->drv->drv_changed)
 		return TOS_E_CHNG;
 
-	/* FSSpec erstellen und Alias auslesen	*/
+	/* Name erstellen und Alias auslesen	*/
 	/* ---------------------------------	*/
+	cookie2Pathname(fc, name, fpathName, true); // get the cookie filename
 
-	cfss(drv, dd->dirID, dd->vRefNum, (unsigned char *) name, &fs, true);
+	if (!host_readlink(fpathName, target, sizeof(target)))
+		return errnoHost2Mint(errno, TOS_EFILNF);
 
-	return resolve_symlink(&fs, bufsiz, buf);
-}
-
-
-/*************************************************************
-*
-* Fuer Dcntl.
-*
-* Da der Parameter <arg> in allen Fällen auf eine Struktur im 68k-Adreßraum
-* zeigt, wird hier ein Zeiger übergeben.
-*
-*************************************************************/
-
-int32_t CMacXFS::getCatInfo (uint16_t drv, CInfoPBRec *pb, bool resolveAlias)
-{
-#pragma unused(resolveAlias)
-	FSSpec fs;
-	OSErr  err;
-	int32_t   doserr;
-
-	err = PBGetCatInfoSync (pb);
-	if (err)
-		return cnverr(err);
-
-	/* Aliase dereferenzieren	*/
-	/* ----------------------	*/
-	doserr = TOS_E_OK;
-	if (pb->hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias)
-	{
-		pb->hFileInfo.ioNamePtr[pb->hFileInfo.ioNamePtr[0] + 1] = 0;
-		cfss(drv, pb->hFileInfo.ioFlParID, pb->hFileInfo.ioVRefNum, pb->hFileInfo.ioNamePtr+1, &fs, true);
-		doserr = resolve_symlink( &fs, 0, NULL );
-		if (!doserr)		/* Der Mac hat dereferenziert! */
-		{
-			pb->hFileInfo.ioVRefNum = fs.vRefNum;
-			pstrcpy (pb->hFileInfo.ioNamePtr, fs.name);
-			pb->hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-			pb->hFileInfo.ioDirID = fs.parID;
-			if (pb->hFileInfo.ioNamePtr[0] == 0) pb->hFileInfo.ioFDirIndex = -1;
-			err = PBGetCatInfoSync(pb);
-			if (err)
-				return cnverr(err);
-		}
-	}
-	return doserr;
+	CTextConversion::Host2AtariUtf8Copy(buf, target, bufsiz);
+	return TOS_E_OK;
 }
 
 
@@ -3533,135 +2733,163 @@ int32_t CMacXFS::getCatInfo (uint16_t drv, CInfoPBRec *pb, bool resolveAlias)
 
 int32_t CMacXFS::xfs_dcntl
 (
-	uint16_t drv,
-	MXFSDD *dd,
-	char *name,
+	XfsCookie *fc,
+	const char *name,
 	uint16_t cmd,
-	void *pArg,
-	unsigned char *AdrOffset68k
+	uint32_t arg,
+	void *pArg
 )
 {
-	CInfoPBRec pb;
-	OSErr err;
-	int32_t doserr;
-	unsigned char fname[64];
+	char fname[MAXPATHNAMELEN];
 
-	if (drv >= NDRVS || drives[drv].drv_fsspec.vRefNum == 0)
+	if (fc->drv == NULL)
 		return TOS_EDRIVE;
-	if (drives[drv].drv_changed)
+	if (fc->drv->drv_changed)
 		return TOS_E_CHNG;
 
-	if (drives[drv].drv_longnames)
+	if (!(fc->drv->drv_flags & M_DRV_DOSNAMES))
 	{
-		if ((name[0] == '.') && (!name[1]))
-			fname[1] = EOS;		// "." wie leerer Name
-		else
-			AtariFnameToMacFname((unsigned char *) name, fname + 1);
+		if (name[0] == '.' && !name[1])
+			name = "";		// "." wie leerer Name
 	}
-	else
-	{
-		nameto_8_3 ((unsigned char *) name, fname + 1, 2, false);
-		AtariFnameToMacFname(fname+1, fname + 1);
-	}
-
-	sp((char *) fname);
-	pb.hFileInfo.ioVRefNum = dd->vRefNum;
-	pb.hFileInfo.ioDirID = dd->dirID;
-	pb.hFileInfo.ioNamePtr = (unsigned char *) fname;
-	pb.hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-	if (pb.hFileInfo.ioNamePtr[0] == 0)
-		pb.hFileInfo.ioFDirIndex = -1;
 
 	switch(cmd)
 	{
-	  case FUTIME:
-		if (!pArg)
-		    return TOS_EINVFN;
-		doserr = getCatInfo(drv, &pb, true);
-		if (doserr)
-			return doserr;
-		date_dos2mac(be16_to_cpu(((mutimbuf *) pArg)->modtime),
-						be16_to_cpu(((mutimbuf *) pArg)->moddate), &pb.hFileInfo.ioFlMdDat);
-		pb.hFileInfo.ioDirID = pb.hFileInfo.ioFlParID;
-		if ((err = PBSetCatInfoSync(&pb)) != noErr)
-		    return cnverr(err);
-	  	return 0;
-
-	  case FSTAT:
-		if (!pArg)
-		    return TOS_EINVFN;
-		doserr = getCatInfo(drv, &pb, true);
-		if (doserr)
-			return doserr;
-		cinfo_to_xattr(&pb, (XATTR *) pArg, drv);
+	case MX_KER_XFSNAME:
+		CTextConversion::Host2AtariUtf8Copy((char *)pArg, "macfs", 8);
 		return TOS_E_OK;
 
-	// "type" und "creator" einer Datei ermitteln
-
-	  case FMACGETTYCR:
-		if (!pArg)
-		    return TOS_EINVFN;
-		doserr = getCatInfo (drv, &pb, true);
-		if (doserr)
-			return doserr;
-		*(FInfo *) pArg = pb.hFileInfo.ioFlFndrInfo;
-		return TOS_E_OK;
-
-	// "type" und "creator" einer Datei ändern
-
-	  case FMACSETTYCR:
-		if (!pArg)
-		    return TOS_EINVFN;
-#ifdef DEMO
-
-		(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
-		return TOS_EWRPRO;
-
-#else
-			
-		doserr = getCatInfo (drv, &pb, true);
-		if (doserr)
-			return doserr;
-		pb.hFileInfo.ioFlFndrInfo = *(FInfo *) pArg;
-		pb.hFileInfo.ioDirID = pb.hFileInfo.ioFlParID;
-		if ((err = PBHSetFInfoSync((HParmBlkPtr)&pb)) != noErr)
+	case MINT_FS_INFO:
+		if (pArg)
 		{
-		    return cnverr(err);
+			uint32_t *p32;
+			CTextConversion::Host2AtariUtf8Copy((char *)pArg, "macfs-xfs", 32);
+			p32 = (uint32_t *)((char *)pArg + 32);
+			*p32 = cpu_to_be32(((int32_t)HOSTFS_XFS_VERSION << 16) | HOSTFS_NFAPI_VERSION);
+			p32 = (uint32_t *)((char *)pArg + 36);
+			*p32 = cpu_to_be32(MINT_FS_HOSTFS);
+			CTextConversion::Host2AtariUtf8Copy((char *)pArg + 40, "host filesystem", 32);
 		}
 		return TOS_E_OK;
 
+	case MINT_FS_USAGE:
+		{
+			STATVFS buff;
+
+			cookie2Pathname(fc, NULL, fname, true);
+
+			int32_t res = host_statvfs(fname, &buff);
+			if (res != TOS_E_OK)
+				return res;
+
+			if (pArg)
+			{
+				uint32_t *p32;
+				uint64_t *p64;
+				p32 = (uint32_t *)pArg;
+				/* LONG  blocksize */  *p32 = cpu_to_be32(buff.f_bsize);
+				p64 = (uint64_t *)((char *)pArg + 4);
+				/* LLONG    blocks */  *p64 = cpu_to_be64(buff.f_blocks);
+				p64 = (uint64_t *)((char *)pArg + 12);
+				/* LLONG    freebs */  *p64 = cpu_to_be64(buff.f_bavail);
+				p64 = (uint64_t *)((char *)pArg + 20);
+				/* LLONG    inodes */  *p64 = cpu_to_be64(buff.f_files);
+				p64 = (uint64_t *)((char *)pArg + 28);
+				/* LLONG    finodes*/  *p64 = cpu_to_be64(buff.f_ffree);
+			}
+			return TOS_E_OK;
+		}
+
+	case MINT_V_CNTR_WP:
+		// FIXME: TODO!
+		break;
+
+	case MINT_FUTIME:
+		if (fc->drv->drv_flags & M_DRV_READONLY)
+			return TOS_EWRPRO;
+	    {
+	    	struct utimbuf t_set;
+			if (pArg)
+			{
+				mutimbuf *tim = (mutimbuf *)pArg;
+				t_set.actime = date_dos2mac(be16_to_cpu(tim->actime), be16_to_cpu(tim->acdate));
+				t_set.modtime = date_dos2mac(be16_to_cpu(tim->modtime), be16_to_cpu(tim->moddate));
+			} else
+			{
+				t_set.actime = t_set.modtime = time(NULL);
+			}
+			cookie2Pathname(fc, name, fname, true);
+			if (utime(fname, &t_set))
+				return errnoHost2Mint(errno, TOS_EFILNF);
+		}
+	  	return TOS_E_OK;
+
+	case MINT_FUTIME_UTC:
+		/* NYI */
+		/* useless until kernel handles UTC timestamps */
+		break;
+
+	case MINT_FTRUNCATE:
+		cookie2Pathname(fc, name, fname, true);
+
+		DebugInfo("MacXFS: fs_fscntl: FTRUNCATE: %s, %08x", fname, arg);
+		if (fc->drv->drv_flags & M_DRV_READONLY)
+			return TOS_EWRPRO;
+		if (truncate(fname, arg))
+			return errnoHost2Mint(errno, TOS_EFILNF);
+
+		return TOS_E_OK;
+
+	case MINT_FSTAT:
+		if (!pArg)
+		    return TOS_EINVAL;
+		return xfs_xattr(fc, name, (XATTR *) pArg, 0);
+
+	case MINT_FSTAT64:
+		if (!pArg)
+		    return TOS_EINVAL;
+		return xfs_stat64(fc, name, (MINT_STAT64 *) pArg);
+
+	// "type" und "creator" einer Datei ermitteln
+	case FMACGETTYCR:
+		if (!pArg)
+		    return TOS_EINVAL;
+		/* no longer supported */
+		return TOS_EINVFN;
+
+	// "type" und "creator" einer Datei ändern
+	 case FMACSETTYCR:
+		if (!pArg)
+		    return TOS_EINVAL;
+#ifdef DEMO
+		(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+		return TOS_EWRPRO;
+#else
+		/* no longer supported */
+		return TOS_EINVFN;
 #endif
 
 	// spezielle MagiC-Funktionen
 
-	  case FMACMAGICEX:
+	case FMACMAGICEX:
 		{
-		MMEXRec *mmex = (MMEXRec *) pArg;
-		switch(be16_to_cpu(mmex->funcNo))
-		{
+			MMEXRec *mmex = (MMEXRec *) pArg;
+			switch (be16_to_cpu(mmex->funcNo))
+			{
 			case MMEX_INFO:
 				mmex->longVal = cpu_to_be32(1);
 				mmex->destPtr = NULL;	// MM_VersionPtr;
 				return 0;
 
 			case MMEX_GETFSSPEC:
-				if (be32_to_cpu((uint32_t) (mmex->destPtr)) >= m_AtariMemSize)
-				{
-					DebugError("CMacXFS::xfs_dcntl(FMACMAGICEX, MMEX_GETFSSPEC) - invalid dest ptr");
-					return TOS_ERROR;
-				}
-				doserr = getCatInfo (drv, &pb, true);
-				if (doserr)
-					return doserr;
-				mmex->longVal = cpu_to_be32(FSMakeFSSpec(
-									pb.hFileInfo.ioVRefNum,
-									pb.hFileInfo.ioFlParID,
-									pb.hFileInfo.ioNamePtr,
-									(FSSpec *) (AdrOffset68k + be32_to_cpu((uint32_t) (mmex->destPtr)))));
-				return cnverr ((OSErr) be32_to_cpu(mmex->longVal));
+				/* no longer supported */
+				return TOS_EINVAL;
 
 			case MMEX_GETRSRCLEN:
 				// Mac-Rsrc-Länge liefern
+				cookie2Pathname(fc, name, fname, true);
+				// strcat(fname, "/..namedfork/rsrc
+#ifdef NOTYET
 				doserr = getCatInfo (drv, &pb, true);
 				if (doserr)
 					return doserr;
@@ -3669,34 +2897,27 @@ int32_t CMacXFS::xfs_dcntl
 					return TOS_EACCDN;
 				mmex->longVal = cpu_to_be32(pb.hFileInfo.ioFlRLgLen);
 				return 0;
+#endif
+				return TOS_EINVAL;
 
 			case FMACGETTYCR:
-				doserr = getCatInfo (drv, &pb, true);
-				if (doserr)
-					return doserr;
-				*(CInfoPBRec*) pArg = pb;
-				return TOS_E_OK;
+				/* no longer supported */
+				return TOS_EINVAL;
 
 			case FMACSETTYCR:
 #ifdef DEMO
 				
 				(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
 				return TOS_EWRPRO;
-				
+			
 #else
-				doserr = getCatInfo (drv, &pb, true);
-				if (doserr)
-					return doserr;
-				((HFileInfo *) pArg)->ioVRefNum = pb.hFileInfo.ioVRefNum;
-				((HFileInfo *) pArg)->ioDirID = pb.hFileInfo.ioFlParID;
-				((HFileInfo *) pArg)->ioNamePtr = pb.hFileInfo.ioNamePtr;
-				err = PBSetCatInfoSync ((CInfoPBRec *) pArg);
-				return cnverr(err);
-
+				/* no longer supported */
+				return TOS_EINVAL;
 #endif
-		}
+			}
 		}
 	}
+
 	return TOS_EINVFN;
 }
 
@@ -3706,155 +2927,76 @@ int32_t CMacXFS::xfs_dcntl
 /******************* Dateitreiber ****************************/
 /*************************************************************/
 
-OSErr CMacXFS::f_2_cinfo( MAC_FD *f, CInfoPBRec *pb, char *fname)
+int32_t CMacXFS::dev_close(MAC_FD *f)
 {
-	FCBPBRec fpb;
-	OSErr err;
+	uint16_t refcnt;
 
-	fpb.ioFCBIndx = 0;
-	fpb.ioVRefNum = 0;
-	fpb.ioNamePtr = (unsigned char*)fname;
-	fpb.ioRefNum = f->host_fd;
-	err = PBGetFCBInfoSync (&fpb);  /* refnum => parID und Name */
-
-	if (err)
-		return err;
-
-	pb->hFileInfo.ioVRefNum = fpb.ioFCBVRefNum;
-	pb->hFileInfo.ioNamePtr = (unsigned char*)fname;
-	pb->hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-	pb->hFileInfo.ioDirID = fpb.ioFCBParID;
-	if (pb->hFileInfo.ioNamePtr[0] == 0) pb->hFileInfo.ioFDirIndex = -1;
-	err = PBGetCatInfoSync (pb);
-	return err;
-}
-
-
-int32_t CMacXFS::dev_close( MAC_FD *f )
-{
-	FCBPBRec fpb;
-	OSErr err;
-	char fname[64];
-	CInfoPBRec pb;
-	IOParam ipb;
-	UInt16 refcnt;
-
-
+	DebugInfo("dev_close(%d)", f->host_fd);
 	refcnt = be16_to_cpu(f->fd.fd_refcnt);
-	if (refcnt <= 0)
+	if (refcnt == 0)
 		return TOS_EINTRN;
-
-	// FCB der Datei ermitteln
-	fpb.ioFCBIndx = 0;
-	fpb.ioVRefNum = 0;
-	fpb.ioNamePtr = (unsigned char*)fname;
-	fpb.ioRefNum = f->host_fd;
-	err = PBGetFCBInfoSync (&fpb);  /* refnum => parID und Name */
-	if (err)
-	{
-		FSClose(f->host_fd);
-		return cnverr(err);
-	}
 
 	refcnt--;
 	f->fd.fd_refcnt = cpu_to_be16(refcnt);
 	if (!refcnt)
 	{
-
-	/* Datum und Uhrzeit koennen erst nach Schliessen gesetzt werden */
-	/* ------------------------------------------------------------- */
+		/* Datum und Uhrzeit setzen */
+		/* ------------------------ */
 		if (f->mod_time_dirty)
 		{
-			err = FSClose(f->host_fd);
-			if (err)
-				return cnverr(err);
-
-			pb.hFileInfo.ioVRefNum = fpb.ioFCBVRefNum;
-			pb.hFileInfo.ioNamePtr = (unsigned char*) fname;
-			pb.hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-			pb.hFileInfo.ioDirID = fpb.ioFCBParID;
-
-			if (pb.hFileInfo.ioNamePtr[0] == 0)
-				pb.hFileInfo.ioFDirIndex = -1;
-
-			err = PBGetCatInfoSync (&pb);
-
-    		if (err)
-				return cnverr(err);
-
-			// !TT Archiv-Bit: falls Datei gerade neu angelegt, dann Backup-Datum auf Null setzen
-			if (pb.hFileInfo.ioFlCrDat == pb.hFileInfo.ioFlMdDat)
-			{
-				pb.hFileInfo.ioFlBkDat = 0;	// -> Archiv-Bit löschen
-			}
-
-			pb.hFileInfo.ioFDirIndex = 0;      /* Namen suchen */
-			pb.hFileInfo.ioDirID = fpb.ioFCBParID;
-			date_dos2mac(f->mod_time[0], f->mod_time[1], &pb.hFileInfo.ioFlMdDat);
-			pb.hFileInfo.ioFlCrDat = pb.hFileInfo.ioFlMdDat;
-
-			// Archiv-Bit: sicherstellen, daß Backup-Datum verschieden von Modif.-Datum ist.
-			if (pb.hFileInfo.ioFlBkDat == pb.hFileInfo.ioFlMdDat)
-			{
-				pb.hFileInfo.ioFlBkDat = 0;
-			}
-
-			err = PBSetCatInfoSync (&pb);    /* synchron */
+			struct timeval tv[2];
+			
+			tv[0].tv_sec = date_dos2mac(f->mod_time[0], f->mod_time[1]);
+			tv[1].tv_sec = tv[0].tv_sec;
+			tv[0].tv_usec = tv[1].tv_usec = 0;
+			if (futimes(f->host_fd, tv) != 0)
+				return errnoHost2Mint(errno, TOS_EACCDN);
 		}
-		else
-			err = FSClose(f->host_fd);
-	}
-	else
-	{
-		ipb.ioRefNum = f->host_fd;
-		err = PBFlushFileSync ((ParmBlkPtr) &ipb);
+
+		if (close(f->host_fd) != 0)
+			return errnoHost2Mint(errno, TOS_EIHNDL);
+		f->fc.drv = NULL;
 	}
 
-//	if (!err && FlushWhenClosing)
-//		FlushVol (nil, fpb.ioVRefNum);
-
-	return cnverr(err);
+	return TOS_E_OK;
 }
 
-int32_t CMacXFS::dev_read( MAC_FD *f, int32_t count, char *buf )
+int32_t CMacXFS::dev_read(MAC_FD *f, int32_t count, char *buf)
 {
-	OSErr err;
 	long lcount;
 
+	DebugInfo("dev_read(%d, %p, %d)", f->host_fd, (void *)buf, count);
 #if DEBUG_68K_EMU
-	if ((trigger == 2) && (count > 0x1e) && (trigger_refnum == f->host_fd))
+	if (trigger == 2 && count > 0x1e && trigger_refnum == f->host_fd)
 	{
-		DebugInfo("#### DEBUG TRIGGER #### Ladeadresse ist 0x%08x", buf);
+		DebugInfo("#### DEBUG TRIGGER #### Ladeadresse ist %p", (void *)buf);
 		trigger_ProcessStartAddr = buf;
 		trigger_ProcessFileLen = (unsigned) count;
 		trigger = 0;
 	}
 #endif
-	lcount = count;
-	err = FSRead(f->host_fd, &lcount, buf);
-	if (err == eofErr)
-		err = 0;				/* nur Teil eingelesen, kein Fehler! */
-	else
-	if (err)
-		return cnverr(err);
+	lcount = read(f->host_fd, buf, count);
+	if (lcount < 0)
+		return errnoHost2Mint(errno, TOS_EACCDN);
 	return (int32_t) lcount;
 }
 
 
-int32_t CMacXFS::dev_write( MAC_FD *f, int32_t count, char *buf )
+int32_t CMacXFS::dev_write(MAC_FD *f, int32_t count, char *buf)
 {
 #ifdef DEMO
 	#pragma unused(f, count, buf)
 	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
 	return TOS_EWRPRO;
 #else
-	OSErr err;
 	long lcount;
 
-	lcount = count;
-	err = FSWrite(f->host_fd, &lcount, buf);
-	if (err)
-		return cnverr(err);
+	DebugInfo("dev_read(%d, %p, %d)", f->host_fd, (void *)buf, count);
+	if (f->fc.drv->drv_flags & M_DRV_READONLY)
+		return TOS_EWRPRO;
+	lcount = write(f->host_fd, buf, count);
+	if (lcount < 0)
+		return errnoHost2Mint(errno, TOS_EACCDN);
 	return (int32_t) lcount;
 #endif
 }
@@ -3863,19 +3005,15 @@ int32_t CMacXFS::dev_write( MAC_FD *f, int32_t count, char *buf )
 int32_t CMacXFS::dev_stat(MAC_FD *f, void *unsel, uint16_t rwflag, int32_t apcode)
 {
 #pragma unused(unsel, apcode)
-	OSErr err;
-	long pos;
-	long laenge;
+	struct stat st;
+	off_t pos;
 
 	if (rwflag)
 		return 1;         /* Schreiben immer bereit */
-	err = GetEOF(f->host_fd, &laenge);
-	if (err)
-		return cnverr(err);
-	err = GetFPos(f->host_fd, &pos);
-	if (err)
-		return cnverr(err);
-	if (pos < laenge)
+	if (fstat(f->host_fd, &st) != 0)
+		return errnoHost2Mint(errno, TOS_EACCDN);
+	pos = lseek(f->host_fd, 0, SEEK_CUR);
+	if (pos < st.st_size)
 		return 1;
 	return 0;
 }
@@ -3883,34 +3021,27 @@ int32_t CMacXFS::dev_stat(MAC_FD *f, void *unsel, uint16_t rwflag, int32_t apcod
 
 int32_t CMacXFS::dev_seek(MAC_FD *f, int32_t pos, uint16_t mode)
 {
-	OSErr err;
 	short macmode;
-	long lpos;
+	off_t lpos;
 
-	switch(mode)
+	DebugInfo("dev_seek(%d, %d, %d)", f->host_fd, pos, mode);
+	switch (mode)
 	{
-		case 0:   macmode = 1;break;
-		case 1:   macmode = 3;break;
-		case 2:   macmode = 2;break;
+		case 0:   macmode = SEEK_SET; break;
+		case 1:   macmode = SEEK_CUR; break;
+		case 2:   macmode = SEEK_END; break;
 		default:  return TOS_EINVFN;
 	}
-	lpos = pos;
-	err = SetFPos(f->host_fd, macmode, lpos);
-	if (err)
-		return cnverr(err);
-	err = GetFPos(f->host_fd, &lpos);
-	if (err)
-		return cnverr(err);
+	lpos = lseek(f->host_fd, pos, macmode);
+	if (lpos == (off_t)-1)
+		return errnoHost2Mint(errno, TOS_EACCDN);
 	return lpos;
 }
 
 
 int32_t CMacXFS::dev_datime(MAC_FD *f, uint16_t d[2], uint16_t rwflag)
 {
-	OSErr err;
-	char fname[64];
-	CInfoPBRec pb;
-
+	struct stat st;
 
 #ifdef DEMO
 	
@@ -3924,82 +3055,172 @@ int32_t CMacXFS::dev_datime(MAC_FD *f, uint16_t d[2], uint16_t rwflag)
 	
 	if (rwflag)			/* schreiben */
 	{
+		if (f->fc.drv->drv_flags & M_DRV_READONLY)
+			return TOS_EWRPRO;
 		f->mod_time[0] = be16_to_cpu(d[0]);
 		f->mod_time[1] = be16_to_cpu(d[1]);
 		f->mod_time_dirty = 1;		/* nur puffern */
-		err = TOS_E_OK;				/* natürlich kein Fehler */
-	}
-	else
+	} else
 	{
 		if (f->mod_time_dirty)	/* war schon geaendert */
 		{
 			d[0] = cpu_to_be16(f->mod_time[0]);
 			d[1] = cpu_to_be16(f->mod_time[1]);
-			err = TOS_E_OK;				/* natuerlich kein Fehler */
-		}
-		else
+		} else
 		{
-			err = f_2_cinfo(f, &pb, fname);
-   			if (err)
-       			return cnverr(err);
+			if (fstat(f->host_fd, &st) != 0)
+				return errnoHost2Mint(errno, TOS_EACCDN);
 
-          	/* Datum ist ioFlMdDat bzw. ioDrMdDat */
-          	date_mac2dos(pb.hFileInfo.ioFlMdDat, &(d[0]), &(d[1]));
+          	date_mac2dos(st.st_mtime, &d[0], &d[1]);
 			d[0] = cpu_to_be16(d[0]);
 			d[1] = cpu_to_be16(d[1]);
 		}
 	}
 
-	return cnverr(err);
-}
-
-OSErr CMacXFS::getFSSpecByFileRefNum (short fRefNum, FSSpec *spec, FCBPBRec *pb)
-{
-	OSErr err;
-	pb->ioFCBIndx = 0;
-	pb->ioRefNum = fRefNum;
-	pb->ioNamePtr = spec->name;
-	err = PBGetFCBInfoSync ((FCBPBPtr)pb);
-	spec->parID = pb->ioFCBParID;
-	spec->vRefNum = pb->ioFCBVRefNum;
-	return err;
+	return TOS_E_OK;
 }
 
 
 int32_t CMacXFS::dev_ioctl(MAC_FD *f, uint16_t cmd, void *buf)
 {
-	OSErr err;
-	char fname[64];
-	CInfoPBRec pb;
-
+	struct stat st;
 
 	switch(cmd)
 	{
-	case FSTAT:
-		if (buf == 0)
-		    return TOS_EINVFN;
-		err = f_2_cinfo(f, &pb, fname);
-		if (err)
-			return cnverr(err);
-		/*
-		struct _mx_dmd *fd_dmd = (struct _mx_dmd *) (be32_to_cpu(f->fd.fd_dmd) + AdrOffset68k);
-		cinfo_to_xattr(&pb, (XATTR *) buf, be16_to_cpu(fd_dmd->d_drive));
-		*/
-		cinfo_to_xattr(&pb, (XATTR *) buf, 0 /*dummy*/);
+	case MINT_FIONWRITE:
+		*((int32_t *)buf) = cpu_to_be32(1);
 		return TOS_E_OK;
-	  	break;
-	  case FTRUNCATE:
-	  	err = SetEOF(f->host_fd, cpu_to_be32(*((int32_t *) buf)));
-		return cnverr(err);
-	  	break;
 
-	  case FMACOPENRES:
-	  {
-      		HParamBlockRec pb;
-      		FSSpec	spec;
-      		char	perm;
-      		FCBPBRec	fcb;
-      		
+	case MINT_FIONREAD:
+	{
+		int navail;
+		
+#ifdef FIONREAD
+		if (ioctl(f->host_fd, FIONREAD, &navail) < 0)
+#endif
+		{
+			int32_t pos = lseek(f->host_fd, 0, SEEK_CUR); // get position
+			navail = lseek(f->host_fd, 0, SEEK_END) - pos;
+			lseek(f->host_fd, pos, SEEK_SET); // set the position back
+		}
+		*((int32_t *)buf) = cpu_to_be32(navail);
+		return TOS_E_OK;
+	}
+
+	case MINT_FIOEXCEPT:
+		*((int32_t *)buf) = cpu_to_be32(0);
+		return TOS_E_OK;
+
+	case MINT_FSTAT:
+		if (buf == 0)
+		    return TOS_EINVAL;
+		if (fstat(f->host_fd, &st) != 0)
+			return errnoHost2Mint(errno, TOS_EFILNF);
+		if (buf)
+			convert_to_xattr(&st, (XATTR *) buf);
+		return TOS_E_OK;
+
+	case MINT_FSTAT64:
+		if (buf == 0)
+		    return TOS_EINVAL;
+		if (fstat(f->host_fd, &st))
+			return errnoHost2Mint(errno, TOS_EFILNF);
+		if (buf)
+		    convert_to_stat64(&st, (MINT_STAT64 *)buf);
+		return TOS_E_OK;
+		
+	case MINT_FUTIME:
+		if (f->fc.drv->drv_flags & M_DRV_READONLY)
+			return TOS_EWRPRO;
+#ifdef HAVE_FUTIMENS
+		// Mintlib calls the dcntl(FUTIME_UTC, filename) first (below).
+		// but other libs might not know.
+		if (__builtin_available(macOS 10.13, iOS 11, tvOS 11, watchOS 4, *))
+		{
+			struct timespec ts[2];
+			if (buf)
+			{
+				uint32_t *p32 = (uint32_t *)buf;
+				ts[0].tv_sec = be32_to_cpu(p32[0]);
+				ts[1].tv_sec = be32_to_cpu(p32[1]);
+				ts[0].tv_sec = datetime2utc(ts[0].tv_sec) - gmtoff(ts[0].tv_sec);
+				ts[1].tv_sec = datetime2utc(ts[1].tv_sec) - gmtoff(ts[1].tv_sec);
+			} else
+			{
+				ts[0].tv_sec = ts[1].tv_sec = time(NULL);
+			}
+			ts[0].tv_nsec = ts[1].tv_nsec = 0;
+			if (futimens(f->host_fd, ts))
+			    return errnoHost2Mint(errno, TOS_EACCDN);
+		} else
+#endif
+		{
+			struct timeval tv[2];
+			if (buf)
+			{
+				uint32_t *p32 = (uint32_t *)buf;
+				tv[0].tv_sec = be32_to_cpu(p32[0]);
+				tv[1].tv_sec = be32_to_cpu(p32[1]);
+				tv[0].tv_sec = datetime2utc(tv[0].tv_sec) - gmtoff(tv[0].tv_sec);
+				tv[1].tv_sec = datetime2utc(tv[1].tv_sec) - gmtoff(tv[1].tv_sec);
+			} else
+			{
+				tv[0].tv_sec = tv[1].tv_sec = time(NULL);
+			}
+			tv[0].tv_usec = tv[1].tv_usec = 0;
+			if (futimes(f->host_fd, tv))
+			    return errnoHost2Mint(errno, TOS_EACCDN);
+		}
+		return TOS_E_OK;
+
+	case MINT_FUTIME_UTC:
+		/* NYI */
+		/* useless until kernel handles UTC timestamps */
+		break;
+
+	case MINT_F_SETLK:
+	case MINT_F_SETLKW:
+	case MINT_F_GETLK:
+		/*
+		 * locking can't be handled here.
+		 * It has to be done in macxfs.xfs on the Atari side
+		 * We must maintain the root pointer of the file
+		 * locks list, however.
+		 * Note that the "buf" arguments to flock() is a pointer
+		 * to a struct flock, and older kernels without implementing
+		 * the call will pass that to us, while the new implementation
+		 * just passes the address of the root of the locks list.
+		 */
+		if (!f->fc.index)
+			return TOS_EIHNDL;
+		if (cmd == MINT_F_GETLK)
+			*((uint32_t *)buf) = cpu_to_be32(f->fc.index->locks);
+		else
+			f->fc.index->locks = be32_to_cpu(*((uint32_t *)buf));
+		return TOS_E_OK;			
+
+	case MINT_FTRUNCATE:
+		if (!(f->fd.fd_mode & cpu_to_be16(OM_WPERM)))
+			return TOS_EACCDN;
+		if (f->fc.drv->drv_flags & M_DRV_READONLY)
+			return TOS_EWRPRO;
+	  	if (ftruncate(f->host_fd, be32_to_cpu(*((uint32_t *) buf))) != 0)
+	  		return errnoHost2Mint(errno, TOS_EACCDN);
+		return TOS_E_OK;
+
+	case MX_KER_XFSNAME:
+		if (buf)
+		    CTextConversion::Host2AtariUtf8Copy((char *)buf, "macfs", 8);
+		return TOS_E_OK;
+		
+	case FMACOPENRES:
+		{
+#ifdef NOTYET
+	  		HParamBlockRec pb;
+	  		FSSpec	spec;
+	  		char	perm;
+	  		FCBPBRec	fcb;
+	  		
 			// Get filename & dirID
 			err = getFSSpecByFileRefNum (f->host_fd, &spec, &fcb);
 			if (err) return cnverr (err);
@@ -4020,12 +3241,12 @@ int32_t CMacXFS::dev_ioctl(MAC_FD *f, uint16_t cmd, void *buf)
 				perm = fsRdPerm;
 				break;
 			}
-
+	
 			/* close the data fork */
 			pb.ioParam.ioRefNum = f->host_fd;
 			if ((err = PBCloseSync((ParmBlkPtr)&pb)) != noErr)
 			    return cnverr(err);
-
+	
 			/* now open the resource fork */
 			pb.ioParam.ioVRefNum = spec.vRefNum;
 			pb.fileParam.ioDirID = spec.parID;
@@ -4035,71 +3256,29 @@ int32_t CMacXFS::dev_ioctl(MAC_FD *f, uint16_t cmd, void *buf)
 			if ((err = PBHOpenRFSync(&pb)) != noErr)
 			    return cnverr(err);
 			f->host_fd = pb.ioParam.ioRefNum;
-			if (be16_to_cpu(f->fd.fd_mode) & O_TRUNC)
+			if (f->fd.fd_mode & cpu_to_be16(_ATARI_O_TRUNC))
 			{
 			    pb.ioParam.ioMisc = 0;
 			    if ((err = PBSetEOFSync((ParmBlkPtr)&pb)) != noErr)
 			        return cnverr(err);
 			}
+#endif
 			return 0;
 		}
 
-	  case FMACGETTYCR:
-		{
-      		FSSpec	spec;
-      		HFileParam pbf;
-      		FCBPBRec	fcb;
+	case FMACGETTYCR:
+		/* no longer supported */
+		return TOS_EINVAL;
 
-			if (buf == 0)
-			    return TOS_EINVFN;
+	case FMACSETTYCR:
+		/* no longer supported */
+		return TOS_EINVAL;
 
-			// Get filename & dirID
-			err = getFSSpecByFileRefNum (f->host_fd, &spec, &fcb);
-			if (err) return cnverr (err);
-
-			pbf.ioVRefNum = spec.vRefNum;
-			pbf.ioDirID = spec.parID;
-			pbf.ioNamePtr = spec.name;
-			pbf.ioFDirIndex = 0;
-			if ((err = PBHGetFInfoSync((HParmBlkPtr)&pbf)) != noErr)
-			    return cnverr(err);
-
-			*(FInfo *) buf = pbf.ioFlFndrInfo;
-			return 0;
-		}
-
-	  case FMACSETTYCR:
-		{
-      		FSSpec	spec;
-      		HFileParam pbf;
-      		FCBPBRec	fcb;
-
-			if (buf == 0)
-			    return TOS_EINVFN;
-
-			// Get filename & dirID
-			err = getFSSpecByFileRefNum (f->host_fd, &spec, &fcb);
-			if (err)
-				return cnverr(err);
-
-			pbf.ioVRefNum = spec.vRefNum;
-			pbf.ioDirID = spec.parID;
-			pbf.ioNamePtr = spec.name;
-			pbf.ioFDirIndex = 0;
-			if ((err = PBHGetFInfoSync((HParmBlkPtr)&pbf)) != noErr)
-			    return cnverr(err);
-
-			pbf.ioFlFndrInfo = *(FInfo *)buf;
-			pbf.ioDirID = spec.parID;
-			if ((err = PBHSetFInfoSync((HParmBlkPtr)&pbf)) != noErr)
-			    return cnverr(err);
-			return 0;
-		}
-
-	  case FMACMAGICEX:
+	case FMACMAGICEX:
 	  	{
-	  	MMEXRec *mmex = (MMEXRec*)buf;
-		switch (mmex->funcNo)
+		  	MMEXRec *mmex = (MMEXRec*)buf;
+
+			switch (mmex->funcNo)
 			{
       		case MMEX_INFO:
       			mmex->longVal = 1;
@@ -4132,14 +3311,14 @@ int32_t CMacXFS::dev_getc(MAC_FD *f, uint16_t mode)
 }
 
 
-int32_t CMacXFS::dev_getline( MAC_FD *f, char *buf, int32_t size, uint16_t mode )
+int32_t CMacXFS::dev_getline(MAC_FD *f, char *buf, int32_t size, uint16_t mode)
 {
 #pragma unused(mode)
 	char c;
 	int32_t gelesen,ret;
 
 	for	(gelesen = 0; gelesen < size;)
-		{
+	{
 		ret = dev_read(f, 1, &c);
 		if (ret < 0)
 			return ret;			// Fehler
@@ -4151,18 +3330,18 @@ int32_t CMacXFS::dev_getline( MAC_FD *f, char *buf, int32_t size, uint16_t mode 
 			break;
 		gelesen++;
 		*buf++ = c;
-		}
+	}
 	return gelesen;
 }
 
 
-int32_t CMacXFS::dev_putc( MAC_FD *f, uint16_t mode, int32_t val )
+int32_t CMacXFS::dev_putc(MAC_FD *f, uint16_t mode, int32_t val)
 {
 #pragma unused(mode)
 	char c;
 
 	c = (char) val;
-	return dev_write(f, 1L, &c);
+	return dev_write(f, 1, &c);
 }
 
 
@@ -4188,7 +3367,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 
 	fncode = be16_to_cpu(*((uint16_t *) params));
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::XFSFunctions(%d)", (int) fncode);
+	DebugInfo("CMacXFS::XFSFunctions(%d)", fncode);
 	if (fncode == 7)
 	{
 #if 0
@@ -4221,7 +3400,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 		{
 			struct ptermparm
 			{
-				uint32_t pd;		// PD *
+				memptr pd;		// PD *
 			};
 			ptermparm *pptermparm = (ptermparm *) params;
 			xfs_pterm((PD *) (AdrOffset68k + be32_to_cpu(pptermparm->pd)));
@@ -4235,7 +3414,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct drv_openparm
 			{
 				uint16_t drv;
-				uint32_t dd;		// MXFSDD *
+				memptr dd;		// MXFSDD *
 				int32_t flg_ask_diskchange;	// in fact: DMD->D_XFS (68k-Pointer or NULL)
 			};
 			drv_openparm *pdrv_openparm = (drv_openparm *) params;
@@ -4267,21 +3446,22 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			{
 				uint16_t mode;
 				uint16_t drv;
-				uint32_t rel_dd;	// MXFSDD *
-				uint32_t pathname;		// char *
-				uint32_t restpfad;		// char **
-				uint32_t symlink_dd;	// MXFSDD *
-				uint32_t symlink;		// char **
-				uint32_t dd;		// MXFSDD *
-				uint32_t dir_drive;
+				memptr rel_dd;	// MXFSDD *
+				memptr pathname;		// char *
+				memptr restpfad;		// char **
+				memptr symlink_dd;	// MXFSDD *
+				memptr symlink;		// char **
+				memptr dd;		// MXFSDD *
+				memptr dir_drive;
 			};
 			char *restpath;
 			char *symlink;
-			uint32_t *pp;
-
+			memptr *pp;
+			
 			path2DDparm *ppath2DDparm = (path2DDparm *) params;
+			MXFSDD *dd = (MXFSDD *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->dd));
 #ifdef DEBUG_VERBOSE
-			__dump((const unsigned char *) ppath2DDparm, sizeof(*ppath2DDparm));
+			__dump("path2DDParm:", (const unsigned char *) ppath2DDparm, sizeof(*ppath2DDparm));
 #endif
 			restpath = NULL;
 			symlink = NULL;
@@ -4293,7 +3473,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 					&restpath,
 					(MXFSDD *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->symlink_dd)),
 					&symlink,
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->dd)),
+					dd,
 					(uint16_t *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->dir_drive))
 					);
 
@@ -4302,7 +3482,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
             
 			if (ppath2DDparm->restpfad != 0)
 			{
-				pp = (uint32_t *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->restpfad));
+				pp = (memptr *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->restpfad));
 				if (restpath)
 					*pp = cpu_to_be32(restpath - (char *)AdrOffset68k);
 				else
@@ -4310,16 +3490,15 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			}
 			if (ppath2DDparm->symlink != 0)
 			{
-				pp = (uint32_t *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->symlink));
+				pp = (memptr *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->symlink));
 				if (symlink)
 					*pp = cpu_to_be32(symlink - (char *)AdrOffset68k);
 				else
 					*pp = 0;
 			}
 #ifdef DEBUG_VERBOSE
-			__dump((const unsigned char *) ppath2DDparm, sizeof(*ppath2DDparm));
 			if (doserr >= 0)
-				DebugInfo(" restpath = „%s“", restpath);
+				DebugInfo(" DD=%08lx, restpath='%s'", (unsigned long)dd->dirID, restpath);
 #endif
 		}
 		break;
@@ -4330,15 +3509,15 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct sfirstparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t name;	// char *
-				uint32_t dta;		// MAC_DTA *
+				memptr dd;	// MXFSDD *
+				memptr name;	// char *
+				memptr dta;		// MAC_DTA *
 				uint16_t attrib;
 			};
 			sfirstparm *psfirstparm = (sfirstparm *) params;
-			doserr = xfs_sfirst(
-					be16_to_cpu(psfirstparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(psfirstparm->dd)),
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(psfirstparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(psfirstparm->dd)));
+			doserr = xfs_sfirst(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(psfirstparm->name)),
 					(MAC_DTA *) (AdrOffset68k + be32_to_cpu(psfirstparm->dta)),
 					be16_to_cpu(psfirstparm->attrib)
@@ -4352,7 +3531,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct snextparm
 			{
 				uint16_t drv;
-				uint32_t dta;		// MAC_DTA *
+				memptr dta;		// MAC_DTA *
 			};
 			snextparm *psnextparm = (snextparm *) params;
 			doserr = xfs_snext(
@@ -4367,17 +3546,17 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 		{
 			struct fopenparm
 			{
-				uint32_t name;	// char *
+				memptr name;	// char *
 				uint16_t drv;
-				uint32_t dd;		//MXFSDD *
+				memptr dd;		//MXFSDD *
 				uint16_t omode;
 				uint16_t attrib;
 			};
 			fopenparm *pfopenparm = (fopenparm *) params;
-			doserr = xfs_fopen(
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(pfopenparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pfopenparm->dd)));
+			doserr = xfs_fopen(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(pfopenparm->name)),
-					be16_to_cpu(pfopenparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pfopenparm->dd)),
 					be16_to_cpu(pfopenparm->omode),
 					be16_to_cpu(pfopenparm->attrib)
 					);
@@ -4390,13 +3569,13 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct fdeleteparm
 			{
 				uint16_t drv;
-				uint32_t dd;		//MXFSDD *
-				uint32_t name;	// char *
+				memptr dd;		//MXFSDD *
+				memptr name;	// char *
 			};
 			fdeleteparm *pfdeleteparm = (fdeleteparm *) params;
-			doserr = xfs_fdelete(
-					be16_to_cpu(pfdeleteparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pfdeleteparm->dd)),
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(pfdeleteparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pfdeleteparm->dd)));
+			doserr = xfs_fdelete(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(pfdeleteparm->name))
 					);
 		}
@@ -4408,22 +3587,22 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct flinkparm
 			{
 				uint16_t drv;
-				uint32_t nam1;	// char *
-				uint32_t nam2;	// char *
-				uint32_t dd1;		// MXFSDD *
-				uint32_t dd2;		// MXFSDD *
+				memptr nam1;	// char *
+				memptr nam2;	// char *
+				memptr dd1;		// MXFSDD *
+				memptr dd2;		// MXFSDD *
 				uint16_t mode;
 				uint16_t dst_drv;
 			};
+			XfsCookie fromDir, toDir;
 			flinkparm *pflinkparm = (flinkparm *) params;
-			doserr = xfs_link(
-					be16_to_cpu(pflinkparm->drv),
+			fetchXFSC(&fromDir, be16_to_cpu(pflinkparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pflinkparm->dd1)));
+			fetchXFSC(&toDir, be16_to_cpu(pflinkparm->dst_drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pflinkparm->dd2)));
+			doserr = xfs_link(&fromDir, 
 					(char *) (AdrOffset68k + be32_to_cpu(pflinkparm->nam1)),
+					&toDir,
 					(char *) (AdrOffset68k + be32_to_cpu(pflinkparm->nam2)),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pflinkparm->dd1)),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pflinkparm->dd2)),
-					be16_to_cpu(pflinkparm->mode),
-					be16_to_cpu(pflinkparm->dst_drv)
+					be16_to_cpu(pflinkparm->mode)
 					);
 		}
 		break;
@@ -4434,15 +3613,15 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct xattrparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t name;	// char *
-				uint32_t xattr;	// XATTR *
+				memptr dd;	// MXFSDD *
+				memptr name;	// char *
+				memptr xattr;	// XATTR *
 				uint16_t mode;
 			};
 			xattrparm *pxattrparm = (xattrparm *) params;
-			doserr = xfs_xattr(
-					be16_to_cpu(pxattrparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pxattrparm->dd)),
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(pxattrparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pxattrparm->dd)));
+			doserr = xfs_xattr(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(pxattrparm->name)),
 					(XATTR *) (AdrOffset68k + be32_to_cpu(pxattrparm->xattr)),
 					be16_to_cpu(pxattrparm->mode)
@@ -4456,15 +3635,15 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct attribparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t name;	// char *
+				memptr dd;	// MXFSDD *
+				memptr name;	// char *
 				uint16_t rwflag;
 				uint16_t attr;
 			};
 			attribparm *pattribparm = (attribparm *) params;
-			doserr = xfs_attrib(
-					be16_to_cpu(pattribparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pattribparm->dd)),
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(pattribparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pattribparm->dd)));
+			doserr = xfs_attrib(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(pattribparm->name)),
 					be16_to_cpu(pattribparm->rwflag),
 					be16_to_cpu(pattribparm->attr)
@@ -4478,15 +3657,15 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct chownparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t name;	// char *
+				memptr dd;	// MXFSDD *
+				memptr name;	// char *
 				uint16_t uid;
 				uint16_t gid;
 			};
 			chownparm *pchownparm = (chownparm *) params;
-			doserr = xfs_fchown(
-					be16_to_cpu(pchownparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pchownparm->dd)),
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(pchownparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pchownparm->dd)));
+			doserr = xfs_fchown(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(pchownparm->name)),
 					be16_to_cpu(pchownparm->uid),
 					be16_to_cpu(pchownparm->gid)
@@ -4500,14 +3679,14 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct chmodparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t name;	// char *
+				memptr dd;	// MXFSDD *
+				memptr name;	// char *
 				uint16_t fmode;
 			};
 			chmodparm *pchmodparm = (chmodparm *) params;
-			doserr = xfs_fchmod(
-					be16_to_cpu(pchmodparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pchmodparm->dd)),
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(pchmodparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pchmodparm->dd)));
+			doserr = xfs_fchmod(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(pchmodparm->name)),
 					be16_to_cpu(pchmodparm->fmode)
 					);
@@ -4520,19 +3699,19 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct dcreateparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t name;	// char *
+				memptr dd;	// MXFSDD *
+				memptr name;	// char *
 			};
 			dcreateparm *pdcreateparm = (dcreateparm *) params;
-			if (be32_to_cpu((uint32_t) (pdcreateparm->name)) >= m_AtariMemSize)
+			XfsCookie fc;
+			if (be32_to_cpu(pdcreateparm->name) >= m_AtariMemSize)
 			{
 				DebugError("CMacXFS::xfs_dcreate() - invalid name ptr");
 				return TOS_ERROR;
 			}
 
-			doserr = xfs_dcreate(
-					be16_to_cpu(pdcreateparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdcreateparm->dd)),
+			fetchXFSC(&fc, be16_to_cpu(pdcreateparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pdcreateparm->dd)));
+			doserr = xfs_dcreate(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(pdcreateparm->name))
 					);
 		}
@@ -4544,13 +3723,12 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct ddeleteparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
+				memptr dd;	// MXFSDD *
 			};
 			ddeleteparm *pddeleteparm = (ddeleteparm *) params;
-			doserr = xfs_ddelete(
-					be16_to_cpu(pddeleteparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pddeleteparm->dd))
-					);
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(pddeleteparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pddeleteparm->dd)));
+			doserr = xfs_ddelete(&fc);
 		}
 		break;
 
@@ -4560,14 +3738,14 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct dd2nameparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t buf;		// char *
+				memptr dd;	// MXFSDD *
+				memptr buf;		// char *
 				uint16_t bufsiz;
 			};
 			dd2nameparm *pdd2nameparm = (dd2nameparm *) params;
-			doserr = xfs_DD2name(
-					be16_to_cpu(pdd2nameparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdd2nameparm->dd)),
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(pdd2nameparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pdd2nameparm->dd)));
+			doserr = xfs_DD2name(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(pdd2nameparm->buf)),
 					be16_to_cpu(pdd2nameparm->bufsiz)
 					);
@@ -4579,16 +3757,17 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 		{
 			struct dopendirparm
 			{
-				uint32_t dirh;		// MAC_DIRHANDLE *
+				memptr dirh;		// MAC_DIRHANDLE *
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
+				memptr dd;	// MXFSDD *
 				uint16_t tosflag;
 			};
 			dopendirparm *pdopendirparm = (dopendirparm *) params;
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(pdopendirparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pdopendirparm->dd)));
 			doserr = xfs_dopendir(
 					(MAC_DIRHANDLE *) (AdrOffset68k + be32_to_cpu(pdopendirparm->dirh)),
-					be16_to_cpu(pdopendirparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdopendirparm->dd)),
+					&fc,
 					be16_to_cpu(pdopendirparm->tosflag)
 					);
 		}
@@ -4599,12 +3778,12 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 		{
 			struct dreaddirparm
 			{
-				uint32_t dirh;		// MAC_DIRHANDLE *
+				memptr dirh;		// MAC_DIRHANDLE *
 				uint16_t drv;
 				uint16_t size;
-				uint32_t buf;		// char *
-				uint32_t xattr;	// XATTR * oder NULL
-				uint32_t xr;		// int32_t * oder NULL
+				memptr buf;		// char *
+				memptr xattr;	// XATTR * oder NULL
+				memptr xr;		// int32_t * oder NULL
 			};
 			dreaddirparm *pdreaddirparm = (dreaddirparm *) params;
 			doserr = xfs_dreaddir(
@@ -4623,7 +3802,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 		{
 			struct drewinddirparm
 			{
-				uint32_t dirh;		// MAC_DIRHANDLE *
+				memptr dirh;		// MAC_DIRHANDLE *
 				uint16_t drv;
 			};
 			drewinddirparm *pdrewinddirparm = (drewinddirparm *) params;
@@ -4639,7 +3818,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 		{
 			struct dclosedirparm
 			{
-				uint32_t dirh;		// MAC_DIRHANDLE *
+				memptr dirh;		// MAC_DIRHANDLE *
 				uint16_t drv;
 			};
 			dclosedirparm *pdclosedirparm = (dclosedirparm *) params;
@@ -4656,7 +3835,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct dpathconfparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
+				memptr dd;	// MXFSDD *
 				uint16_t which;
 			};
 			dpathconfparm *pdpathconfparm = (dpathconfparm *) params;
@@ -4674,17 +3853,17 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct dfreeparm
 			{
 				uint16_t drv;
-				int32_t dirID;
-				uint32_t data;	// uint32_t data[4]
+				memptr dd;	// MXFSDD *
+				memptr data;	// uint32_t data[4]
 			};
 			dfreeparm *pdfreeparm = (dfreeparm *) params;
-			doserr = xfs_dfree(
-					be16_to_cpu(pdfreeparm->drv),
-					pdfreeparm->dirID,
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(pdfreeparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pdfreeparm->dd)));
+			doserr = xfs_dfree(&fc,
 					(uint32_t *) (AdrOffset68k + be32_to_cpu(pdfreeparm->data))
 					);
 #ifdef DEBUG_VERBOSE
-			__dump((const unsigned char *) (AdrOffset68k + be32_to_cpu(pdfreeparm->data)), 16);
+			__dump("dfreeparm:", (const unsigned char *) (AdrOffset68k + be32_to_cpu(pdfreeparm->data)), 16);
 #endif
 		}
 		break;
@@ -4695,8 +3874,8 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct wlabelparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t name;	// char *
+				memptr dd;	// MXFSDD *
+				memptr name;	// char *
 			};
 			wlabelparm *pwlabelparm = (wlabelparm *) params;
 			doserr = xfs_wlabel(
@@ -4713,8 +3892,8 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct rlabelparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t name;	// char *
+				memptr dd;	// MXFSDD *
+				memptr name;	// char *
 				uint16_t bufsiz;
 			};
 			rlabelparm *prlabelparm = (rlabelparm *) params;
@@ -4733,14 +3912,14 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct symlinkparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t name;	// char *
-				uint32_t to;		// char *
+				memptr dd;	// MXFSDD *
+				memptr name;	// char *
+				memptr to;		// char *
 			};
 			symlinkparm *psymlinkparm = (symlinkparm *) params;
-			doserr = xfs_symlink(
-					be16_to_cpu(psymlinkparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(psymlinkparm->dd)),
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(psymlinkparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(psymlinkparm->dd)));
+			doserr = xfs_symlink(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(psymlinkparm->name)),
 					(char *) (AdrOffset68k + be32_to_cpu(psymlinkparm->to))
 					);
@@ -4753,17 +3932,17 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct readlinkparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t name;	// char *
-				uint32_t buf;		// char *
+				memptr dd;	// MXFSDD *
+				memptr name;	// char *
+				memptr buf;		// char *
 				uint16_t bufsiz;
 			};
 			readlinkparm *preadlinkparm = (readlinkparm *) params;
-			doserr = xfs_readlink(
-					be16_to_cpu(preadlinkparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(preadlinkparm->dd)),
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(preadlinkparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(preadlinkparm->dd)));
+			doserr = xfs_readlink(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(preadlinkparm->name)),
-					(char *) (AdrOffset68k + be32_to_cpu(preadlinkparm->buf)),
+					preadlinkparm->buf ? (char *) (AdrOffset68k + be32_to_cpu(preadlinkparm->buf)) : NULL,
 					be16_to_cpu(preadlinkparm->bufsiz)
 					);
 		}
@@ -4775,19 +3954,19 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			struct dcntlparm
 			{
 				uint16_t drv;
-				uint32_t dd;	// MXFSDD *
-				uint32_t name;	// char *
+				memptr dd;	// MXFSDD *
+				memptr name;	// char *
 				uint16_t cmd;
 				int32_t arg;
 			};
 			dcntlparm *pdcntlparm = (dcntlparm *) params;
-			doserr = xfs_dcntl(
-					be16_to_cpu(pdcntlparm->drv),
-					(MXFSDD *) (AdrOffset68k + be32_to_cpu(pdcntlparm->dd)),
+			XfsCookie fc;
+			fetchXFSC(&fc, be16_to_cpu(pdcntlparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pdcntlparm->dd)));
+			doserr = xfs_dcntl(&fc,
 					(char *) (AdrOffset68k + be32_to_cpu(pdcntlparm->name)),
 					be16_to_cpu(pdcntlparm->cmd),
-					pdcntlparm->arg ? AdrOffset68k + be32_to_cpu(pdcntlparm->arg) : NULL,
-					AdrOffset68k
+					pdcntlparm->arg,
+					pdcntlparm->arg ? AdrOffset68k + be32_to_cpu(pdcntlparm->arg) : NULL
 					);
 		}
 		break;
@@ -4827,8 +4006,8 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 	MAC_FD *f = (MAC_FD *) (AdrOffset68k + be32_to_cpu(ifd));
 
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::XFSDevFunctions(%d)", (int) fncode);
-	__dump((const unsigned char *) f, sizeof(*f));
+	DebugInfo("CMacXFS::XFSDevFunctions(0x%04x)", fncode);
+	__dump("MAC_FD:", (const unsigned char *) f, sizeof(*f));
 #endif
 	switch(fncode)
 	{
@@ -5040,47 +4219,46 @@ void CMacXFS::setDrivebits(uint32_t newbits, unsigned char *AdrOffset68k)
 *************************************************************/
 void CMacXFS::SetXFSDrive
 (
-	short drv,
+	unsigned short dev,
 	MacXFSDrvType drvType,
 	CFURLRef pathUrl,
-	bool longnames,
-	bool reverseDirOrder,
+	unsigned int flags,
 	unsigned char *AdrOffset68k
 )
 {
-	FSRef fs;
-
-	DebugInfo("CMacXFS::%s(%c: has type %s)", __FUNCTION__, 'A' + drv, xfsDrvTypeToStr(drvType));
-
 	uint32_t newbits = xfs_drvbits;
+	struct mount_info *drv;
 
-	free(drives[drv].host_root);
-	drives[drv].host_root = NULL;
+	if (dev >= NDRVS)
+	{
+		DebugError("%s: invalid drv %u", __FUNCTION__, dev);
+		return;
+	}
+	drv = &drives[dev];
+	delete drv->host_root;
+	drv->host_root = NULL;
+	strcpy(drv->mount_point, "A:\\");
+	drv->mount_point[0] = DriveToLetter(dev);
 
 #ifdef SPECIALDRIVE_AB
 	if (drv >= 2)
 #endif
 	{
 		// Laufwerk ist kein MacXFS-Laufwerk mehr => abmelden
-		newbits &= ~(1L << drv);
+		newbits &= ~(1L << dev);
 		if (drvType != NoMacXFS)
 		{
-			char dirname[ATARI_PATH_MAX];
+			char dirname[MAXPATHNAMELEN];
 
-			// convert CFURLRef to FSRef
-			if (!CFURLGetFSRef(pathUrl, &fs))
-			{
-				DebugError("CMacXFS::%s() -- conversion from URL to FSRef failed", __FUNCTION__);
-				return;
-			}
 			if (CFURLGetFileSystemRepresentation(pathUrl, true, (unsigned char *)dirname, sizeof(dirname)))
 			{
 				size_t len = strlen(dirname);
-				if (len > 0 && dirname[len - 1] != '/')
-					strcat(dirname, "/");
-				drives[drv].host_root = strdup(dirname);
+				if (len > 0 && dirname[len - 1] != *DIRSEPARATOR)
+					strcat(dirname, DIRSEPARATOR);
+				drv->host_root = new XfsFsFile(dirname);
+				MAPNEWVOIDP(drv->host_root);
 				// Laufwerk ist MacXFS-Laufwerk
-				newbits |= 1L << drv;
+				newbits |= 1L << dev;
 			} else
 			{
 				drvType = NoMacXFS;
@@ -5088,42 +4266,54 @@ void CMacXFS::SetXFSDrive
 		}
 	}
 
-	drives[drv].drv_changed = true;
-	drives[drv].xfs_path = fs;
-	drives[drv].drv_type = drvType;
+	drv->drv_changed = true;
+	drv->drv_type = drvType;
 
 	if (drvType == MacDir)
 	{
-		drives[drv].drv_valid = true;
-	}
-	else
+		drv->drv_valid = true;
+	} else
 	{
-		drives[drv].drv_valid = false;
-		drives[drv].drv_fsspec.vRefNum = 0;
+		drv->drv_valid = false;
 	}
 
-	drives[drv].drv_longnames = longnames;
-	drives[drv].drv_rvsDirOrder = reverseDirOrder;
+	flags |= M_DRV_READONLY; /* XXX */
+	drv->drv_flags = flags;
+	// drv->halfSensitive = true;
 
-	DebugInfo("CMacXFS::SetXFSDrive() -- Drive %c: %s dir order, %s names", 'A' + drv, drives[drv].drv_rvsDirOrder ? "reverse" : "normal", drives[drv].drv_longnames ? "long" : "8+3");
+	DebugInfo("CMacXFS::%s() -- Drive %c: '%s', root DD=%08lx, type=%s, dir order=%s, names=%s",
+		__FUNCTION__,
+		DriveToLetter(dev),
+		drv->host_root ? drv->host_root->name : "",
+		(unsigned long)(drv->host_root ? MAPVOIDPTO32(drv->host_root) : 0),
+		xfsDrvTypeToStr(drvType),
+		drv->drv_flags & M_DRV_REVERSE_DIR_ORDER ? "reverse" : "normal",
+		drv->drv_flags & M_DRV_DOSNAMES ? "8+3" : "long");
 
 #ifdef SPECIALDRIVE_AB
-	if (drv >= 2)
+	if (dev >= 2)
 #endif
 		setDrivebits(newbits, AdrOffset68k);
 }
 
-void CMacXFS::ChangeXFSDriveFlags
-(
-	short drv,
-	bool longnames,
-	bool reverseDirOrder
-)
+void CMacXFS::ChangeXFSDriveFlags(unsigned short dev, unsigned int flags)
 {
-	drives[drv].drv_longnames = longnames;
-	drives[drv].drv_rvsDirOrder = reverseDirOrder;
+	struct mount_info *drv;
+	if (dev >= NDRVS)
+	{
+		DebugError("%s: invalid drv %u", __FUNCTION__, dev);
+		return;
+	}
+	drv = &drives[dev];
+	flags |= M_DRV_READONLY; /* XXX */
+	drv->drv_flags = flags;
 
-	DebugInfo("CMacXFS::ChangeXFSDriveFlags() -- Drive %c: %s dir order, %s names", 'A' + drv, drives[drv].drv_rvsDirOrder ? "reverse" : "normal", drives[drv].drv_longnames ? "long" : "8+3");
+	DebugInfo("CMacXFS::%s() -- Drive %c: '%s', dir order=%s, names=%s",
+		__FUNCTION__,
+		DriveToLetter(dev),
+		drv->host_root ? drv->host_root->name : "",
+		drv->drv_flags & M_DRV_REVERSE_DIR_ORDER ? "reverse" : "normal",
+		drv->drv_flags & M_DRV_DOSNAMES ? "8+3" : "long");
 }
 
 
@@ -5139,9 +4329,7 @@ void CMacXFS::ChangeXFSDriveFlags
 /* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L1772 */
 int32_t CMacXFS::Drv2DevCode(uint32_t params, unsigned char *AdrOffset68k)
 {
-	short vol;
 	uint16_t drv = be16_to_cpu(*((uint16_t*) (AdrOffset68k + params)));
-
 
 	if (drv <= 1)
 	{
@@ -5149,9 +4337,7 @@ int32_t CMacXFS::Drv2DevCode(uint32_t params, unsigned char *AdrOffset68k)
 		return (int32_t) 0x00010000 | (drv + 1);	// liefert 1 bzw. 2
 	}
 
-	vol = drives[drv].drv_fsspec.vRefNum;
-
-	if (vol == 0)
+	if (drv >= NDRVS || !drives[drv].drv_valid)
 	{
 		// evtl. AHDI-Drive?
 		if (false)
@@ -5166,28 +4352,7 @@ int32_t CMacXFS::Drv2DevCode(uint32_t params, unsigned char *AdrOffset68k)
 	else
 	{
 		// Es ist ein Mac-Volume - Drive-Nr. ermitteln
-		HVolumeParam pb;
-		short err, drvNum, driver;
-		Str255 name;
-
-		pb.ioVolIndex = 0;
-		pb.ioVRefNum = vol;
-		pb.ioNamePtr = name;
-		err = PBHGetVInfoSync ((HParamBlockRec*)&pb);
-		if (err)
-		{
-			return 0;
-		}
-		else
-		{
-			drvNum = pb.ioVDrvInfo;
-			driver = pb.ioVDRefNum;
-			if ((driver >= -39) && (driver <= -33))
-			{	// ein SCSI-Device?
-				drvNum = driver;
-			}
-			return (int32_t) (0x00010000 | (uint16_t) drvNum);
-		}
+		return (int32_t) (0x00030000 | (uint16_t) drv);
 	}
 }
 
@@ -5229,4 +4394,284 @@ int32_t CMacXFS::RawDrvr (uint32_t param, unsigned char *AdrOffset68k)
 		break;
 	}
 	return ret;
+}
+
+
+/*
+ * build a complete linux filepath
+ * --> fs	 something like a handle to a known file
+ *	   name	 a postfix to the path of fs or NULL, if no postfix
+ *	   buf	 buffer for the complete filepath or NULL if static one
+ *			 should be used.
+ * <-- complete filepath or NULL if error
+ */
+char *CMacXFS::cookie2Pathname(struct mount_info *drv, XfsFsFile *fs, const char *name, char *buf, bool insert_root)
+{
+	static char sbuf[MAXPATHNAMELEN]; /* FIXME: size should told by unix */
+
+	if (!buf)
+		// use static buffer
+		buf = sbuf;
+
+	if (!fs)
+	{
+		// we are at root
+		if (!name)
+			return NULL;
+
+		if (insert_root)
+			strcpy(buf, drv->host_root->name);
+		else
+			*buf = '\0';
+		return buf;
+	}
+
+	// recurse to deep
+	if (!cookie2Pathname(drv, fs->parent, fs->name, buf, insert_root))
+		return NULL;
+
+	// returning from the recursion -> append the appropriate filename
+	if (name && *name)
+	{
+		// make sure there's the right trailing dir separator
+		int len = strlen(buf);
+		if (len > 0)
+		{
+			char *last = buf + len - 1;
+			if (*last == '\\' || *last == '/')
+			{
+				*last = '\0';
+			}
+			strcat(buf, DIRSEPARATOR);
+		}
+		getHostFileName(buf + strlen(buf), drv, buf, name);
+	}
+
+	return buf;
+}
+
+char *CMacXFS::cookie2Pathname(XfsCookie *fc, const char *name, char *buf, bool insert_root)
+{
+	return cookie2Pathname(fc->drv, fc->index, name, buf, insert_root);
+}
+
+
+
+DIR *CMacXFS::host_opendir(const char *fpathName)
+{
+	DIR *result = opendir(fpathName);
+	if (result || errno != ENOTDIR)
+		return result;
+
+	// follow symlink when needed
+	struct stat statBuf;
+	if (!lstat(fpathName, &statBuf) && S_ISLNK(statBuf.st_mode))
+	{
+		char temp[MAXPATHNAMELEN];
+		if (host_readlink(fpathName, temp, sizeof(temp) - 1))
+			return host_opendir(temp);
+	}
+
+	return NULL;
+}
+
+
+char *CMacXFS::host_readlink(const char *pathname, char *target, int len)
+{
+	int rv;
+	int i;
+
+	target[0] = '\0';
+	if ((rv = readlink(pathname, target, len)) < 0)
+		return NULL;
+
+	// put the trailing \0
+	target[rv] = '\0';
+
+	// relative host fs symlinks are left alone. The kernel will parse them
+	if (target[0] != *DIRSEPARATOR && target[0] != '\\' && target[1] != ':')
+		return target;
+	// convert to real path (example: "/tmp/../file" -> "/file")
+	{
+		char *tmp = my_canonicalize_file_name(target, false);
+		if (tmp == NULL)
+			return target;
+		size_t nameLen = strlen(tmp);
+		for (i = 0; i < NDRVS; i++)
+		{
+			struct mount_info *drv = &drives[i];
+			if (drv->drv_valid)
+			{
+				size_t hrLen = strlen(drv->host_root->name);
+				if (hrLen == 0 || hrLen > nameLen)
+					continue;
+				if (strncmp(drv->host_root->name, tmp, hrLen) == 0)
+				{
+					// target drive found; replace the hosts root directory
+					// with the mount point
+					strncpy(target, drv->mount_point, len);
+					int mLen = strlen(drv->mount_point);
+					if (mLen < len)
+						strncpy(target + mLen, tmp + hrLen, len - mLen);
+					break;
+				}
+			}
+		}
+		free(tmp);
+	}
+	
+	return target;
+}
+
+
+bool CMacXFS::getHostFileName(char *result, struct mount_info *drv, const char *pathName, const char *name)
+{
+	struct stat statBuf;
+
+	// if the whole thing fails then take the requested name as is
+	// it also completes the path
+	if (drv->drv_flags & M_DRV_DOSNAMES)
+		nameto_8_3(name, result, 2);
+	else
+		CTextConversion::Atari2HostUtf8Copy(result, name, MAXPATHNAMELEN);
+
+	if (!strpbrk(name, "*?") && // if is it NOT a mask
+		 stat(pathName, &statBuf)) // and if such file NOT really exists
+	{
+		// the TOS filename was adjusted (lettercase, length, ..)
+		char testName[MAXPATHNAMELEN];
+		char filenamepart[MAXPATHNAMELEN];
+		struct dirent *dirEntry;
+		bool nonexisting = false;
+
+		// shorten the name from the pathName;
+		strcpy(filenamepart, result);
+		const char *finalName = filenamepart;
+		*result = '\0';
+
+		DIR *dh = host_opendir(pathName);
+		if (dh == NULL)
+		{
+			goto lbl_final;	 // should never happen
+		}
+
+		for (;;)
+		{
+			if ((dirEntry = readdir(dh)) == NULL)
+			{
+				nonexisting = true;
+				goto lbl_final;
+			}
+
+			// if (drv->halfSensitive)
+				if (strcasecmp(filenamepart, dirEntry->d_name) == 0)
+				{
+					finalName = dirEntry->d_name;
+					goto lbl_final;
+				}
+
+			nameto_8_3(dirEntry->d_name, testName, 1);
+
+			if (strcmp(testName, filenamepart) == 0)
+			{
+				// FIXME isFile test (maybe?)
+				// this follows one more argument to be passed
+
+				finalName = dirEntry->d_name;
+				goto lbl_final;
+			}
+		}
+
+	lbl_final:
+		strcpy(result, finalName);
+
+		// in case of halfsensitive filesystem,
+		// an upper case filename should be lowercase?
+		if (nonexisting /* && (!drv || drv->halfSensitive) */)
+		{
+			bool isUpper = true;
+			for (char *curr = result; *curr; curr++)
+			{
+				if (*curr != toupper(*curr))
+				{
+					isUpper = false;
+					break;
+				}
+			}
+			if (isUpper)
+			{
+				// lower case conversion
+				// strlwr(result);
+			}
+		}
+		if (dh != NULL)
+			closedir(dh);
+	}
+
+	return true;
+}
+
+
+void CMacXFS::fetchXFSC(XfsCookie *fc, uint16_t drv, MXFSDD *dd)
+{
+	if (drv >= NDRVS || !drives[drv].drv_valid)
+	{
+		fc->drv = NULL;
+		return;
+	}
+	fc->dev = drv;
+	fc->drv = &drives[drv];
+	fc->index = (XfsFsFile*)MAP32TOVOIDP(dd->dirID);
+}
+
+
+char *CMacXFS::my_canonicalize_file_name(const char *filename, bool append_slash)
+{
+	if (filename == NULL)
+		return NULL;
+
+#if (!defined HAVE_CANONICALIZE_FILE_NAME && defined HAVE_REALPATH) || defined __CYGWIN__
+#ifdef PATH_MAX
+	int path_max = PATH_MAX;
+#else
+	int path_max = pathconf(filename, _PC_PATH_MAX);
+	if (path_max <= 0)
+		path_max = 4096;
+#endif
+#endif
+
+	char *resolved;
+#if defined HAVE_CANONICALIZE_FILE_NAME
+	resolved = canonicalize_file_name(filename);
+#elif defined HAVE_REALPATH
+	char *tmp = (char *)malloc(path_max);
+	char *realp = realpath(filename, tmp);
+	resolved = (realp != NULL) ? strdup(realp) : NULL;
+	free(tmp);
+#else
+	resolved = NULL;
+#endif
+	if (resolved == NULL)
+		resolved = strdup(filename);
+	if (resolved)
+	{
+#ifdef __CYGWIN__
+		char *tmp2 = (char *)malloc(path_max);
+		strcpy(tmp2, resolved);
+		cygwin_path_to_win32(tmp2, path_max);
+		free(resolved);
+		resolved = tmp2;
+#endif
+		if (append_slash)
+		{
+			size_t len = strlen(resolved);
+			if (len > 1 && resolved[len - 1] != *DIRSEPARATOR)
+			{
+				resolved = (char *)realloc(resolved, len + 2);
+				if (resolved)
+					strcat(resolved, DIRSEPARATOR);
+			}
+		}
+	}
+	return resolved;
 }

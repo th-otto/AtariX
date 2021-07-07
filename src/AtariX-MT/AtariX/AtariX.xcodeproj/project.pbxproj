@@ -17,7 +17,6 @@
 		8CE01DAA2162604200770778 /* nf_objs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CE01DA52162604100770778 /* nf_objs.cpp */; };
 		8CEB9A4C2162EE3A00EF9EEB /* maptab.c in Sources */ = {isa = PBXBuildFile; fileRef = 8CEB9A4A2162EE3A00EF9EEB /* maptab.c */; };
 		8CFB1DF626920AFD00C17567 /* About.m in Sources */ = {isa = PBXBuildFile; fileRef = 8CFB1DF526920AFD00C17567 /* About.m */; };
-		8CFB1DF92693280C00C17567 /* typemapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CFB1DF72693280C00C17567 /* typemapper.cpp */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		AD027A5E1429382D003CBB79 /* SDLMainIntro.m in Sources */ = {isa = PBXBuildFile; fileRef = AD027A5D1429382D003CBB79 /* SDLMainIntro.m */; };
@@ -28,7 +27,6 @@
 		AD3E859E143E508B0054D0E8 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD3E859D143E508B0054D0E8 /* Carbon.framework */; };
 		AD3E85A2143E50DF0054D0E8 /* MyPreferences.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A0143E50DF0054D0E8 /* MyPreferences.cpp */; };
 		AD3E85A5143E50F90054D0E8 /* Preferences.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A3143E50F90054D0E8 /* Preferences.cpp */; };
-		AD3E85A8143E51170054D0E8 /* FullPath.c in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A6143E51170054D0E8 /* FullPath.c */; };
 		AD3E85AA143E591A0054D0E8 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD3E85A9143E591A0054D0E8 /* CoreServices.framework */; };
 		AD42AFBD1572794F00F7B76E /* rootfs-common in Resources */ = {isa = PBXBuildFile; fileRef = AD42AFBC1572794F00F7B76E /* rootfs-common */; };
 		AD5F11981572401100F8BE63 /* rootfs in Resources */ = {isa = PBXBuildFile; fileRef = AD5F11961572401100F8BE63 /* rootfs */; };
@@ -44,8 +42,6 @@
 		AD96C542143E4EEC008E0D68 /* MagiCMouse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C52C143E4EEC008E0D68 /* MagiCMouse.cpp */; };
 		AD96C543143E4EEC008E0D68 /* MagiCPrint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C52E143E4EEC008E0D68 /* MagiCPrint.cpp */; };
 		AD96C544143E4EEC008E0D68 /* MagiCSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C530143E4EEC008E0D68 /* MagiCSerial.cpp */; };
-		AD96C545143E4EEC008E0D68 /* MyMoreFiles.c in Sources */ = {isa = PBXBuildFile; fileRef = AD96C533143E4EEC008E0D68 /* MyMoreFiles.c */; };
-		AD96C546143E4EEC008E0D68 /* PascalStrings.c in Sources */ = {isa = PBXBuildFile; fileRef = AD96C536143E4EEC008E0D68 /* PascalStrings.c */; };
 		AD96C547143E4EEC008E0D68 /* TextConversion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C538143E4EEC008E0D68 /* TextConversion.cpp */; };
 		AD96C548143E4EEC008E0D68 /* XCmd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C53A143E4EEC008E0D68 /* XCmd.cpp */; };
 		AD96C54D143E4F56008E0D68 /* Debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD96C54B143E4F56008E0D68 /* Debug.cpp */; };
@@ -98,7 +94,6 @@
 		8CEB9A4A2162EE3A00EF9EEB /* maptab.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = maptab.c; sourceTree = "<group>"; };
 		8CEB9A4B2162EE3A00EF9EEB /* maptab.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = maptab.h; sourceTree = "<group>"; };
 		8CFB1DF526920AFD00C17567 /* About.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = About.m; sourceTree = "<group>"; };
-		8CFB1DF72693280C00C17567 /* typemapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = typemapper.cpp; sourceTree = "<group>"; };
 		8CFB1DF82693280C00C17567 /* typemapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = typemapper.h; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* AtariX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AtariX.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -116,8 +111,6 @@
 		AD3E85A1143E50DF0054D0E8 /* MyPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyPreferences.h; sourceTree = "<group>"; };
 		AD3E85A3143E50F90054D0E8 /* Preferences.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Preferences.cpp; sourceTree = "<group>"; };
 		AD3E85A4143E50F90054D0E8 /* Preferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Preferences.h; sourceTree = "<group>"; };
-		AD3E85A6143E51170054D0E8 /* FullPath.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FullPath.c; sourceTree = "<group>"; };
-		AD3E85A7143E51170054D0E8 /* FullPath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FullPath.h; sourceTree = "<group>"; };
 		AD3E85A9143E591A0054D0E8 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = ../../../../../../System/Library/Frameworks/CoreServices.framework; sourceTree = "<group>"; };
 		AD3E85AB143E59700054D0E8 /* Atari.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Atari.h; sourceTree = "<group>"; };
 		AD3E85AC143E5CC80054D0E8 /* resource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = resource.h; sourceTree = "<group>"; };
@@ -154,10 +147,6 @@
 		AD96C52F143E4EEC008E0D68 /* MagicPrint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagicPrint.h; sourceTree = "<group>"; };
 		AD96C530143E4EEC008E0D68 /* MagiCSerial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MagiCSerial.cpp; sourceTree = "<group>"; };
 		AD96C531143E4EEC008E0D68 /* MagiCSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagiCSerial.h; sourceTree = "<group>"; };
-		AD96C533143E4EEC008E0D68 /* MyMoreFiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MyMoreFiles.c; sourceTree = "<group>"; };
-		AD96C534143E4EEC008E0D68 /* MyMoreFiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyMoreFiles.h; sourceTree = "<group>"; };
-		AD96C536143E4EEC008E0D68 /* PascalStrings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PascalStrings.c; sourceTree = "<group>"; };
-		AD96C537143E4EEC008E0D68 /* PascalStrings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PascalStrings.h; sourceTree = "<group>"; };
 		AD96C538143E4EEC008E0D68 /* TextConversion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextConversion.cpp; sourceTree = "<group>"; };
 		AD96C539143E4EEC008E0D68 /* TextConversion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextConversion.h; sourceTree = "<group>"; };
 		AD96C53A143E4EEC008E0D68 /* XCmd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XCmd.cpp; sourceTree = "<group>"; };
@@ -208,18 +197,11 @@
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				8CFB1DF72693280C00C17567 /* typemapper.cpp */,
 				8CFB1DF82693280C00C17567 /* typemapper.h */,
 				ADCBEFF1146E90700079D3A4 /* AppDelegate.h */,
 				AD3A53FE15A8D76D000202C6 /* AppDelegate.m */,
-				AD3E85A6143E51170054D0E8 /* FullPath.c */,
-				AD3E85A7143E51170054D0E8 /* FullPath.h */,
 				AD96C54B143E4F56008E0D68 /* Debug.cpp */,
 				AD96C54C143E4F56008E0D68 /* Debug.h */,
-				AD96C533143E4EEC008E0D68 /* MyMoreFiles.c */,
-				AD96C534143E4EEC008E0D68 /* MyMoreFiles.h */,
-				AD96C536143E4EEC008E0D68 /* PascalStrings.c */,
-				AD96C537143E4EEC008E0D68 /* PascalStrings.h */,
 				AD027A5D1429382D003CBB79 /* SDLMainIntro.m */,
 				AD027A5C1429382D003CBB79 /* SDLMainIntro.h */,
 				38694A250A23D420005C94A3 /* EmulationRunner.cpp */,
@@ -494,16 +476,12 @@
 				AD96C542143E4EEC008E0D68 /* MagiCMouse.cpp in Sources */,
 				AD96C543143E4EEC008E0D68 /* MagiCPrint.cpp in Sources */,
 				AD96C544143E4EEC008E0D68 /* MagiCSerial.cpp in Sources */,
-				AD96C545143E4EEC008E0D68 /* MyMoreFiles.c in Sources */,
-				AD96C546143E4EEC008E0D68 /* PascalStrings.c in Sources */,
 				AD96C547143E4EEC008E0D68 /* TextConversion.cpp in Sources */,
 				AD96C548143E4EEC008E0D68 /* XCmd.cpp in Sources */,
-				8CFB1DF92693280C00C17567 /* typemapper.cpp in Sources */,
 				AD96C54D143E4F56008E0D68 /* Debug.cpp in Sources */,
 				AD3E85A2143E50DF0054D0E8 /* MyPreferences.cpp in Sources */,
 				AD3E85A5143E50F90054D0E8 /* Preferences.cpp in Sources */,
 				8CEB9A4C2162EE3A00EF9EEB /* maptab.c in Sources */,
-				AD3E85A8143E51170054D0E8 /* FullPath.c in Sources */,
 				AD6D7DFF143FA90C00575FB1 /* missing.cpp in Sources */,
 				AD0936E21440B537006D73E9 /* gui.m in Sources */,
 				AD0792A31461EBCD0043E0F6 /* PreferencesWindowController.m in Sources */,
@@ -582,13 +560,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "_DEBUG=1";
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/SDL2.framework/Headers",
@@ -603,7 +579,6 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = AtariX;
-				SDKROOT = macosx;
 				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -614,7 +589,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -633,7 +607,6 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = AtariX;
-				SDKROOT = macosx;
 				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = app;
 			};
@@ -642,32 +615,28 @@
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_OPTIMIZATION_LEVEL = 2;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				FRAMEWORK_SEARCH_PATHS = "";
-				GCC_VERSION_ppc = 3.3;
+				GCC_OPTIMIZATION_LEVEL = 2;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "$(HEADER_SEARCH_PATHS)";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				MACOSX_DEPLOYMENT_TARGET_ppc = 10.2;
-				SDKROOT = macosx;
 			};
 			name = Release;
 		};

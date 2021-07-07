@@ -33,7 +33,6 @@
 #include "Debug.h"
 #include "TextConversion.h"
 #include "Clipboard.h"
-#include "PascalStrings.h"
 
 #define CHSET_ATARI_delta						0x7F
 #define CHSET_ATARI_cedille_uppercase			0x80		// Ç
@@ -74,11 +73,11 @@
 #define CHSET_ATARI_u_aigu_lowercase			0xA3		// ú
 #define CHSET_ATARI_n_tilde_lowercase			0xA4		// ñ
 #define CHSET_ATARI_n_tilde_uppercase			0xA5		// Ñ
-#define CHSET_ATARI_a_under_lowercase			0xA6		// _a
-#define CHSET_ATARI_o_under_lowercase			0xA7		// _o
+#define CHSET_ATARI_a_under_lowercase			0xA6		// ª
+#define CHSET_ATARI_o_under_lowercase			0xA7		// º
 #define CHSET_ATARI_question_inverted			0xA8		// ¿
-#define CHSET_ATARI_angle_upper_left			0xA9		//
-#define CHSET_ATARI_angle_upper_right			0xAA		//
+#define CHSET_ATARI_angle_upper_left			0xA9		// ⌐
+#define CHSET_ATARI_angle_upper_right			0xAA		// ¬
 #define CHSET_ATARI_1_div_2						0xAB		// ½
 #define CHSET_ATARI_1_div_4						0xAC		// ¼
 #define CHSET_ATARI_exclamation_inverted		0xAD		// ¡
@@ -141,115 +140,108 @@
 
 const CClipboard::atariCharEntry CClipboard::atariCharConvTable[] =
 {
-	{ CHSET_ATARI_cedille_uppercase			, u8"Ç" },
-	{ CHSET_ATARI_u_umlaut_lowercase		, u8"ü" },
-	{ CHSET_ATARI_e_aigu_lowercase			, u8"é" },
-	{ CHSET_ATARI_a_circonflex_lowercase	, u8"â" },
-	{ CHSET_ATARI_a_umlaut_lowercase		, u8"ä" },
-	{ CHSET_ATARI_a_grave_lowercase			, u8"à" },
-	{ CHSET_ATARI_a_circle_lowercase		, u8"å" },
-	{ CHSET_ATARI_cedille_lowercase			, u8"ç" },
-	{ CHSET_ATARI_e_circonflex_lowercase	, u8"ê" },
-	{ CHSET_ATARI_e_trema_lowercase			, u8"ë" },
-	{ CHSET_ATARI_e_grave_lowercase			, u8"è" },
-	{ CHSET_ATARI_i_trema_lowercase			, u8"ï" },
-	{ CHSET_ATARI_i_circonflex_lowercase	, u8"î" },
-	{ CHSET_ATARI_i_grave_lowercase			, u8"ì" },
-	{ CHSET_ATARI_a_umlaut_uppercase		, u8"Ä" },
-	{ CHSET_ATARI_a_hatschek_uppercase	  	, u8"Ǎ" },
-	{ CHSET_ATARI_e_aigu_uppercase			, u8"É" },
-	{ CHSET_ATARI_ae_lowercase				, u8"æ" },
-	{ CHSET_ATARI_ae_uppercase				, u8"Æ" },
-	{ CHSET_ATARI_o_circonflex_lowercase	, u8"ô" },
-	{ CHSET_ATARI_o_umlaut_lowercase		, u8"ö" },
-	{ CHSET_ATARI_o_grave_lowercase			, u8"ò" },
-	{ CHSET_ATARI_u_circonflex_lowercase	, u8"û" },
-	{ CHSET_ATARI_u_grave_lowercase			, u8"ù" },
-	{ CHSET_ATARI_y_trema_lowercase			, u8"ÿ" },
-	{ CHSET_ATARI_o_umlaut_uppercase		, u8"Ö" },
-	{ CHSET_ATARI_u_umlaut_uppercase		, u8"Ü" },
-	{ CHSET_ATARI_cent						, u8"¢" },
-	{ CHSET_ATARI_pound						, u8"£" },
-	{ CHSET_ATARI_yen						, u8"¥" },
-	{ CHSET_ATARI_eszett					, u8"ß" },
-	{ CHSET_ATARI_integral					, u8"⨍" },
-	{ CHSET_ATARI_a_aigu_lowercase			, u8"á" },
-	{ CHSET_ATARI_i_aigu_lowercase			, u8"í" },
-	{ CHSET_ATARI_o_aigu_lowercase			, u8"ó" },
-	{ CHSET_ATARI_u_aigu_lowercase			, u8"ú" },
-	{ CHSET_ATARI_n_tilde_lowercase			, u8"ñ" },
-	{ CHSET_ATARI_n_tilde_uppercase			, u8"Ñ" },
-//	{ CHSET_ATARI_a_under_lowercase			,u8"_a" },
-//	{ CHSET_ATARI_o_under_lowercase			,u8"_o" },
-	{ CHSET_ATARI_question_inverted			, u8"¿" },
-	{ CHSET_ATARI_angle_upper_left			, u8" " },
-	{ CHSET_ATARI_angle_upper_right			, u8" " },
-	{ CHSET_ATARI_1_div_2					, u8"½" },
-	{ CHSET_ATARI_1_div_4					, u8"¼" },
-	{ CHSET_ATARI_exclamation_inverted		, u8"¡" },
-	{ CHSET_ATARI_double_angle_left			, u8"«" },
-	{ CHSET_ATARI_double_angle_right		, u8"»" },
-	{ CHSET_ATARI_a_tilde_lowercase			, u8"ã" },
-	{ CHSET_ATARI_o_tilde_lowercase			, u8"õ" },
-	{ CHSET_ATARI_o_schraegstrich_uppercase	, u8"Ø" },
-	{ CHSET_ATARI_o_schraegstrich_lowercase	, u8"ø" },
-	{ CHSET_ATARI_oe_lowercase				, u8"œ" },
-	{ CHSET_ATARI_oe_uppercase				, u8"Œ" },
-	{ CHSET_ATARI_a_grave_uppercase			, u8"À" },
-	{ CHSET_ATARI_a_tilde_uppercase			, u8"Ã" },
-	{ CHSET_ATARI_o_tilde_uppercase			, u8"Õ" },
-	{ CHSET_ATARI_diaeresis					, u8"¨" },
-	{ CHSET_ATARI_acute_accent				, u8"´" },
-	{ CHSET_ATARI_dagger					, u8"†" },
-	{ CHSET_ATARI_absatz					, u8"¶" },
-	{ CHSET_ATARI_copyright					, u8"©" },
-	{ CHSET_ATARI_registered				, u8"®" },
-	{ CHSET_ATARI_trademark					, u8"™" },
-	{ CHSET_ATARI_ij_lowercase				, u8"ĳ" },
-	{ CHSET_ATARI_ij_uppercase				, u8"Ĳ" },
-	{ CHSET_ATARI_paragraph					, u8"§" },
-	{ CHSET_ATARI_circumflex_accent			, u8"^" },
-	{ CHSET_ATARI_infinite					, u8"∞" },
-	{ CHSET_ATARI_alpha_lowercase			, u8"α" },
-	{ CHSET_ATARI_beta_lowercase			, u8"β" },
-	{ CHSET_ATARI_gamma_uppercase			, u8"Γ" },
-	{ CHSET_ATARI_pi_lowercase				, u8"π" },
-	{ CHSET_ATARI_sigma_uppercase			, u8"Σ" },
-	{ CHSET_ATARI_sigma_lowercase			, u8"σ" },
-	{ CHSET_ATARI_mue_lowercase				, u8"μ" },
-	{ CHSET_ATARI_tau_lowercase				, u8"τ" },
-	{ CHSET_ATARI_error_barred_white_circle	, u8"⧲" },
-	{ CHSET_ATARI_theta_uppercase			, u8"Θ" },
-	{ CHSET_ATARI_omega_uppercase			, u8"Ω" },
-	{ CHSET_ATARI_delta_lowercase			, u8"δ" },
-	{ CHSET_ATARI_contour_integral			, u8"∮" },
-	{ CHSET_ATARI_phi_uppercase				, u8"Φ" },
-	{ CHSET_ATARI_element					, u8"∈" },
-	{ CHSET_ATARI_intersection				, u8"∩" },
-	{ CHSET_ATARI_identical					, u8"≡" },
-	{ CHSET_ATARI_plusminus					, u8"±" },
-	{ CHSET_ATARI_greater_than_or_equal		, u8"≥" },
-	{ CHSET_ATARI_smaller_than_or_equal		, u8"≤" },
-	{ CHSET_ATARI_top_half_integral			, u8"⌠" },
-	{ CHSET_ATARI_bottom_half_integral		, u8"⌡" },
-	{ CHSET_ATARI_division					, u8"÷" },
-	{ CHSET_ATARI_almost_equal_to			, u8"≈" },
-	{ CHSET_ATARI_degree					, u8"°" },
-	{ CHSET_ATARI_dot_above					, u8"˙" },
-	{ CHSET_ATARI_bullet					, u8"•" },
-	{ CHSET_ATARI_square_root				, u8"√" },
-	{ CHSET_ATARI_superscript_n				, u8"ⁿ" },
-	{ CHSET_ATARI_superscript_two			, u8"²" },
-	{ CHSET_ATARI_superscript_three			, u8"³" },
-	{ CHSET_ATARI_overline					, u8" ̅" }
+	{ CHSET_ATARI_cedille_uppercase			, "Ç" },
+	{ CHSET_ATARI_u_umlaut_lowercase		, "ü" },
+	{ CHSET_ATARI_e_aigu_lowercase			, "é" },
+	{ CHSET_ATARI_a_circonflex_lowercase	, "â" },
+	{ CHSET_ATARI_a_umlaut_lowercase		, "ä" },
+	{ CHSET_ATARI_a_grave_lowercase			, "à" },
+	{ CHSET_ATARI_a_circle_lowercase		, "å" },
+	{ CHSET_ATARI_cedille_lowercase			, "ç" },
+	{ CHSET_ATARI_e_circonflex_lowercase	, "ê" },
+	{ CHSET_ATARI_e_trema_lowercase			, "ë" },
+	{ CHSET_ATARI_e_grave_lowercase			, "è" },
+	{ CHSET_ATARI_i_trema_lowercase			, "ï" },
+	{ CHSET_ATARI_i_circonflex_lowercase	, "î" },
+	{ CHSET_ATARI_i_grave_lowercase			, "ì" },
+	{ CHSET_ATARI_a_umlaut_uppercase		, "Ä" },
+	{ CHSET_ATARI_a_hatschek_uppercase	  	, "Ǎ" },
+	{ CHSET_ATARI_e_aigu_uppercase			, "É" },
+	{ CHSET_ATARI_ae_lowercase				, "æ" },
+	{ CHSET_ATARI_ae_uppercase				, "Æ" },
+	{ CHSET_ATARI_o_circonflex_lowercase	, "ô" },
+	{ CHSET_ATARI_o_umlaut_lowercase		, "ö" },
+	{ CHSET_ATARI_o_grave_lowercase			, "ò" },
+	{ CHSET_ATARI_u_circonflex_lowercase	, "û" },
+	{ CHSET_ATARI_u_grave_lowercase			, "ù" },
+	{ CHSET_ATARI_y_trema_lowercase			, "ÿ" },
+	{ CHSET_ATARI_o_umlaut_uppercase		, "Ö" },
+	{ CHSET_ATARI_u_umlaut_uppercase		, "Ü" },
+	{ CHSET_ATARI_cent						, "¢" },
+	{ CHSET_ATARI_pound						, "£" },
+	{ CHSET_ATARI_yen						, "¥" },
+	{ CHSET_ATARI_eszett					, "ß" },
+	{ CHSET_ATARI_integral					, "⨍" },
+	{ CHSET_ATARI_a_aigu_lowercase			, "á" },
+	{ CHSET_ATARI_i_aigu_lowercase			, "í" },
+	{ CHSET_ATARI_o_aigu_lowercase			, "ó" },
+	{ CHSET_ATARI_u_aigu_lowercase			, "ú" },
+	{ CHSET_ATARI_n_tilde_lowercase			, "ñ" },
+	{ CHSET_ATARI_n_tilde_uppercase			, "Ñ" },
+	{ CHSET_ATARI_a_under_lowercase			, "ª" },
+	{ CHSET_ATARI_o_under_lowercase			, "º" },
+	{ CHSET_ATARI_question_inverted			, "¿" },
+	{ CHSET_ATARI_angle_upper_left			, "⌐" },
+	{ CHSET_ATARI_angle_upper_right			, "¬" },
+	{ CHSET_ATARI_1_div_2					, "½" },
+	{ CHSET_ATARI_1_div_4					, "¼" },
+	{ CHSET_ATARI_exclamation_inverted		, "¡" },
+	{ CHSET_ATARI_double_angle_left			, "«" },
+	{ CHSET_ATARI_double_angle_right		, "»" },
+	{ CHSET_ATARI_a_tilde_lowercase			, "ã" },
+	{ CHSET_ATARI_o_tilde_lowercase			, "õ" },
+	{ CHSET_ATARI_o_schraegstrich_uppercase	, "Ø" },
+	{ CHSET_ATARI_o_schraegstrich_lowercase	, "ø" },
+	{ CHSET_ATARI_oe_lowercase				, "œ" },
+	{ CHSET_ATARI_oe_uppercase				, "Œ" },
+	{ CHSET_ATARI_a_grave_uppercase			, "À" },
+	{ CHSET_ATARI_a_tilde_uppercase			, "Ã" },
+	{ CHSET_ATARI_o_tilde_uppercase			, "Õ" },
+	{ CHSET_ATARI_diaeresis					, "¨" },
+	{ CHSET_ATARI_acute_accent				, "´" },
+	{ CHSET_ATARI_dagger					, "†" },
+	{ CHSET_ATARI_absatz					, "¶" },
+	{ CHSET_ATARI_copyright					, "©" },
+	{ CHSET_ATARI_registered				, "®" },
+	{ CHSET_ATARI_trademark					, "™" },
+	{ CHSET_ATARI_ij_lowercase				, "ĳ" },
+	{ CHSET_ATARI_ij_uppercase				, "Ĳ" },
+	{ CHSET_ATARI_paragraph					, "§" },
+	{ CHSET_ATARI_circumflex_accent			, "^" },
+	{ CHSET_ATARI_infinite					, "∞" },
+	{ CHSET_ATARI_alpha_lowercase			, "α" },
+	{ CHSET_ATARI_beta_lowercase			, "β" },
+	{ CHSET_ATARI_gamma_uppercase			, "Γ" },
+	{ CHSET_ATARI_pi_lowercase				, "π" },
+	{ CHSET_ATARI_sigma_uppercase			, "Σ" },
+	{ CHSET_ATARI_sigma_lowercase			, "σ" },
+	{ CHSET_ATARI_mue_lowercase				, "μ" },
+	{ CHSET_ATARI_tau_lowercase				, "τ" },
+	{ CHSET_ATARI_error_barred_white_circle	, "⧲" },
+	{ CHSET_ATARI_theta_uppercase			, "Θ" },
+	{ CHSET_ATARI_omega_uppercase			, "Ω" },
+	{ CHSET_ATARI_delta_lowercase			, "δ" },
+	{ CHSET_ATARI_contour_integral			, "∮" },
+	{ CHSET_ATARI_phi_uppercase				, "Φ" },
+	{ CHSET_ATARI_element					, "∈" },
+	{ CHSET_ATARI_intersection				, "∩" },
+	{ CHSET_ATARI_identical					, "≡" },
+	{ CHSET_ATARI_plusminus					, "±" },
+	{ CHSET_ATARI_greater_than_or_equal		, "≥" },
+	{ CHSET_ATARI_smaller_than_or_equal		, "≤" },
+	{ CHSET_ATARI_top_half_integral			, "⌠" },
+	{ CHSET_ATARI_bottom_half_integral		, "⌡" },
+	{ CHSET_ATARI_division					, "÷" },
+	{ CHSET_ATARI_almost_equal_to			, "≈" },
+	{ CHSET_ATARI_degree					, "°" },
+	{ CHSET_ATARI_dot_above					, "˙" },
+	{ CHSET_ATARI_bullet					, "•" },
+	{ CHSET_ATARI_square_root				, "√" },
+	{ CHSET_ATARI_superscript_n				, "ⁿ" },
+	{ CHSET_ATARI_superscript_two			, "²" },
+	{ CHSET_ATARI_superscript_three			, "³" },
+	{ CHSET_ATARI_overline					, " ̅" }
 };
-
-// statische Attribute:
-
-//unsigned long CClipboard::s_lastCrDat = 0;
-//unsigned long CClipboard::s_lastMdDat = 0;
-//long CClipboard::s_lastFILgLen = 0;
-//char CClipboard::s_AtariScrapPath[256] = ":MAGIC_C:GEMSYS:GEMSCRAP:";
 
 
 /**********************************************************************
@@ -353,7 +345,7 @@ void CClipboard::Mac2Atari(const uint8_t *pData)
 	while(*pData)
 	{
 		c = *pData++;
-		if (c > 0x20 && c <= 0x7F)
+		if (c >= 0x20 && c <= 0x7F)
 		{
 			// US-ASCII (7 Bit), ohne Steuerzeichen
 			*wrPtr++ = c;
@@ -487,7 +479,7 @@ void CClipboard::Mac2Atari(const uint8_t *pData)
 				}
 				else
 				{
-					// \r\n -> \r\n
+					// \r -> \r\n
 					*wrPtr++ = '\n';
 				}
 				break;
@@ -497,6 +489,12 @@ void CClipboard::Mac2Atari(const uint8_t *pData)
 				*wrPtr++ = '\r';
 				*wrPtr++ = '\n';
 				break;
+
+			case '\t':
+			case '\v':
+				*wrPtr++ = c;
+				break;
+				
 /*
 			case 0xEF:
 				// BOM ignorieren
@@ -624,33 +622,6 @@ void CClipboard::Atari2Mac(uint8_t **pBuffer)
 
 /**********************************************************************
 *
-* statisch und privat: Atari-Clipboard-Datei löschen
-*
-**********************************************************************/
-/*
-void CClipboard::DeleteAtariScrapFile( const char *fname )
-{
-	OSErr err;
-	Str255 path;
- 	FSSpec spec;
- 
-	strcpy((char *) (path+1), s_AtariScrapPath);
-	strcat((char *) (path+1), fname);
-	C2P(path);
-	err = FSMakeFSSpec(0, 0, path, &spec);
-
-	if	((err != 0) && (err != fnfErr))
-	{
-		DebugError("CClipboard::DeleteClipboardFile() --- Fehler %d bei FSMakeFSSpec()", err);
-	}
-
-	if	(!err)
-		FSpDelete(&spec);
-}
-*/
-
-/**********************************************************************
-*
 * statisch und privat: Atari-Clipboard öffnen mit Unix-Aufrufen
 *
 **********************************************************************/
@@ -659,8 +630,7 @@ int CClipboard::OpenAtariScrapFile(int unixPerm)
 {
 	int fd;
 
-
-	fd = open((const char *) CGlobals::s_atariScrapFileUnixPath, unixPerm);
+	fd = open(CGlobals::s_atariScrapFileUnixPath, unixPerm);
 
 /*
 	if	(perm == fsWrPerm)
@@ -683,56 +653,3 @@ int CClipboard::OpenAtariScrapFile(int unixPerm)
 */
 	return fd;
 }
-
-
-/**********************************************************************
-*
-* statisch und privat: Atari-Clipboard geändert?
-*
-**********************************************************************/
-/*
-OSErr CClipboard::CheckAtariScrapFile( bool *bChanged )
-{
-	CInfoPBRec pb;
-	OSErr err;
-	FSSpec spec;
-
-
-	if	(bChanged)
-		*bChanged = false;
-
-	// Wir sind ganz brutal und nehmen an, daß das Atari-Clipboard immer
-	// in "MAGIC_C/GEMSYS/GEMSCRAP/SCRAP.TXT" liegt
-	err = FSMakeFSSpec(0, 0, "\p:MAGIC_C:GEMSYS:GEMSCRAP:SCRAP.TXT", &spec);
-	if	(err)
-	{
-		DebugError("CClipboard::CheckAtariScrapFile() --- Fehler %d bei FSMakeFSSpec()", err);
-		return(err);
-	}
-
-	pb.hFileInfo.ioNamePtr = spec.name;
-	pb.hFileInfo.ioVRefNum = spec.vRefNum;
-	pb.hFileInfo.ioFDirIndex = -1;
-	pb.hFileInfo.ioDirID = spec.parID;
-	err = PBHGetFInfoSync((HParmBlkPtr)&pb);
-	if	(err)
-	{
-		DebugError("CClipboard::CheckAtariScrapFile() --- Fehler %d bei PBHGetFInfoSync()", err);
-		return(err);
-	}
-
-	if	((pb.hFileInfo.ioFlCrDat != s_lastCrDat) ||
-		 (pb.hFileInfo.ioFlMdDat != s_lastMdDat) ||
-		 (pb.hFileInfo.ioFlLgLen != s_lastFILgLen))
-	{
-		// Hat sich geändert
-		s_lastCrDat = pb.hFileInfo.ioFlCrDat;
-		s_lastMdDat = pb.hFileInfo.ioFlMdDat;
-		s_lastFILgLen = pb.hFileInfo.ioFlLgLen;
-		if	(bChanged)
-			*bChanged = true;
-	}
-
-	return(err);
-}
-*/
