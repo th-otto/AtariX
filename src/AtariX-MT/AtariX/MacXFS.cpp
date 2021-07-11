@@ -34,8 +34,7 @@
 
 #include "config.h"
 // System-Header
-#include <Carbon/Carbon.h>
-#include <machine/endian.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include <stdlib.h>
 #include <string.h>
 // Programm-Header
@@ -603,7 +602,7 @@ mode_t CMacXFS::modeMint2Host(uint16_t m)
 }
 
 
-int CMacXFS::flagsMagic2Host(uint16 flags)
+int CMacXFS::flagsMagic2Host(uint16_t flags)
 {
 	int res = O_RDONLY;
 
@@ -1581,7 +1580,7 @@ int32_t CMacXFS::xfs_fopen(XfsCookie *fc, const char *name, uint16_t omode, uint
 #ifdef DEMO
 	if (omode & _ATARI_O_CREAT)
 	{
-		(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+		(void) MyAlert(ALRT_DEMO, 2);
 		return TOS_EWRPRO;
 	}
 #endif
@@ -1684,7 +1683,7 @@ int32_t CMacXFS::xfs_fdelete(XfsCookie *dir, const char *name)
 {
 #ifdef DEMO
 	#pragma unused(dir, name)
-	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+	(void) MyAlert(ALRT_DEMO, 2);
 	return TOS_EWRPRO;
 #else
 	char fpathName[MAXPATHNAMELEN];
@@ -1728,7 +1727,7 @@ int32_t CMacXFS::xfs_link(XfsCookie *fromDir, char *fromname, XfsCookie *toDir, 
 {
 #ifdef DEMO
 	#pragma unused(fromDir, fromname, toDir, toname, mode)
-	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+	(void) MyAlert(ALRT_DEMO, 2);
 	return TOS_EWRPRO;
 #else
 
@@ -1774,7 +1773,7 @@ int32_t CMacXFS::xfs_link(XfsCookie *fromDir, char *fromname, XfsCookie *toDir, 
 
 void CMacXFS::convert_to_xattr(struct stat *st, XATTR *xattr)
 {
-	uint64 blksize, blocks;
+	uint64_t blksize, blocks;
 
 	xattr->attr = cpu_to_be16(mac2DOSAttr(st));
 	xattr->mode = cpu_to_be16(modeHost2Mint(st->st_mode));
@@ -1839,7 +1838,7 @@ void CMacXFS::convert_to_stat64(struct stat *st, MINT_STAT64 *statp)
 	statp->_st_ctime_ns = cpu_to_be32(st->st_ctimensec);
 
 	statp->_st_size = cpu_to_be64(st->st_size);
-	uint64 blksize, blocks;
+	uint64_t blksize, blocks;
 	blksize = st->st_blksize;
     if (blksize <= 512)
 		blksize = 512;
@@ -1955,7 +1954,7 @@ int32_t CMacXFS::xfs_attrib(XfsCookie *fc, const char *name, uint16_t rwflag, ui
 #ifdef DEMO
 	if (rwflag)
 	{
-		(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+		(void) MyAlert(ALRT_DEMO, 2);
 		return TOS_EWRPRO;
 	}
 #endif
@@ -2085,7 +2084,7 @@ int32_t CMacXFS::xfs_dcreate(XfsCookie *fc, const char *name)
 
 #ifdef DEMO
 
-	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+	(void) MyAlert(ALRT_DEMO, 2);
 	return TOS_EWRPRO;
 
 #else
@@ -2121,7 +2120,7 @@ int32_t CMacXFS::xfs_ddelete(XfsCookie *fc)
 		return TOS_E_CHNG;
 #ifdef DEMO
 
-	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+	(void) MyAlert(ALRT_DEMO, 2);
 	return TOS_EWRPRO;
 	
 #else
@@ -2566,7 +2565,7 @@ int32_t CMacXFS::xfs_symlink(XfsCookie *fc, const char *name, const char *toname
 		return TOS_EACCDN;
 	
 	#pragma unused(dd, to)
-	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+	(void) MyAlert(ALRT_DEMO, 2);
 	return TOS_EWRPRO;
 
 #else
@@ -2862,7 +2861,7 @@ int32_t CMacXFS::xfs_dcntl
 		if (!pArg)
 		    return TOS_EINVAL;
 #ifdef DEMO
-		(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+		(void) MyAlert(ALRT_DEMO, 2);
 		return TOS_EWRPRO;
 #else
 		/* no longer supported */
@@ -2907,7 +2906,7 @@ int32_t CMacXFS::xfs_dcntl
 			case FMACSETTYCR:
 #ifdef DEMO
 				
-				(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+				(void) MyAlert(ALRT_DEMO, 2);
 				return TOS_EWRPRO;
 			
 #else
@@ -2986,7 +2985,7 @@ int32_t CMacXFS::dev_write(MAC_FD *f, int32_t count, char *buf)
 {
 #ifdef DEMO
 	#pragma unused(f, count, buf)
-	(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+	(void) MyAlert(ALRT_DEMO, 2);
 	return TOS_EWRPRO;
 #else
 	long lcount;
@@ -3047,7 +3046,7 @@ int32_t CMacXFS::dev_datime(MAC_FD *f, uint16_t d[2], uint16_t rwflag)
 	
 	if (rwflag)
 	{
-		(void) MyAlert(ALRT_DEMO, kAlertNoteAlert);
+		(void) MyAlert(ALRT_DEMO, 2);
 		return TOS_EWRPRO;
 	}
 	

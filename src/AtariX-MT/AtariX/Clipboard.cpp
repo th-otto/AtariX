@@ -25,8 +25,7 @@
 #include "config.h"
 // System-Header
 #include <fcntl.h>
-#include <Carbon/Carbon.h>
-#include <machine/endian.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include <string.h>
 // Programm-Header
 #include "Globals.h"

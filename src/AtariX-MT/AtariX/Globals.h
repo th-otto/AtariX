@@ -27,7 +27,6 @@
 
 // System-Header
 #include <CoreFoundation/CoreFoundation.h>
-#include <Carbon/Carbon.h>
 // Programm-Header
 #include "MyPreferences.h"
 #include <sys/param.h>
@@ -71,7 +70,7 @@ extern void Send68kExceptionData(
 // global function used by AtariSysHalt
 extern void SendSysHaltReason(const char *Reason);
 extern void UpdateAtariDoubleBuffer(void);
-extern DialogItemIndex MyAlert(SInt16 alertID, AlertType alertType);
+extern int MyAlert(SInt16 alertID, int nButtons);
 
 class CGlobals
 {

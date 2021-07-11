@@ -24,8 +24,7 @@
 
 #include "config.h"
 // System-Header
-#include <Carbon/Carbon.h>
-#include <machine/endian.h>
+#include <CoreFoundation/CoreFoundation.h>
 // Programm-Header
 #include "Debug.h"
 #include "Globals.h"
@@ -172,6 +171,15 @@ const unsigned char CMagiCKeyboard::s_convtab[128] =
 	0
 	};
 
+
+#define cmdKey (1 << 8)
+#define shiftKey (1 << 9)
+#define alphaLock (1 << 10)
+#define optionKey (1 << 11)
+#define controlKey (1 << 12)
+#define rightShiftKey (1 << 13)
+#define rightOptionKey (1 << 14)
+#define rightControlKey (1 << 15)
 
 const UInt32 CMagiCKeyboard::s_modconvtab[16] =
 {

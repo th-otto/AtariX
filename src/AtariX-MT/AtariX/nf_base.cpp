@@ -29,14 +29,14 @@
 #include "natfeat.h"
 #include "nf_base.h"
 
-void a2fstrcpy(char *dest, uint32 source)
+void a2fstrcpy(char *dest, uint32_t source)
 {
 	while ((*dest++ = m68ki_read_8(source)) != 0)
 		source++;
 }
 
 
-void f2astrcpy(uint32 dest, const char *source)
+void f2astrcpy(uint32_t dest, const char *source)
 {
 	while (*source)
 	{
@@ -48,7 +48,7 @@ void f2astrcpy(uint32 dest, const char *source)
 }
 
 
-void atari2HostSafeStrncpy(char *dest, uint32 source, size_t count)
+void atari2HostSafeStrncpy(char *dest, uint32_t source, size_t count)
 {
 	while (count > 1 && (*dest = (char) m68ki_read_8(source)) != 0)
 	{
@@ -61,7 +61,7 @@ void atari2HostSafeStrncpy(char *dest, uint32 source, size_t count)
 }
 
 
-void host2AtariSafeStrncpy(uint32 dest, const char *source, size_t count)
+void host2AtariSafeStrncpy(uint32_t dest, const char *source, size_t count)
 {
 	while (count > 1 && *source)
 	{
@@ -75,7 +75,7 @@ void host2AtariSafeStrncpy(uint32 dest, const char *source, size_t count)
 }
 
 
-size_t atari2HostSafeStrlen(uint32 source)
+size_t atari2HostSafeStrlen(uint32_t source)
 {
 	size_t count = 1;
 	

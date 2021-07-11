@@ -56,19 +56,19 @@ class CXCmd
 	};
 	static tsLoadedPlugin s_Plugins[MAX_PLUGINS];
 
-	OSErr Load(const char *libName, struct tsLoadedPlugin *plugin);
-	OSErr LoadPlugin(
+	int Load(const char *libName, struct tsLoadedPlugin *plugin);
+	int LoadPlugin(
 			const char *pPath,
 			const char *SearchPath,
 			struct tsLoadedPlugin *plugin);
 
-	OSErr OnCommandLoadLibrary(
+	int OnCommandLoadLibrary(
 				const char *szLibName,
 				bool bIsPath,
 				uint32_t *pDescriptor,
 				int32_t *pNumOfSymbols);
-	OSErr OnCommandUnloadLibrary(uint32_t XCmdDescriptor);
-	OSErr OnCommandFindSymbol(
+	int OnCommandUnloadLibrary(uint32_t XCmdDescriptor);
+	int OnCommandFindSymbol(
 				uint32_t XCmdDescriptor,
 				char *pSymName,
 				uint32_t SymNumber,

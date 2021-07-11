@@ -39,8 +39,8 @@ static int GuiMyMainThreadAlert(const char *msg_text, const char *info_text, int
 	// have to create pool to avoid debug error messages like:
 	// "... Object 0x7a6429e0 of class ... autoreleased with no pool in place - just leaking - break on objc_autoreleaseNoPool() to debug"
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	NSString *nmsg  = [[NSString stringWithCString: msg_text encoding:NSUTF8StringEncoding/*NSISOLatin1StringEncoding*/] retain];
-	NSString *ninfo = [[NSString stringWithCString: info_text encoding:NSUTF8StringEncoding/*NSISOLatin1StringEncoding*/] retain];
+	NSString *nmsg  = [[NSString stringWithCString: msg_text encoding:NSUTF8StringEncoding] retain];
+	NSString *ninfo = [[NSString stringWithCString: info_text encoding:NSUTF8StringEncoding] retain];
 
 	NSAlert *alert = [[NSAlert alloc] init];
 //	NSAlert *alert = [[[NSAlert alloc] init] autorelease];

@@ -26,11 +26,11 @@
 #ifndef _NF_BASE_H
 #define _NF_BASE_H
 
-void a2fstrcpy(char *dest, uint32 source);
-void f2astrcpy(uint32 dest, const char *source);
-void atari2HostSafeStrncpy(char *dest, uint32 source, size_t count);
-void host2AtariSafeStrncpy(uint32 dest, const char *source, size_t count);
-size_t atari2HostSafeStrlen(uint32 source);
+void a2fstrcpy(char *dest, uint32_t source);
+void f2astrcpy(uint32_t dest, const char *source);
+void atari2HostSafeStrncpy(char *dest, uint32_t source, size_t count);
+void host2AtariSafeStrncpy(uint32_t dest, const char *source, size_t count);
+size_t atari2HostSafeStrlen(uint32_t source);
 
 /*
  * Host<->Atari mem & str functions
@@ -44,7 +44,7 @@ struct _nf_base
 	void (*reset)(void);
 	const char *name;
 	int isSuperOnly;
-	sint32 (*dispatch)(uint32 fncode, uint32 args);
+	int32_t (*dispatch)(uint32_t fncode, uint32_t args);
 };
 
 #endif /* _NF_BASE_H */

@@ -24,8 +24,8 @@
 
 #include "config.h"
 // System-Header
-#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <Carbon/Carbon.h> /* needed for MultiProcessing functions */
 // Programm-Header
 #include "missing.h"
 #include "XCmd.h"
@@ -100,7 +100,7 @@ class CMagiC
 
 	// private Funktionen
 	void Init_CookieData(MgMxCookieData *pCookieData);
-   	OSErr LoadReloc (CFURLRef fileUrl,
+   	int LoadReloc (CFURLRef fileUrl,
 					long stackSize,
 					long reladdr,
 					BasePage **basePage);

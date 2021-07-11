@@ -25,7 +25,6 @@
  *
  */
 
-//#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreFoundation/CFPlugInCOM.h>
 
@@ -61,9 +60,9 @@ struct XCmdInfo
 typedef struct _MagicMacXPluginInterfaceStruct
 {
 	IUNKNOWN_C_GUTS;
-	OSErr (*PluginInit)(void *pThis, const struct XCmdInfo *pInfo);
-	OSErr (*PluginExit)(void *pThis);
-	OSErr (*GetPluginInfo)(
+	short (*PluginInit)(void *pThis, const struct XCmdInfo *pInfo);
+	short (*PluginExit)(void *pThis);
+	short (*GetPluginInfo)(
 			void *pThis,
 			const char **pName,
 			const char **pCreator,

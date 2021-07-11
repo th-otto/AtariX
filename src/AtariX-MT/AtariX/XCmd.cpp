@@ -40,7 +40,6 @@
 // Tabelle der geladenen Plugins
 CXCmd::tsLoadedPlugin CXCmd::s_Plugins[MAX_PLUGINS];
 
-#if __LP64__
 typedef UInt8                           CFragSymbolClass;
 enum {
                                         /* Values for type CFragSymbolClass.*/
@@ -50,7 +49,6 @@ enum {
   kTOCCFragSymbol               = 3,
   kGlueCFragSymbol              = 4
 };
-#endif
 
 /**********************************************************************
 *
@@ -223,7 +221,7 @@ void CXCmd::InitXCMD(struct tsLoadedPlugin *plugin)
 *
 **********************************************************************/
 
-OSErr CXCmd::Load(const char *libName, struct tsLoadedPlugin *plugin)
+int CXCmd::Load(const char *libName, struct tsLoadedPlugin *plugin)
 {
 	void *handle;
 
@@ -234,7 +232,7 @@ OSErr CXCmd::Load(const char *libName, struct tsLoadedPlugin *plugin)
 	if (handle == 0)
 	{
 		DebugInfo(" CXCmd::Load() -- GetSharedLibrary => %s", dlerror());
-		return fnfErr;
+		return ENOENT;
 	}
 
 	return 0;
@@ -247,7 +245,7 @@ OSErr CXCmd::Load(const char *libName, struct tsLoadedPlugin *plugin)
 *
 **********************************************************************/
 
-OSErr CXCmd::LoadPlugin
+int CXCmd::LoadPlugin
 (
 	const char *pUnixPath,			// Plugin name or complete path
 	const char *SearchPath,			// path (e.g. "~/Library/MagicMacX/PlugIns")
@@ -255,7 +253,7 @@ OSErr CXCmd::LoadPlugin
 )
 {
 	char szPath[MAXPATHNAMELEN];
-	OSErr err;
+	int err;
 	CFURLRef plugInURL;
 	CFStringRef cpUnixPath;
 
@@ -323,7 +321,7 @@ OSErr CXCmd::LoadPlugin
 	if	(plugin->PluginRef == 0)
 	{
 		DebugError("CXCmd::LoadPlugin() -- CFPlugInCreate() failed with path \"%s\"", szPath);
-		return(fnfErr);
+		return ENOENT;
 	}
 
 
@@ -381,7 +379,7 @@ OSErr CXCmd::LoadPlugin
 			else
 			{
 				DebugInfo("CXCmd::LoadPlugin() -- Failed to get interface.\n");
-				err = fnfErr;
+				err = ENOENT;
 			}
 
 			// MF:!! release the two interface refs...
@@ -389,13 +387,13 @@ OSErr CXCmd::LoadPlugin
 		else
 		{
 			DebugInfo("CXCmd::LoadPlugin() -- Failed to create instance.\n");
-			err = fnfErr;
+			err = ENOENT;
 		}
 	}
 	else
 	{
 		DebugInfo("CXCmd::LoadPlugin() -- Could not find any factories.\n");
-		err = fnfErr;
+		err = ENOENT;
 	}
 
 	if	(factories)
@@ -405,7 +403,7 @@ OSErr CXCmd::LoadPlugin
 	// Memory for the plug-in is deallocated here.
 
 
-	return(err);
+	return err;
 }
 
 
@@ -442,7 +440,7 @@ static void DebugPrintSymbolsInPlugIn(MagicMacXPluginInterfaceStruct *pInterface
 *
 **********************************************************************/
 
-OSErr CXCmd::OnCommandLoadLibrary
+int CXCmd::OnCommandLoadLibrary
 (
 	const char *szLibName,		// name oder Pfad
 	bool bIsPath,			// true: Pfad / false: Name
@@ -450,7 +448,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 	int32_t *pNumOfSymbols
 )
 {
-	OSErr err;
+	int err;
 	uint32_t i;
 	const char *pPluginName;
 	const char *pPluginCreator;
@@ -468,7 +466,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 		if	(s_Plugins[i].handle == 0)
 			goto found;
 	}
-	return(mFulErr);
+	return EMFILE;
 
 	found:
 
@@ -555,7 +553,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 		*pNumOfSymbols = ulNumOfSym;
 	}
 
-	return(err);
+	return err;
 }
 
 
@@ -565,7 +563,7 @@ OSErr CXCmd::OnCommandLoadLibrary
 *
 **********************************************************************/
 
-OSErr CXCmd::OnCommandUnloadLibrary
+int CXCmd::OnCommandUnloadLibrary
 (
 	uint32_t XCmdDescriptor
 )
@@ -575,10 +573,10 @@ OSErr CXCmd::OnCommandUnloadLibrary
 	DebugInfo("CXCmd::OnCommandUnloadLibrary(%u)", XCmdDescriptor);
 
 	if (XCmdDescriptor >= MAX_PLUGINS)
-		return fnfErr;
+		return EBADF;
 	pInterface = s_Plugins[XCmdDescriptor].pInterface;
 	if (pInterface == 0)
-		return fnfErr;
+		return ENOENT;
 	// Plugin freigeben
 	pInterface->Release(pInterface);
 	// nochmal (?) freigeben
@@ -597,7 +595,7 @@ OSErr CXCmd::OnCommandUnloadLibrary
 *
 **********************************************************************/
 
-OSErr CXCmd::OnCommandFindSymbol
+int CXCmd::OnCommandFindSymbol
 (
 	uint32_t XCmdDescriptor,
 	char *pSymName,
@@ -607,7 +605,7 @@ OSErr CXCmd::OnCommandFindSymbol
 )
 {
 	MagicMacXPluginInterfaceStruct *pInterface;
-	OSErr err;
+	int err;
 	const char *s;
 	tfXCMDFunction *pFn;
 
@@ -621,7 +619,7 @@ OSErr CXCmd::OnCommandFindSymbol
 	if	(XCmdDescriptor >= MAX_PLUGINS)
 	{
 		DebugError("CXCmd::OnCommandFindSymbol()-- illegal Descriptor %u", (unsigned int)SymIndex);
-		return(fnfErr);
+		return ENOENT;
 	}
 	pInterface = s_Plugins[XCmdDescriptor].pInterface;
 
@@ -640,12 +638,12 @@ OSErr CXCmd::OnCommandFindSymbol
 	{
 		*pSymbolAddress = (void *) pFn;
 		*pSymClass =  kCodeCFragSymbol;
-		err = noErr;
+		err = 0;
 	}
 	else
 	{
 		*pSymbolAddress = 0;
-		err = fnfErr;
+		err = ENOENT;
 	}
 
 #ifdef _DEBUG
@@ -655,7 +653,7 @@ OSErr CXCmd::OnCommandFindSymbol
 		DebugInfo("CXCmd::OnCommandFindSymbol() -- success");
 #endif
 
-	return(err);
+	return err;
 }
 
 
@@ -670,7 +668,7 @@ int32_t CXCmd::Command(uint32_t params, unsigned char *AdrOffset68k)
 {
 	strXCMD *pCmd = (strXCMD *) (params + AdrOffset68k);
 	int32_t ret;
-	OSErr err;
+	int err;
 
 
 	DebugInfo("CXCmd::Command(%d)", pCmd->m_cmd);
@@ -739,5 +737,5 @@ int32_t CXCmd::Command(uint32_t params, unsigned char *AdrOffset68k)
 	pCmd->m_MacError = err;
 	if	(err)
 		ret = TOS_ERROR;
-	return(ret);
+	return ret;
 }

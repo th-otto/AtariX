@@ -24,8 +24,7 @@
 
 #include "config.h"
 // System-Header
-#include <Carbon/Carbon.h>
-#include <machine/endian.h>
+#include <CoreFoundation/CoreFoundation.h>
 // Programm-Header
 #include "Debug.h"
 #include "Globals.h"
@@ -983,7 +982,7 @@ CMagiC::~CMagiC()
 *
 **********************************************************************/
 
-OSErr CMagiC::LoadReloc
+int CMagiC::LoadReloc
 (
 	CFURLRef fileUrl,
 	long stackSize,
@@ -991,7 +990,7 @@ OSErr CMagiC::LoadReloc
 	BasePage **basePage
 )
 {
-	OSErr err = 0;
+	int err = 0;
 	int fd = -1;
 	unsigned long len, codlen;
 	ExeHeader exehead;
@@ -1013,7 +1012,7 @@ OSErr CMagiC::LoadReloc
 
 	if (!CFURLGetFileSystemRepresentation(fileUrl, true, (unsigned char *)filename, MAXPATHLEN))
 	{
-		err = openErr;
+		err = ENOENT;
 	}
 
 	if (!err)
@@ -1021,7 +1020,7 @@ OSErr CMagiC::LoadReloc
 		fd = open(filename, O_RDONLY|O_BINARY);
 		if (fd < 0)
 		{
-			err = openErr;
+			err = errno;
 		} else
 		{
 			FileSize = lseek(fd, 0l, SEEK_END);
@@ -1042,7 +1041,7 @@ MagicMacX could not find the MagiC kernel file "MagicMacX.OS".
 Reinstall the application.
 [Quit program]
 */
-		MyAlert(ALRT_NO_MAGICMAC_OS, kAlertStopAlert);
+		MyAlert(ALRT_NO_MAGICMAC_OS, 1);
 		goto exitReloc;
 	}
 
@@ -1052,7 +1051,7 @@ Reinstall the application.
 	if (bytes_read != len)
 	{
 	readerr:
-		err = readErr;
+		err = EINVAL;
 		DebugError("CMagiC::LoadReloc() - Datei zu kurz");
 		goto exitReloc;
 	}
@@ -1071,10 +1070,10 @@ Reinstall the application.
 
 	DebugInfo("CMagiC::LoadReloc() - total length incl. basepage and stack = 0x%08lx (%ld)", tpaSize, tpaSize);
 
-	if	(tpaSize > m_RAM68ksize)
+	if (tpaSize > m_RAM68ksize)
 	{
 		DebugError("CMagiC::LoadReloc() - program size too large");
-		err = memFullErr;
+		err = ENOMEM;
 		goto exitReloc;
 	}
 
@@ -1086,7 +1085,7 @@ Reinstall the application.
 	if	(reladdr + tpaSize > m_RAM68ksize)
 	{
 		DebugError("CMagiC::LoadReloc() - illegal load address");
-		err = 2;
+		err = EINVAL;
 		goto exitReloc;
 	}
 
@@ -1151,7 +1150,7 @@ Reinstall the application.
 			relBuf = (unsigned char *) malloc(RelocBufSize + 2);
 			if	(!relBuf)
 			{
-				err = memFullErr;
+				err = ENOMEM;
 				goto exitReloc;
 			}
 
@@ -1201,7 +1200,7 @@ exitReloc:
 	if	(fd >= 0)
 		close(fd);
 
-	return(err);
+	return err;
 }
 
 
@@ -1383,7 +1382,7 @@ uint32_t CMagiC::thunk_XCmdCommand(uint32_t params, unsigned char *AdrOffset68k)
 
 int CMagiC::Init(CMagiCScreen *pMagiCScreen, CXCmd *pXCmd)
 {
-	OSErr err;
+	int err;
 	Atari68kData *pAtari68kData;
 	struct MacXSysHdr *pMacXSysHdr;
 	struct SYSHDR *pSysHdr;
@@ -1441,14 +1440,14 @@ The application ran out of memory.
 Assign more memory to the application using the Finder dialogue "Information"!
 [Cancel]
 */
-		MyAlert(ALRT_NOT_ENOUGH_MEM, kAlertStopAlert);
+		MyAlert(ALRT_NOT_ENOUGH_MEM, 1);
 		return(1);
 	}
 
 	// Atari-Kernel lesen
 	err = LoadReloc(CGlobals::s_MagiCKernelUrl, 0, -1, &m_BasePage);
-	if	(err)
-		return(err);
+	if (err)
+		return err;
 
 	// 68k Speicherbegrenzungen ausrechnen
 	Adr68kVideo = m_RAM68ksize;
@@ -1512,7 +1511,7 @@ The file "MagicMacX.OS" seems to be corrupted or belongs to a different (newer o
 Reinstall the application.
 [Quit program]
 */
-		MyAlert(ALRT_INVALID_MAGICMAC_OS, kAlertStopAlert);
+		MyAlert(ALRT_INVALID_MAGICMAC_OS, 1);
 		return(1);
 	}
 
@@ -3399,7 +3398,7 @@ uint32_t CMagiC::AtariEnosys(uint32_t params, unsigned char *AdrOffset68k)
 {
 #pragma unused(params)
 #pragma unused(AdrOffset68k)
-	MyAlert(ALRT_ILLEGAL_FUNC, kAlertStopAlert);
+	MyAlert(ALRT_ILLEGAL_FUNC, 1);
 	pTheMagiC->StopExec();	// fatal error for execution thread
 	return 0;
 }
@@ -3474,7 +3473,7 @@ uint32_t CMagiC::AtariError(uint32_t params, unsigned char *AdrOffset68k)
 	 Install a driver, or change the monitor resolution resp. colour depth using the system's control panel. Finally, restart  MagiCMacX.
 	 [Quit MagiCMacX]
 	 */
-	MyAlert(ALRT_NO_VIDEO_DRIVER, kAlertStopAlert);
+	MyAlert(ALRT_NO_VIDEO_DRIVER, 1);
 	pTheMagiC->StopExec();	// fatal error for execution thread
 	return 0;
 }

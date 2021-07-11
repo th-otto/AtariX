@@ -26,18 +26,16 @@
 
 #include "config.h"
 // System-Header
-#include <Carbon/Carbon.h>
-#include <machine/endian.h>
+#include <CoreFoundation/CoreFoundation.h>
 // Programm-Header
 #include "Globals.h"
 #include "Debug.h"
 #include "missing.h"
 
-DialogItemIndex MyAlert(SInt16 alertID, AlertType alertType)
+int MyAlert(SInt16 alertID, int nButtons)
 {
 	const char *msgtxt = "unknown message";
 	const char *inftxt = "unknown information";
-	int nButtons;
 
 	switch(alertID)
 	{
@@ -95,11 +93,6 @@ DialogItemIndex MyAlert(SInt16 alertID, AlertType alertType)
 		default:
 			break;
 	}
-
-	if (alertType == kAlertStopAlert)
-		nButtons = 1;
-	else
-		nButtons = 2;
 
 	GuiMyAlert(msgtxt, inftxt, nButtons);
 	return 0;
