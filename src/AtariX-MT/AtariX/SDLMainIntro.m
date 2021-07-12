@@ -335,7 +335,7 @@ static void CustomApplicationMain (int argc, char **argv)
 /* Called when the internal event loop has just started running */
 - (void) applicationDidFinishLaunching: (NSNotification *) note
 {
-    int status;
+    //int status;
 
 	DebugTrace("%s()", __func__);
     /* Set the working directory to the .app's parent directory */
@@ -351,7 +351,7 @@ static void CustomApplicationMain (int argc, char **argv)
     //status = my_main();
 
     /* We're done, thank you for playing */
-    exit(status);
+    exit(0);
 }
 @end
 
