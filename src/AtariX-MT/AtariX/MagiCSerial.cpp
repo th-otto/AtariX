@@ -408,7 +408,7 @@ UInt32 CMagiCSerial::Config(
 		unsigned int nStopBits,
 		unsigned int *pOldnStopBits)
 {
-	bool bSet;
+	bool bSet = false;
 
 
 	DebugInfo("CMagiCSerial::Config()");
