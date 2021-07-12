@@ -1576,7 +1576,7 @@ int32_t CMacXFS::xfs_fopen(XfsCookie *fc, const char *name, uint16_t omode, uint
 		trigger = 1;
 #endif
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_fopen('%s', drv=%d, omode=%d)", name, fc->dev, omode);
+	DebugInfo("CMacXFS::xfs_fopen('%s', drv=%d, omode=%d, DD=%08lx)", name, fc->dev, omode, (unsigned long)MAPVOIDPTO32(fc->index));
 #endif
 
 #ifdef DEMO
@@ -1874,7 +1874,7 @@ int32_t CMacXFS::xfs_xattr(XfsCookie *fc, const char *name, XATTR *xattr, uint16
 	int err;
 
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_xattr(drv=%d, '%s', mode=0x%04x)", fc->dev, name, mode);
+	DebugInfo("CMacXFS::xfs_xattr(drv=%d, '%s', mode=0x%04x, DD=%08lx)", fc->dev, name, mode, (unsigned long)MAPVOIDPTO32(fc->index));
 #endif
 
 	if (fc->drv == NULL)
@@ -2406,7 +2406,7 @@ int32_t CMacXFS::xfs_dpathconf(uint16_t drv, MXFSDD *dd, uint16_t which)
 
 int32_t CMacXFS::host_statvfs(const char *fpathName, void *buff)
 {
-	DebugInfo("MacXFS: fs_dfree (%s)", fpathName);
+	DebugInfo("CMacXFS::%s (%s)", __FUNCTION__, fpathName);
 
 #ifdef HAVE_SYS_STATVFS_H
 	if (statvfs(fpathName, (STATVFS *)buff))
@@ -2424,7 +2424,7 @@ int32_t CMacXFS::xfs_dfree(XfsCookie *fc, uint32_t data[4])
 	char fpathName[MAXPATHNAMELEN];
 
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_dfree(drv = %d, dirID = 0x%08lx)", fc->dev, (unsigned long)MAPVOIDPTO32(fc->index));
+	DebugInfo("CMacXFS::%s(drv=%d, DD=0x%08lx)", __FUNCTION__, fc->dev, (unsigned long)MAPVOIDPTO32(fc->index));
 #endif
 
 	if (fc->drv == NULL)
@@ -2703,7 +2703,7 @@ int32_t CMacXFS::xfs_readlink(XfsCookie *fc, const char *name,
 	char target[MAXPATHNAMELEN];
 
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::xfs_readlink('%s', drv = %d, dirID = %p, buf = %p, bufsize = %d)", name, fc->dev, fc->index, (void *) buf, bufsiz);
+	DebugInfo("CMacXFS::%s('%s', drv=%d, DD=%08lx, buf=%p, bufsize=%d)", __FUNCTION__, name, fc->dev, (unsigned long)MAPVOIDPTO32(fc->index), (void *) buf, bufsiz);
 #endif
 
 	if (fc->drv == NULL)    /* ungueltig */
@@ -2833,7 +2833,7 @@ int32_t CMacXFS::xfs_dcntl
 	case MINT_FTRUNCATE:
 		cookie2Pathname(fc, name, fname, true);
 
-		DebugInfo("MacXFS: fs_fscntl: FTRUNCATE: %s, %08x", fname, arg);
+		DebugInfo("CMacXFS::%s: FTRUNCATE: %s, %08x", __FUNCTION__, fname, arg);
 		if (fc->drv->drv_flags & M_DRV_READONLY)
 			return TOS_EWRPRO;
 		if (truncate(fname, arg))
@@ -2932,7 +2932,7 @@ int32_t CMacXFS::dev_close(MAC_FD *f)
 {
 	uint16_t refcnt;
 
-	DebugInfo("dev_close(%d)", f->host_fd);
+	DebugInfo("CMacXFS::%s(%d)", __FUNCTION__, f->host_fd);
 	refcnt = be16_to_cpu(f->fd.fd_refcnt);
 	if (refcnt == 0)
 		return TOS_EINTRN;
@@ -2966,7 +2966,7 @@ int32_t CMacXFS::dev_read(MAC_FD *f, int32_t count, char *buf)
 {
 	long lcount;
 
-	DebugInfo("dev_read(%d, %p, %d)", f->host_fd, (void *)buf, count);
+	DebugInfo("CMacXFS::%s(%d, %p, %d)", __FUNCTION__, f->host_fd, (void *)buf, count);
 #if DEBUG_68K_EMU
 	if (trigger == 2 && count > 0x1e && trigger_refnum == f->host_fd)
 	{
@@ -2992,7 +2992,7 @@ int32_t CMacXFS::dev_write(MAC_FD *f, int32_t count, char *buf)
 #else
 	long lcount;
 
-	DebugInfo("dev_read(%d, %p, %d)", f->host_fd, (void *)buf, count);
+	DebugInfo("CMacXFS::%s(%d, %p, %d)", __FUNCTION__, f->host_fd, (void *)buf, count);
 	if (f->fc.drv->drv_flags & M_DRV_READONLY)
 		return TOS_EWRPRO;
 	lcount = write(f->host_fd, buf, count);
@@ -3025,7 +3025,7 @@ int32_t CMacXFS::dev_seek(MAC_FD *f, int32_t pos, uint16_t mode)
 	short macmode;
 	off_t lpos;
 
-	DebugInfo("dev_seek(%d, %d, %d)", f->host_fd, pos, mode);
+	DebugInfo("CMacXFS::%s(%d, %d, %d)", __FUNCTION__, f->host_fd, pos, mode);
 	switch (mode)
 	{
 		case 0:   macmode = SEEK_SET; break;
@@ -3368,7 +3368,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 
 	fncode = be16_to_cpu(*((uint16_t *) params));
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::XFSFunctions(%d)", fncode);
+	DebugInfo("CMacXFS::%s(%d)", __FUNCTION__, fncode);
 	if (fncode == 7)
 	{
 #if 0
@@ -3978,7 +3978,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 	}
 
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::XFSFunctions => %d (= 0x%08x)", (int) doserr, (int) doserr);
+	DebugInfo("CMacXFS::%s => %d (= 0x%08x)", __FUNCTION__, (int) doserr, (int) doserr);
 #endif
 	return doserr;
 }
@@ -4007,7 +4007,7 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 	MAC_FD *f = (MAC_FD *) (AdrOffset68k + be32_to_cpu(ifd));
 
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::XFSDevFunctions(0x%04x)", fncode);
+	DebugInfo("CMacXFS::%s(0x%04x)", __FUNCTION__, fncode);
 	__dump("MAC_FD:", (const unsigned char *) f, sizeof(*f));
 #endif
 	switch(fncode)
@@ -4186,7 +4186,7 @@ int32_t CMacXFS::XFSDevFunctions(uint32_t param, unsigned char *AdrOffset68k)
 		break;
 	}
 #ifdef DEBUG_VERBOSE
-	DebugInfo("CMacXFS::XFSDevFunctions => %d", (int) doserr);
+	DebugInfo("CMacXFS::%s => %d", __FUNCTION__, (int) doserr);
 #endif
 	return doserr;
 }
