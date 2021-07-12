@@ -137,6 +137,7 @@ int CXCmd::Preload(void)
 		return errno;
 
 	// durchsuche das Verzeichnis, bis ein Fehler auftritt
+	i = 0;
 	while (i < MAX_PLUGINS && (ent = readdir(dir)) != NULL)
 	{
 		if (strcmp(ent->d_name, ".") == 0 ||
