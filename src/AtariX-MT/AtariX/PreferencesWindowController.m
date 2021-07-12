@@ -25,6 +25,7 @@
 //
 
 #import "PreferencesWindowController.h"
+#include "Debug.h"
 
 static NSString *DMKAtariDrivesTableKey = @"atariDrivesTable";
 
@@ -104,7 +105,7 @@ static const NSString *ATTableData[ATARI_NUM_DRIVES + 1] =
 
 - (void)windowDidLoad
 {
-	printf("%s()\n", __FUNCTION__);
+	DebugTrace("%s()", __FUNCTION__);
     [super windowDidLoad];
 	
     // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
@@ -186,8 +187,6 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 		NSString *columnId = aTableColumn.identifier;
 		id theValue;
 
-		NSLog(@"get object value for column %s and row %d", columnId.UTF8String, (int)rowIndex);
-
 #if 1
 		NSParameterAssert(rowIndex >= 0 && rowIndex < ATARI_NUM_DRIVES);
 #else
@@ -253,7 +252,6 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 	return ATARI_NUM_DRIVES;
 #else
 	NSInteger retVal = [_tableContents count];
-	NSLog(@"%s(): number = %d", __FUNCTION__, retVal);
     return retVal;
 #endif
 }
@@ -304,7 +302,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 
 - (BOOL)windowShouldClose:(id)sender
 {
-	NSLog(@"close button pushed");
+	DebugTrace("close button pushed");
 	return YES;
 }
 
@@ -316,7 +314,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
  ****************************************************************************************************/
 
 - (IBAction)actionCancel:(id)sender {
-	printf("%s()\n", __func__);
+	DebugTrace("%s()", __func__);
 	// revert all changed preferences
 	[[NSUserDefaultsController sharedUserDefaultsController] revert:self];
 	// close window
@@ -332,7 +330,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 
 - (IBAction)actionOk:(id)sender
 {
-	printf("%s()\n", __FUNCTION__);
+	DebugTrace("%s()", __FUNCTION__);
 
 	// note that sharedUserDefaultsController returns (id), so compiler does not know which type, therefore we have "shared".
 	NSUserDefaultsController *sharedController = [NSUserDefaultsController sharedUserDefaultsController];
@@ -348,19 +346,19 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 }
 
 - (IBAction)actionRegister:(id)sender {
-	printf("%s()\n", __FUNCTION__);
+	DebugTrace("%s()", __FUNCTION__);
 }
 
 - (IBAction)actionAtariMemoryStepper:(NSStepper *)sender {
-	printf("%s()\n", __FUNCTION__);
+	DebugTrace("%s()", __FUNCTION__);
 }
 
 - (IBAction)actionAtariScreenWidthStepper:(id)sender {
-	printf("%s()\n", __FUNCTION__);
+	DebugTrace("%s()", __FUNCTION__);
 }
 
 - (IBAction)actionAtariScreenHeightStepper:(id)sender {
-	printf("%s()\n", __FUNCTION__);
+	DebugTrace("%s()", __FUNCTION__);
 }
 
 
@@ -372,7 +370,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 
 - (IBAction)actionAtariDrivePathSelect:(id)sender
 {
-	printf("%s()\n", __FUNCTION__);
+	DebugTrace("%s()", __FUNCTION__);
 	NSInteger driveNo = outletAtariDrivesTableView.selectedRow;
 	//	[outletAtariDrivesTableView selectedColumn];	// equivalent
 	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_M && driveNo != ATARI_DRIVE_U && driveNo <= ATARI_DRIVE_Z)
@@ -386,10 +384,10 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 		chooser.canCreateDirectories = YES;
 		chooser.allowsMultipleSelection = NO;
 		NSInteger ret = [chooser runModal];
-		printf("%s() : runModal() -> %d\n", __FUNCTION__, (int)ret);
+		DebugInfo("%s() : runModal() -> %d", __FUNCTION__, (int)ret);
 		if (ret == NSFileHandlingPanelOKButton)
 		{
-			printf("%s() File Chooser exited with OK, change drive %c:\n", __FUNCTION__, (int)driveNo + 'A');
+			DebugInfo("%s() File Chooser exited with OK, change drive %c:", __FUNCTION__, (int)driveNo + 'A');
 			NSArray *urls = chooser.URLs;
 			// das geht nicht, und NSString bleibt eine URL?!?
 			NSURL *pathUrl = urls.lastObject;
@@ -402,7 +400,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 	}
 	else
 	{
-		printf("%s() : invalid selected drive %d\n", __FUNCTION__, (int)driveNo);
+		DebugInfo("%s() : invalid selected drive %d", __FUNCTION__, (int)driveNo);
 	}
 }
 
@@ -415,7 +413,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 
 - (IBAction)actionAtariDriveRemove:(id)sender
 {
-	printf("%s()\n", __FUNCTION__);
+	DebugTrace("%s()", __FUNCTION__);
 	NSInteger driveNo = outletAtariDrivesTableView.selectedRow;
 	//	[outletAtariDrivesTableView selectedColumn];	// equivalent
 	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_M && driveNo != ATARI_DRIVE_U && driveNo <= ATARI_DRIVE_Z)
@@ -427,7 +425,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 	}
 	else
 	{
-		printf("%s() : invalid selected drive %d\n", __FUNCTION__, (int)driveNo);
+		DebugInfo("%s() : invalid selected drive %d", __FUNCTION__, (int)driveNo);
 	}
 }
 
@@ -440,11 +438,11 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 
 - (IBAction)actionAtariDrivesTable:(id)sender
 {
-	printf("%s()\n", __FUNCTION__);
+	DebugTrace("%s()", __FUNCTION__);
 	NSInteger driveNo = outletAtariDrivesTableView.selectedRow;
 	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_M && driveNo != ATARI_DRIVE_U && driveNo <= ATARI_DRIVE_Z)
 	{
-		printf("%s() : selected drive %d\n", __FUNCTION__, (int)driveNo);
+		DebugInfo("%s() : selected drive %d", __FUNCTION__, (int)driveNo);
 		id theValue;
 		theValue = [m_AtariDrivesUrlDict objectForKey:ATARI_DRIVE_STR(driveNo)];
 		if (theValue == nil)
@@ -464,7 +462,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 	}
 	else
 	{
-		printf("%s() : invalid selected drive %d\n", __FUNCTION__, (int)driveNo);
+		DebugInfo("%s() : invalid selected drive %d", __FUNCTION__, (int)driveNo);
 		// disable buttons
 		[outletAtariDrivePathSelect setEnabled:NO];
 		[outletAtariDriveRemove setEnabled:NO];
@@ -480,7 +478,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
  ****************************************************************************************************/
 
 - (IBAction)actionAtariDrive8p3:(id)sender {
-	printf("%s()\n", __FUNCTION__);
+	DebugTrace("%s()", __FUNCTION__);
 }
 
 

@@ -25,6 +25,7 @@
 //
 
 #import "AtariCrashWindowController.h"
+#include "Debug.h"
 
 @implementation AtariCrashWindowController
 
@@ -134,7 +135,7 @@ static void Exc2Str(UInt16 exc, char *s)
 
 #define SET_REGISTER_TO_GUI(theValue, theNs, theOutlet) \
 sprintf(buf, "%08lx", (unsigned long)(theValue)); \
-NSString *theNs = [NSString stringWithCString:buf encoding:NSISOLatin1StringEncoding]; \
+NSString *theNs = [NSString stringWithCString:buf encoding:NSASCIIStringEncoding]; \
 [theOutlet setStringValue:theNs];
 
 
@@ -164,7 +165,7 @@ NSString *theNs = [NSString stringWithCString:buf encoding:NSISOLatin1StringEnco
 
 	Exc2Str(EmuReg_exc, buf);
 	sprintf(buf + strlen(buf), " (%u)", EmuReg_exc);
-	NSString *thePgmErr = [NSString stringWithCString:buf encoding:NSISOLatin1StringEncoding];
+	NSString *thePgmErr = [NSString stringWithCString:buf encoding:NSASCIIStringEncoding];
 	[outletPgmErr setStringValue:thePgmErr];
 
 	// Fehleradresse und Zugriffsmodus bei Adreß- oder Busfehler
@@ -177,7 +178,7 @@ NSString *theNs = [NSString stringWithCString:buf encoding:NSISOLatin1StringEnco
 	{
 		sprintf(buf, "--------");
 	}
-	NSString *nerraddr = [NSString stringWithCString:buf encoding:NSISOLatin1StringEncoding];
+	NSString *nerraddr = [NSString stringWithCString:buf encoding:NSASCIIStringEncoding];
 	[outletPgmAddr setStringValue:nerraddr];
 
 	// Atari registers
@@ -205,7 +206,7 @@ NSString *theNs = [NSString stringWithCString:buf encoding:NSISOLatin1StringEnco
 	SET_REGISTER_TO_GUI(EmuReg_Ax[6], nA6, outletRegA6)
 	SET_REGISTER_TO_GUI(EmuReg_Ax[7], nA7, outletRegA7)
 
-/*
+#if 0
 	sprintf(buf, "0x%08lx", EmuReg_pc);
 	NSString *npc  = [NSString stringWithCString:buf encoding:NSISOLatin1StringEncoding];
 	[outletRegPC setStringValue:npc];
@@ -213,7 +214,7 @@ NSString *theNs = [NSString stringWithCString:buf encoding:NSISOLatin1StringEnco
 	sprintf(buf, "0x%04x", EmuReg_sr);
 	NSString *nsr  = [NSString stringWithCString:buf encoding:NSISOLatin1StringEncoding];
 	[outletRegSR setStringValue:nsr];
-*/
+#endif
 }
 
 /*****************************************************************************************************
@@ -226,7 +227,7 @@ NSString *theNs = [NSString stringWithCString:buf encoding:NSISOLatin1StringEnco
 
 - (BOOL)windowShouldClose:(id)sender
 {
-	NSLog(@"close button pushed");
+	DebugTrace("close button pushed");
 	
 	*pFinishedCond = 0;
 	[finishedLock signal];	// tell worker thread that window is closed
@@ -242,7 +243,7 @@ NSString *theNs = [NSString stringWithCString:buf encoding:NSISOLatin1StringEnco
 
 - (IBAction)actionOk:(id)sender
 {
-	printf("%s()\n", __FUNCTION__);
+	DebugTrace("%s()", __FUNCTION__);
 	// tell that we are closing
 	BOOL ret = [self windowShouldClose:nil];
 	if (ret == YES)

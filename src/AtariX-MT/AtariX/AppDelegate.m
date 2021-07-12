@@ -103,7 +103,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 
 + (void)initialize
 {
-	DebugInfo("%s()", __func__);
+	DebugTrace("%s()", __func__);
     NSMutableDictionary *initialValues = [NSMutableDictionary dictionary];
 
 	// default Atari rootfs ("C:" Drive)
@@ -167,11 +167,11 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	// go through dictionary
 	[atariDrivesUrlDict enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop)
 	 {
-		 NSLog(@"Enumerating Key %@ and Value %@", key, obj);
 		 NSString *drvname = key;
 		 unichar c = [drvname characterAtIndex:0];
 		 unsigned drvnr = c - 'A';
 		 NSString *path = obj;
+		 DebugInfo("Enumerating Key %s and Value %s", [key UTF8String], [obj UTF8String]);
 		 NSURL *drvUrl = [NSURL URLWithString:path];
 		 // __bridge wird benötigt, wenn Automatic Reference Counting eingeschaltet ist
 		 CFURLRef myCFURL = (__bridge CFURLRef) drvUrl;
@@ -532,7 +532,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 			if (result == NO)
 			{
 				finalResult = NO;
-				NSLog(@"%@",[error localizedDescription]);
+				DebugError("%s", [[error localizedDescription] UTF8String]);
 			}
 		}
 		else
@@ -546,7 +546,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 				if (result == NO)
 				{
 					finalResult = NO;
-					NSLog(@"%@",[error localizedDescription]);
+					DebugWarning("%s", [[error localizedDescription] UTF8String]);
 				}
 			}
 
@@ -555,7 +555,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 			if (result == NO)
 			{
 				finalResult = NO;
-				NSLog(@"%@",[error localizedDescription]);
+				DebugError("%s", [[error localizedDescription] UTF8String]);
 			}
 		}
 	}
@@ -638,7 +638,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 	//
 	// copy common, i.e. unlocalised files and folders
 	//
-/*
+#if 0
 	NSArray *files = [fileManager contentsOfDirectoryAtPath:rootfsCommonPath error:nil];
 	for (NSString *file in files)
 	{
@@ -650,10 +650,10 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
         if (result == NO)
         {
 			finalResult = NO;
-            NSLog(@"%@",[error localizedDescription]);
+            DebugError("%s", [[error localizedDescription] UTF8String]);
 		}
 	}
-*/
+#endif
 
 	if (finalResult == YES)
 	{
@@ -663,7 +663,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 	}
 
 
-/*
+#if 0
 	//
 	// copy localised files. unfortunately directories cannot be merged in a simple way.
 	//
@@ -683,10 +683,11 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
         if (result == NO)
         {
 			finalResult = NO;
-            NSLog(@"%@",[error localizedDescription]);
+            DebugError("%s", [[error localizedDescription] UTF8String]);
 		}
 	}
-*/
+#endif
+
 	//
 	// User feedback with result
 	//
