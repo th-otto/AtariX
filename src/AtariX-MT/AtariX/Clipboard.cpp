@@ -629,7 +629,7 @@ int CClipboard::OpenAtariScrapFile(int unixPerm)
 {
 	int fd;
 
-	fd = open(CGlobals::s_atariScrapFileUnixPath, unixPerm);
+	fd = open(CGlobals::s_atariScrapFileUnixPath, unixPerm, 0644);
 
 /*
 	if	(perm == fsWrPerm)
