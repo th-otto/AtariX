@@ -314,7 +314,7 @@ typedef struct _mx_fd {
 
 	int32_t xfs_sync(uint16_t drv);
 	void xfs_pterm (PD *pd);
-	int32_t xfs_drv_open (uint16_t drv, MXFSDD *dd, int32_t flg_ask_diskchange);
+	int32_t xfs_drv_open (uint16_t drv, MXFSDD *dd, uint32_t flg_ask_diskchange);
 	int32_t xfs_drv_close(uint16_t drv, uint16_t mode);
 	int32_t xfs_path2DD(uint16_t mode, uint16_t drv, MXFSDD *rel_dd, char *pathname,
                   char **restpfad, MXFSDD *symlink_dd, char **symlink,

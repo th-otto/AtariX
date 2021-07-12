@@ -1009,9 +1009,6 @@ int32_t CMacXFS::drv_open(uint16_t drv)
 {
 	struct stat st;
 	
-	if (drv >= NDRVS || !drives[drv].drv_valid)
-		return TOS_EDRIVE;
-
 	if (drives[drv].host_root == NULL ||
 		stat(drives[drv].host_root->name, &st) != 0 || !S_ISDIR(st.st_mode))
 	{
@@ -1022,11 +1019,14 @@ int32_t CMacXFS::drv_open(uint16_t drv)
 	return TOS_E_OK;
 }
 
-int32_t CMacXFS::xfs_drv_open(uint16_t drv, MXFSDD *dd, int32_t flg_ask_diskchange)
+int32_t CMacXFS::xfs_drv_open(uint16_t drv, MXFSDD *dd, uint32_t flg_ask_diskchange)
 {
 	int32_t	err;
 
-	DebugInfo("CMacXFS::xfs_drv_open(drv=%d, flag=%d)", drv, (int) flg_ask_diskchange);
+	DebugInfo("CMacXFS::xfs_drv_open(drv=%d, flag=%08lx)", drv, (unsigned long)flg_ask_diskchange);
+
+	if (drv >= NDRVS || !drives[drv].drv_valid)
+		return TOS_EDRIVE;
 
 	if (flg_ask_diskchange)		// Diskchange- Status ermitteln
 	{
@@ -1061,6 +1061,8 @@ int32_t CMacXFS::xfs_drv_open(uint16_t drv, MXFSDD *dd, int32_t flg_ask_diskchan
 
 int32_t CMacXFS::xfs_drv_close(uint16_t drv, uint16_t mode)
 {
+	DebugInfo("CMacXFS::xfs_drv_close(drv=%d, mode=%d)", drv, mode);
+
 	if (drv >= NDRVS)
 		return TOS_EDRIVE;
 	if (mode == 0 && !drives[drv].drv_valid)    /* ungueltig */
