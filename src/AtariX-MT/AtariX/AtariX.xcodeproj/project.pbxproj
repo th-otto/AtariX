@@ -24,7 +24,6 @@
 		AD0936E21440B537006D73E9 /* gui.m in Sources */ = {isa = PBXBuildFile; fileRef = AD0936E11440B537006D73E9 /* gui.m */; };
 		AD3A53FD15A8D76D000202C6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AD3A53FE15A8D76D000202C6 /* AppDelegate.m */; };
 		AD3B554715A7792200787C42 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AD3B554915A7792200787C42 /* Localizable.strings */; };
-		AD3E859E143E508B0054D0E8 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD3E859D143E508B0054D0E8 /* Carbon.framework */; };
 		AD3E85A2143E50DF0054D0E8 /* MyPreferences.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A0143E50DF0054D0E8 /* MyPreferences.cpp */; };
 		AD3E85A5143E50F90054D0E8 /* Preferences.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A3143E50F90054D0E8 /* Preferences.cpp */; };
 		AD3E85AA143E591A0054D0E8 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD3E85A9143E591A0054D0E8 /* CoreServices.framework */; };
@@ -186,7 +185,6 @@
 				ADC8D9D41A3F81EC0014AE2F /* SDL2.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				002F3C0109D093BD00EBEB88 /* OpenGL.framework in Frameworks */,
-				AD3E859E143E508B0054D0E8 /* Carbon.framework in Frameworks */,
 				AD3E85AA143E591A0054D0E8 /* CoreServices.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

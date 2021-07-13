@@ -25,7 +25,7 @@
 #include "config.h"
 // System-Header
 #include <CoreFoundation/CoreFoundation.h>
-#include <Carbon/Carbon.h> /* needed for MultiProcessing functions */
+#include <CoreServices/CoreServices.h> /* needed for MultiProcessing functions */
 // Programm-Header
 #include "missing.h"
 #include "XCmd.h"
@@ -118,7 +118,6 @@ class CMagiC
 	uint32_t AtariVdiInit( uint32_t params, unsigned char *AdrOffset68k );
 	uint32_t AtariExec68k( uint32_t params, unsigned char *AdrOffset68k );
 	uint32_t OpenSerialBIOS(void);
-	static void SendMessageToMainThread( bool bAsync, uint32_t command );
 	static uint32_t AtariEnosys( uint32_t params, unsigned char *AdrOffset68k );
 	static uint32_t AtariDOSFn( uint32_t params, unsigned char *AdrOffset68k );
 	static uint32_t AtariGettime( uint32_t params, unsigned char *AdrOffset68k );

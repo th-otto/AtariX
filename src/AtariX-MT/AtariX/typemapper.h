@@ -30,14 +30,10 @@
 //    (in case the system doesn't need them)
 #define DEBUG_FORCE_NON32BIT 0
 
-// denies any 32bit <-> ANYbit conversions
-//    (explicitly denies it on any system)
-#define DEBUG_DISABLE_NON32BIT 0
-
 
 
 // single define to force 32bit algorithms
-#if DEBUG_FORCE_NON32BIT && !DEBUG_DISABLE_NON32BIT
+#if DEBUG_FORCE_NON32BIT
 #define DEBUG_NON32BIT 1
 #else
 #define DEBUG_NON32BIT 0
@@ -123,8 +119,8 @@ class NativeTypeMapper
 //    and if it is not explicitely turned off
 #if __SIZEOF_POINTER__ > 4 || DEBUG_NON32BIT
 
-# define MAPNEWVOIDP(x)   memptrMapper.putNative(x)
-# define MAPDELVOIDP(x)   memptrMapper.removeNative(x)
+# define MAPNEWVOIDP(x)   m_xfs.memptrMapper.putNative(x)
+# define MAPDELVOIDP(x)   m_xfs.memptrMapper.removeNative(x)
 # define MAP32TOVOIDP(x)  memptrMapper.getNative(x)
 # define MAPVOIDPTO32(x)  memptrMapper.get32bit(x)
 

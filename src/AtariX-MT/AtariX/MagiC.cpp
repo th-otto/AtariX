@@ -2150,8 +2150,6 @@ OSStatus CMagiC::EmuThread( void )
   end_of_thread:
 
 	// Main Task mitteilen, daß der Emulator-Thread beendet wurde
-//	SendMessageToMainThread(true, kHICommandQuit);		// veraltet?
-
 	m_bEmulatorIsRunning = false;
 	return 0;
 }
@@ -3187,45 +3185,6 @@ uint32_t CMagiC::AtariVgetRGB(uint32_t params, unsigned char *AdrOffset68k)
 
 /**********************************************************************
 *
-* (STATIC) Nachricht (a)synchron an Haupt-Thread schicken
-*
-**********************************************************************/
-
-void CMagiC::SendMessageToMainThread( bool bAsync, uint32_t command )
-{
-	EventRef ev;
-	HICommand commandStruct;
-
-	CreateEvent(
-			NULL,
-			kEventClassCommand,
-			kEventProcessCommand,
-			GetCurrentEventTime(),
-			kEventAttributeNone,
-			&ev);
-
-	commandStruct.attributes = 0;
-	commandStruct.menu.menuRef = 0;
-	commandStruct.menu.menuItemIndex = 0;
-	commandStruct.commandID = command;
-
-	SetEventParameter(
-			ev,
-			kEventParamDirectObject,
-			typeHICommand,			// gewünschter Typ
-			sizeof(commandStruct),		// max. erlaubte Länge
-			(void *) &commandStruct
-			);
-
-	if	(bAsync)
-		PostEventToQueue(GetMainEventQueue(), ev, kEventPriorityStandard);
-	else
-		SendEventToApplication(ev);
-}
-
-
-/**********************************************************************
-*
 * Callback des Emulators: System aufgrund eines fatalen Fehlers anhalten
 *
 **********************************************************************/
@@ -3357,8 +3316,6 @@ uint32_t CMagiC::AtariExit(uint32_t params, unsigned char *AdrOffset68k)
 			pTheMagiC->m_EventId,
 			EMU_EVNT_TERM);
 
-	// Nachricht and Haupt-Thread zum Beenden (entf. 4.11.07)
-//	SendMessageToMainThread(true, kHICommandQuit);
 #ifdef MAGICMACX_DEBUG68K
 	for	(int i = 0; i < 100; i++)
 		DebugInfo("### VideoRamWriteCounter(%2d) = %d", i, WriteCounters[i]);
