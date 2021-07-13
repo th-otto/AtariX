@@ -1,6 +1,7 @@
 #import "AppDelegate.h"
 #include "EmulationMain.h"
 #include "Debug.h"
+#include <SDL2/SDL.h>
 
 /* these were renamed in SDK 10.12 and above */
 #if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
@@ -222,7 +223,17 @@ static NSTextField *urllabel(const char *format, const char *display, const char
 	label = [NSTextField labelWithString: [[[NSString alloc] initWithUTF8String: strbuf] autorelease]];
 	[label setAlignment: NSTextAlignmentLeft];
 	[vbox2 addView:label inGravity: NSStackViewGravityLeading];
-
+	sprintf(strbuf, "SDL (compiled): %d.%d.%d", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
+	label = [NSTextField labelWithString: [[[NSString alloc] initWithUTF8String: strbuf] autorelease]];
+	[label setAlignment: NSTextAlignmentLeft];
+	[vbox2 addView:label inGravity: NSStackViewGravityLeading];
+	SDL_version linked;
+	SDL_GetVersion(&linked);
+	sprintf(strbuf, "SDL (linked) : %d.%d.%d", linked.major, linked.minor, linked.patch);
+	label = [NSTextField labelWithString: [[[NSString alloc] initWithUTF8String: strbuf] autorelease]];
+	[label setAlignment: NSTextAlignmentLeft];
+	[vbox2 addView:label inGravity: NSStackViewGravityLeading];
+	
 	hbox = [[[NSStackView alloc] init] autorelease];
 	[hbox setSpacing: 10];
 	[hbox setEdgeInsets: NSEdgeInsetsMake(10, 10, 10, 10)];
