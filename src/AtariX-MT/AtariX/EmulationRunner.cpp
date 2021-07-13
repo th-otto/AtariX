@@ -1046,6 +1046,10 @@ const char *SDL_WindowEventID_to_str(SDL_WindowEventID id)
 		case SDL_WINDOWEVENT_FOCUS_GAINED:	return "FOCUS_GAINED";
 		case SDL_WINDOWEVENT_FOCUS_LOST:	return "FOCUS_LOST";
 		case SDL_WINDOWEVENT_CLOSE:			return "CLOSE";
+#if SDL_VERSION_ATLEAST(2, 0, 6)
+		case SDL_WINDOWEVENT_TAKE_FOCUS:    return "TAKE_FOCUS";
+		case SDL_WINDOWEVENT_HIT_TEST:      return "HIT_TEST";
+#endif
 	}
 
 	return "UNKNOWN";

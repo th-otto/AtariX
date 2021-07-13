@@ -1,0 +1,104 @@
+--- ./include/SDL.h.orig	2020-12-21 18:44:36.000000000 +0100
++++ ./include/SDL.h	2021-07-13 20:08:52.000000000 +0200
+@@ -127,6 +127,11 @@
+  */
+ extern DECLSPEC void SDLCALL SDL_Quit(void);
+ 
++/// begin kromke.andreas
++extern DECLSPEC int myKeyboardHack;
++extern DECLSPEC void SDLCALL SDL_KeyboardActivate(Uint32 flags);
++/// end kromke.andreas
++
+ /* Ends C function definitions when using C++ */
+ #ifdef __cplusplus
+ }
+--- ./src/dynapi/SDL_dynapi.h.orig	2021-07-13 22:03:29.000000000 +0200
++++ ./src/dynapi/SDL_dynapi.h	2021-07-13 22:05:17.000000000 +0200
+@@ -61,7 +61,7 @@
+ 
+ /* everyone else. This is where we turn on the API if nothing forced it off. */
+ #ifndef SDL_DYNAMIC_API
+-#define SDL_DYNAMIC_API 1
++#define SDL_DYNAMIC_API 0
+ #endif
+ 
+ #endif
+--- ./src/SDL.c.orig	2020-12-21 18:44:36.000000000 +0100
++++ ./src/SDL.c	2021-07-13 21:03:26.000000000 +0200
+@@ -392,6 +392,14 @@
+ #endif
+ }
+ 
++/// begin kromke.andreas
++extern int myKeyboardHack;
++void SDL_KeyboardActivate(Uint32 flags)
++{
++    myKeyboardHack = (int) flags;
++}
++/// end kromke.andreas
++
+ Uint32
+ SDL_WasInit(Uint32 flags)
+ {
+--- ./src/video/cocoa/SDL_cocoaevents.m.orig	2020-12-21 18:44:36.000000000 +0100
++++ ./src/video/cocoa/SDL_cocoaevents.m	2021-07-13 20:21:50.000000000 +0200
+@@ -55,6 +55,10 @@
+ 
+ static SDL_bool s_bShouldHandleEventsInSDLApplication = SDL_FALSE;
+ 
++/// begin kromke.andreas
++int myKeyboardHack = 1;
++/// end kromke.andreas
++
+ static void Cocoa_DispatchEvent(NSEvent *theEvent)
+ {
+     SDL_VideoDevice *_this = SDL_GetVideoDevice();
+@@ -76,7 +80,14 @@
+         case NSEventTypeKeyDown:
+         case NSEventTypeKeyUp:
+         case NSEventTypeFlagsChanged:
++            /// begin kromke.andreas
++            if (myKeyboardHack)
++            {
++            /// end kromke.andreas
+             Cocoa_HandleKeyEvent(_this, theEvent);
++            /// begin kromke.andreas
++            }
++            /// end kromke.andreas
+             break;
+         default:
+             break;
+--- ./Xcode/SDL/SDL.xcodeproj/project.pbxproj.orig	2020-12-21 18:44:36.000000000 +0100
++++ ./Xcode/SDL/SDL.xcodeproj/project.pbxproj	2021-07-13 16:38:15.000000000 +0200
+@@ -14,7 +14,6 @@
+ 		00D0D0D810675E46004B05EF /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 007317C10858E15000B2BC32 /* Carbon.framework */; };
+ 		552673EB2546054600085751 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A75FDABD23E28B6200529352 /* GameController.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+ 		552673EC2546055000085751 /* CoreHaptics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F37DC5F225350EBC0002E6F7 /* CoreHaptics.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+-		557D0CFA254586CA003913E3 /* CoreHaptics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F37DC5F225350EBC0002E6F7 /* CoreHaptics.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+ 		557D0CFB254586D7003913E3 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A75FDABD23E28B6200529352 /* GameController.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+ 		560572062473687700B46B66 /* SDL_syslocale.m in Sources */ = {isa = PBXBuildFile; fileRef = 566E26CC246274CB00718109 /* SDL_syslocale.m */; };
+ 		560572072473687800B46B66 /* SDL_syslocale.m in Sources */ = {isa = PBXBuildFile; fileRef = 566E26CC246274CB00718109 /* SDL_syslocale.m */; };
+@@ -4516,7 +4515,6 @@
+ 			buildActionMask = 2147483647;
+ 			files = (
+ 				557D0CFB254586D7003913E3 /* GameController.framework in Frameworks */,
+-				557D0CFA254586CA003913E3 /* CoreHaptics.framework in Frameworks */,
+ 				564624381FF821DA0074AC87 /* Metal.framework in Frameworks */,
+ 				564624361FF821C20074AC87 /* QuartzCore.framework in Frameworks */,
+ 				A7381E971D8B6A0300B177DD /* AudioToolbox.framework in Frameworks */,
+@@ -9993,6 +9991,7 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
++				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+ 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+ 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+ 				CLANG_WARN_BOOL_CONVERSION = YES;
+@@ -10073,6 +10072,7 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
++				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+ 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+ 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+ 				CLANG_WARN_BOOL_CONVERSION = YES;
