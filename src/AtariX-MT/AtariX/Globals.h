@@ -70,7 +70,7 @@ extern void Send68kExceptionData(
 // global function used by AtariSysHalt
 extern void SendSysHaltReason(const char *Reason);
 extern void UpdateAtariDoubleBuffer(void);
-extern int MyAlert(SInt16 alertID, int nButtons);
+extern int MyAlert(int alertID, int nButtons);
 
 class CGlobals
 {

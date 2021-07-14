@@ -6,22 +6,66 @@
   Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 */
 
-"OK" = "OK";
+"Add" = "Anhängen";
+
+"All files and folders were successfully copied to the Atari boot drive directory." = "Alle Dateien und Verzeichnisse wurde erfolgreich ins Atari-Bootlaufwerk kopiert.";
+
+"Atari boot drive successfully created" = "Das Atari-Bootlaufwerk wurde erfolgreich erstellt.";
+
+"AtariX Versionsinfo" = "AtariX Versionsinfo";
+
 "Cancel" = "Abbrechen";
+
+"Choose Atari Root-FS Directory (Boot Drive)" = "Bitte Atari-Root-FS (Boot-Laufwerk) auswählen!";
+
+"Close" = "Schließen";
+
+"Create directory MAGIC_C inside the provided path?" = "Soll das Verzeichnis MAGIC_C im ausgewählten Pfad erstellt werden?";
+
+"Create or Revert" = "Erstellen oder Zurücksetzen";
 
 /* add "MAGIC_C/" to rootfs path or not */
 "Do not add" = "Nicht anhängen";
-"Add" = "Anhängen";
 
-"Choose Atari Root-FS Directory (Boot Drive)" = "Bitte Atari-Root-FS (Boot-Laufwerk) auswählen!";
+"Emulation has been stopped" = "Emulation has been stopped";
+
+"Not all files and folders could be copied successfully. Your Atari boot drive may be incomplete." = "Nicht alle Dateien und Ordner konnten erfolgreich kopiert werden. Das Atari-Bootlaufwerk ist möglicherweise unvollständig.";
+
+"OK" = "OK";
+
+"Overwrite files inside the provided directory?" = "Bestehende Dateien im Verzeichnis überschreiben?";
+
+"The Atari Root-Fs is incomplete, and the screen driver is missing." = "Das Atari-Dateisystem ist möglicherweise unvollständig, und die Treiberdatei fehlt.";
+
+"The Atari kernel is missing." = "Die Datei mit dem Atari-Kernel fehlt.";
+
+"No file with name \"MagicMacX.OS\" found in the application directory." = "Keine Datei mit dem Namen \"MagicMacX.OS\" im Programmpaket gefunden.";
+
+"Not enough memory." = "Zuwenig Speicher.";
+
+"The Atari kernel is damaged." = "Die Atari-Kerneldatei ist beschädigt.";
+
+"The file \"MagicMacX.OS\" has been modified." = "Die Datei \"MagicMacX.OS\" wurde verändert.";
+
+"The Atari emulator has to be restarted." = "Der Atari-Emulator muß neu gestartet werden.";
+
+"The changes to the settings cannot be applied at runtime." = "Die Änderungen an den Einstellungen können nicht im Betrieb übernommen werden.";
+
+"The Atari emulator will be terminated immediately." = "Der Atari-Emulator wird sofort beendet.";
+
+"The Atari emulator is a Demo-version." = "Der Atari-Emulator ist eine Demo-Version.";
+
+"Write access is disabled in the Demo-version." = "Schreibzugriffe sind in der Demo-Version deaktiviert.";
+
+"The screen size has been adjusted automatically." = "Die Bildschirmgröße wurde automatisch korrigiert.";
+
+"The Atari emulator needs a minimum screen size of 320x200 pixel." = "Der Atari-Emulator benötigt mindestens 320 mal 200 Bildpunkte.";
+
 "The directory must be named MAGIC_C. It will appear as virtual drive C: inside the virtual machine." = "Das Verzeichnis muß MAGIC_C heißen. Es erscheint als Laufwerk C: im virtuellen Atari.";
-"Create directory MAGIC_C inside the provided path?" = "Soll das Verzeichnis MAGIC_C im ausgewählten Pfad erstellt werden?";
+
 "The path provided does not end with directory MAGIC_C. It should be added automatically." = "Der ausgewählte Pfad endet nicht mit einem Verzeichnis MAGIC_C. Dieses Verzeichnis sollte automatisch angehängt werden.";
 
-"Create or Revert" = "Erstellen oder Zurücksetzen";
-"Overwrite files inside the provided directory?" = "Bestehende Dateien im Verzeichnis überschreiben?";
-"You are going to create or revert the Atari boot drive. Existing files or directories inside the same directory will be overwritten." = "Sie sind dabei, das Atari-Bootlaufwerk zu erstellen bzw. zurückzusetzen. Bestehende Dateien und Verzeichnisse werden überschrieben.";
-"Atari boot drive successfully created" = "Das Atari-Bootlaufwerk wurde erfolgreich erstellt.";
-"All files and folders were successfully copied to the Atari boot drive directory." = "Alle Dateien und Verzeichnisse wurde erfolgreich ins Atari-Bootlaufwerk kopiert.";
 "There were errors during creation." = "Während des Erstellens sind Fehler aufgetreten.";
-"Not all files and folders could be copied successfully. Your Atari boot drive may be incomplete." = "Nicht alle Dateien und Ordner konnten erfolgreich kopiert werden. Das Atari-Bootlaufwerk ist möglicherweise unvollständig.";
+
+"You are going to create or revert the Atari boot drive. Existing files or directories inside the same directory will be overwritten." = "Sie sind dabei, das Atari-Bootlaufwerk zu erstellen bzw. zurückzusetzen. Bestehende Dateien und Verzeichnisse werden überschrieben.";
+

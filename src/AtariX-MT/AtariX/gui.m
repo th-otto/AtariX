@@ -34,13 +34,13 @@
 
 
 
-static int GuiMyMainThreadAlert(const char *msg_text, const char *info_text, int nButtons)
+static int GuiMyMainThreadAlert(CFStringRef msg_text, CFStringRef info_text, int nButtons)
 {
 	// have to create pool to avoid debug error messages like:
 	// "... Object 0x7a6429e0 of class ... autoreleased with no pool in place - just leaking - break on objc_autoreleaseNoPool() to debug"
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	NSString *nmsg  = [[NSString stringWithCString: msg_text encoding:NSUTF8StringEncoding] retain];
-	NSString *ninfo = [[NSString stringWithCString: info_text encoding:NSUTF8StringEncoding] retain];
+	NSString *nmsg  = (NSString *)msg_text;
+	NSString *ninfo = (NSString *)info_text;
 
 	NSAlert *alert = [[NSAlert alloc] init];
 //	NSAlert *alert = [[[NSAlert alloc] init] autorelease];
@@ -57,25 +57,14 @@ static int GuiMyMainThreadAlert(const char *msg_text, const char *info_text, int
 	[alert beginSheetModalForWindow:[searchField window] modalDelegate:self didEndSelector:@selector(alertDidEnd:returnCode:contextInfo:) contextInfo:nil];
 	 */
 	[alert retain];		// avoid SEGV
-#if 0
-	// make sure Dialogue is run in main thread (necessary in Cocoa)
-	NSInteger __block retcode;
-	dispatch_sync(dispatch_get_main_queue(), ^
-	{
-		retcode = [alert runModal];
-	});
-#else
 	NSInteger retcode = [alert runModal];
-#endif
-	[nmsg release];
-	[ninfo release];
 	[alert release];
 
 	[pool release];
 	return (int) retcode;
 }
 
-int GuiMyAlert(const char *msg_text, const char *info_text, int nButtons)
+int GuiMyAlert(CFStringRef msg_text, CFStringRef info_text, int nButtons)
 {
 	// make sure Dialogue is run in main thread (necessary in Cocoa)
 	NSInteger __block ret;

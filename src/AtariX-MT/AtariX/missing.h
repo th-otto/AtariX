@@ -48,7 +48,7 @@ public:
 	UInt32 m_pColourTable[MAGIC_COLOR_TABLE_LEN];			// 256 Farben: Farbtabelle
 };
 
-extern "C" int GuiMyAlert(const char *msg_text, const char *info_txt, int nButtons);
+extern "C" int GuiMyAlert(CFStringRef msg_text, CFStringRef info_txt, int nButtons);
 extern "C" void GuiAtariCrash
 (
 	uint16_t exc,

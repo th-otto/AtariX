@@ -6,19 +6,66 @@
   Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 */
 
-"OK" = "OK";
-"Cancel" = "Cancel";
-"Do not add" = "Do not add";
 "Add" = "Add";
+
+"All files and folders were successfully copied to the Atari boot drive directory." = "All files and folders were successfully copied to the Atari boot drive directory.";
+
+"Atari boot drive successfully created." = "Atari boot drive successfully created.";
+
+"AtariX Versionsinfo" = "AtariX Versionsinfo";
+
+"Cancel" = "Cancel";
+
 "Choose Atari Root-FS Directory (Boot Drive)" = "Choose Atari Root-FS Directory (Boot Drive)";
-"The directory must be named MAGIC_C. It will appear as virtual drive C: inside the virtual machine." = "The directory must be named MAGIC_C. It will appear as virtual drive C: inside the virtual machine.";
+
+"Close" = "Close";
+
 "Create directory MAGIC_C inside the provided path?" = "Create directory MAGIC_C inside the provided path?";
-"The path provided does not end with directory MAGIC_C. It should be added automatically." = "The path provided does not end with directory MAGIC_C. It should be added automatically.";
 
 "Create or Revert" = "Create or Revert";
-"Overwrite files inside the provided directory?" = "Overwrite files inside the provided directory?";
-"You are going to create or revert the Atari boot drive. Existing files or directories inside the same directory will be overwritten." = "You are going to create or revert the Atari boot drive. Existing files or directories inside the same directory will be overwritten.";
-"Atari boot drive successfully created." = "Atari boot drive successfully created.";
-"All files and folders were successfully copied to the Atari boot drive directory." = "All files and folders were successfully copied to the Atari boot drive directory.";
-"There were errors during creation." = "There were errors during creation.";
+
+"Do not add" = "Do not add";
+
+"Emulation has been stopped" = "Emulation has been stopped";
+
 "Not all files and folders could be copied successfully. Your Atari boot drive may be incomplete." = "Not all files and folders could be copied successfully. Your Atari boot drive may be incomplete.";
+
+"No screen driver found." = "Keinen passenden Bildschirmtreiber gefunden.";
+
+"OK" = "OK";
+
+"Overwrite files inside the provided directory?" = "Overwrite files inside the provided directory?";
+
+"The Atari Root-Fs is incomplete, and the screen driver is missing." = "The Atari Root-Fs is incomplete, and the screen driver is missing.";
+
+"The Atari kernel is missing." = "The Atari kernel is missing.";
+
+"No file with name \"MagicMacX.OS\" found in the application directory." = "No file with name \"MagicMacX.OS\" found in the application directory.";
+
+"Not enough memory." = "Not enough memory.";
+
+"The Atari kernel is damaged." = "The Atari kernel is damaged.";
+
+"The file \"MagicMacX.OS\" has been modified." = "The file \"MagicMacX.OS\" has been modified.";
+
+"The Atari emulator has to be restarted." = "The Atari emulator has to be restarted.";
+
+"The changes to the settings cannot be applied at runtime." = "The changes to the settings cannot be applied at runtime.";
+
+"The Atari emulator will be terminated immediately." = "The Atari emulator will be terminated immediately.";
+
+"The Atari emulator is a Demo-version." = "The Atari emulator is a Demo-version.";
+
+"Write access is disabled in the Demo-version." = "Write access is disabled in the Demo-version.";
+
+"The screen size has been adjusted automatically." = "The screen size has been adjusted automatically.";
+
+"The Atari emulator needs a minimum screen size of 320x200 pixel." = "The Atari emulator needs a minimum screen size of 320x200 pixel.";
+
+"The directory must be named MAGIC_C. It will appear as virtual drive C: inside the virtual machine." = "The directory must be named MAGIC_C. It will appear as virtual drive C: inside the virtual machine.";
+
+"The path provided does not end with directory MAGIC_C. It should be added automatically." = "The path provided does not end with directory MAGIC_C. It should be added automatically.";
+
+"There were errors during creation." = "There were errors during creation.";
+
+"You are going to create or revert the Atari boot drive. Existing files or directories inside the same directory will be overwritten." = "You are going to create or revert the Atari boot drive. Existing files or directories inside the same directory will be overwritten.";

@@ -455,11 +455,6 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 		NSString *dirName = [pathUrlString lastPathComponent];
 		if (NSOrderedSame != [dirName caseInsensitiveCompare:@"MAGIC_C"])
 		{
-#if 0
-//			extern int GuiMyAlert(const char *msg_text, const char *info_text, int nButtons);
-//			NSInteger retcode = GuiMyAlert("dd", "bb", 2);
-			NSInteger retcode = 3;
-#else
 			// CRASHES !!!
 
 			NSAlert *alert = [[NSAlert alloc] init];
@@ -471,8 +466,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 			[alert setAlertStyle:NSAlertStyleWarning];
 			ret = [alert runModal];
 			[alert release];
-#endif
-			if ((ret == 1) || (ret == NSAlertFirstButtonReturn))
+			if (ret == 1 || ret == NSAlertFirstButtonReturn)
 			{
 				// cancel
 				DebugInfo("cancelled");
