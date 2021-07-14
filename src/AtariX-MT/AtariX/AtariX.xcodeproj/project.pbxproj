@@ -17,6 +17,7 @@
 		8CE01DAA2162604200770778 /* nf_objs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CE01DA52162604100770778 /* nf_objs.cpp */; };
 		8CEB9A4C2162EE3A00EF9EEB /* maptab.c in Sources */ = {isa = PBXBuildFile; fileRef = 8CEB9A4A2162EE3A00EF9EEB /* maptab.c */; };
 		8CFB1DF626920AFD00C17567 /* About.m in Sources */ = {isa = PBXBuildFile; fileRef = 8CFB1DF526920AFD00C17567 /* About.m */; };
+		8CFB1DFA269F2D4200C17567 /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8CFB1DFC269F2D4200C17567 /* Preferences.xib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		AD027A5E1429382D003CBB79 /* SDLMainIntro.m in Sources */ = {isa = PBXBuildFile; fileRef = AD027A5D1429382D003CBB79 /* SDLMainIntro.m */; };
@@ -50,7 +51,6 @@
 		AD98681F143D0E5E00E1D5B2 /* m68kopnz.c in Sources */ = {isa = PBXBuildFile; fileRef = AD986819143D0E5E00E1D5B2 /* m68kopnz.c */; };
 		AD986820143D0E5E00E1D5B2 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = AD98681A143D0E5E00E1D5B2 /* m68kops.c */; };
 		AD995129157167CE009CCE96 /* ApplicationIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = AD995128157167CE009CCE96 /* ApplicationIcon.png */; };
-		ADA0A1811460AB23002C580A /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = ADA0A1801460AB23002C580A /* Preferences.xib */; };
 		ADAF180A1572562500676157 /* MagicMacX.OS in Resources */ = {isa = PBXBuildFile; fileRef = ADAF18081572562400676157 /* MagicMacX.OS */; };
 		ADB9D2681A44EADC00B5CCED /* SDL2.framework in Copy Frameworks into .app bundle */ = {isa = PBXBuildFile; fileRef = ADB9D2671A44EADC00B5CCED /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		ADC8D9D41A3F81EC0014AE2F /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ADC8D9D31A3F81EC0014AE2F /* SDL2.framework */; };
@@ -94,6 +94,9 @@
 		8CEB9A4B2162EE3A00EF9EEB /* maptab.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = maptab.h; sourceTree = "<group>"; };
 		8CFB1DF526920AFD00C17567 /* About.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = About.m; sourceTree = "<group>"; };
 		8CFB1DF82693280C00C17567 /* typemapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = typemapper.h; sourceTree = "<group>"; };
+		8CFB1DFD269F2D4F00C17567 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Preferences.xib; sourceTree = "<group>"; };
+		8CFB1DFB269F2D4200C17567 /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/Preferences.xib; sourceTree = "<group>"; };
+		8CFB1DFE269F2D5200C17567 /* fr */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = fr; path = fr.lproj/Preferences.xib; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* AtariX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AtariX.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD027A5C1429382D003CBB79 /* SDLMainIntro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMainIntro.h; sourceTree = "<group>"; };
@@ -163,7 +166,6 @@
 		AD98681A143D0E5E00E1D5B2 /* m68kops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kops.c; sourceTree = "<group>"; };
 		AD98681B143D0E5E00E1D5B2 /* m68kops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kops.h; sourceTree = "<group>"; };
 		AD995128157167CE009CCE96 /* ApplicationIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ApplicationIcon.png; sourceTree = "<group>"; };
-		ADA0A1801460AB23002C580A /* Preferences.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Preferences.xib; sourceTree = "<group>"; };
 		ADAF1806157255BD00676157 /* de */ = {isa = PBXFileReference; lastKnownFileType = folder; name = de; path = de.lproj/rootfs; sourceTree = "<group>"; };
 		ADAF1807157255C200676157 /* fr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fr; path = fr.lproj/rootfs; sourceTree = "<group>"; };
 		ADAF18091572562400676157 /* English */ = {isa = PBXFileReference; lastKnownFileType = file; name = English; path = English.lproj/MagicMacX.OS; sourceTree = "<group>"; };
@@ -282,7 +284,7 @@
 				AD995128157167CE009CCE96 /* ApplicationIcon.png */,
 				8D1107310486CEB800E47090 /* Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
-				ADA0A1801460AB23002C580A /* Preferences.xib */,
+				8CFB1DFC269F2D4200C17567 /* Preferences.xib */,
 				AD60906D15A38E5D0073E842 /* atarix.xib */,
 				AD60907315A394D80073E842 /* AtariCrash.xib */,
 			);
@@ -435,7 +437,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
-				ADA0A1811460AB23002C580A /* Preferences.xib in Resources */,
+				8CFB1DFA269F2D4200C17567 /* Preferences.xib in Resources */,
 				AD60906B15A38E5D0073E842 /* atarix.xib in Resources */,
 				AD60907115A394D80073E842 /* AtariCrash.xib in Resources */,
 				AD995129157167CE009CCE96 /* ApplicationIcon.png in Resources */,
@@ -499,6 +501,16 @@
 				089C165DFE840E0CC02AAC07 /* English */,
 			);
 			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		8CFB1DFC269F2D4200C17567 /* Preferences.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8CFB1DFB269F2D4200C17567 /* de */,
+				8CFB1DFD269F2D4F00C17567 /* en */,
+				8CFB1DFE269F2D5200C17567 /* fr */,
+			);
+			name = Preferences.xib;
 			sourceTree = "<group>";
 		};
 		AD3B554915A7792200787C42 /* Localizable.strings */ = {
