@@ -934,7 +934,7 @@ bool CMacXFS::nameto_8_3(const char *atariname, char *dosname, int convmode, boo
 			{
 				*dosname++ = ((ch >> 6) & 0x3f) | 0xc0;
 				*dosname++ = (ch & 0x3f) | 0x80;
-			} else 
+			} else
 			{
 				*dosname++ = ((ch >> 12) & 0x0f) | 0xe0;
 				*dosname++ = ((ch >> 6) & 0x3f) | 0x80;
@@ -986,7 +986,7 @@ bool CMacXFS::nameto_8_3(const char *atariname, char *dosname, int convmode, boo
 			{
 				*dosname++ = ((ch >> 6) & 0x3f) | 0xc0;
 				*dosname++ = (ch & 0x3f) | 0x80;
-			} else 
+			} else
 			{
 				*dosname++ = ((ch >> 12) & 0x0f) | 0xe0;
 				*dosname++ = ((ch >> 6) & 0x3f) | 0x80;
@@ -1417,7 +1417,7 @@ int32_t CMacXFS::_snext(MAC_DTA *dta)
 	macdta = dta->macdta.macdta;
 	dir = macdta->hostDir;
 
-	DebugInfo("CMacXFS::_snext() -- pattern=%.11s", macdta->sname);
+	DebugInfo("CMacXFS::%s() -- pattern=%.11s", __FUNCTION__, macdta->sname);
 
 	/* suchen */
 	/* ------ */
@@ -1450,11 +1450,11 @@ int32_t CMacXFS::_snext(MAC_DTA *dta)
 		/* Datei gefunden, passen Name und Attribut ? */
 
 		CTextConversion::Host2AtariUtf8Copy(atariname, dirEntry->d_name, sizeof(atariname));
-		DebugInfo("CMacXFS::_snext() -- directory entry found: \"%s\"", atariname);
+		DebugInfo("CMacXFS::%s() -- directory entry found: \"%s\"", __FUNCTION__, atariname);
 
 		if (conv_path_elem(atariname, dosname))		// Konvertier. fuer Vergleich
 		{
-			DebugInfo("CMacXFS::_snext() -- skip long filename \"%s\"", dirEntry->d_name);
+			DebugInfo("CMacXFS::%s() -- skip long filename \"%s\"", __FUNCTION__, dirEntry->d_name);
 			continue;			/* Dateiname zu lang */
 		}
 
@@ -1465,7 +1465,7 @@ int32_t CMacXFS::_snext(MAC_DTA *dta)
 		/* -----------------------------------------	*/
 		if (dirEntry->d_type == DT_LNK)
 		{
-			DebugInfo("CMacXFS::_snext() -- dereference Alias %s", atariname);
+			DebugInfo("CMacXFS::%s() -- dereference Alias %s", __FUNCTION__, atariname);
 
 			/* Alias dereferenzieren	*/
 			/* ----------------------------------------	*/
@@ -1503,7 +1503,7 @@ doit:
 	dta->mxdta.dta_date = cpu_to_be16(dta->mxdta.dta_date);
 
 	nameto_8_3(atariname, dta->mxdta.dta_name, 1, true);
-	DebugInfo("CMacXFS::_snext() -- return: \"%s\"", dta->mxdta.dta_name);
+	DebugInfo("CMacXFS::%s() -- return: \"%s\"", __FUNCTION__, dta->mxdta.dta_name);
 	return TOS_E_OK;
 }
 
@@ -1645,7 +1645,7 @@ int32_t CMacXFS::xfs_fopen(XfsCookie *fc, const char *name, uint16_t omode, uint
 	int flags = flagsMagic2Host(omode);
 	if ((fc->drv->drv_flags & M_DRV_READONLY) && (flags & O_CREAT))
 		return TOS_EWRPRO;
-		 
+
 	cookie2Pathname(fc, name, fpathName, true);
 	
 #ifdef NOTYET
@@ -2231,7 +2231,7 @@ int32_t CMacXFS::xfs_dopendir(MAC_DIRHANDLE *dirh, XfsCookie *fc, uint16_t tosfl
 {
 	char fpathName[MAXPATHNAMELEN];
 
-	DebugInfo("CMacXFS::%s(drv=%d, DD=%08lx)", __FUNCTION__, fc->dev, (unsigned long)MAPVOIDPTO32(fc->index));
+	DebugInfo("CMacXFS::%s(drv=%d, DD=%08lx, tosflag=%u)", __FUNCTION__, fc->dev, (unsigned long)MAPVOIDPTO32(fc->index), tosflag);
 	if (fc->drv == NULL)
 		return TOS_EDRIVE;
 
@@ -2239,6 +2239,7 @@ int32_t CMacXFS::xfs_dopendir(MAC_DIRHANDLE *dirh, XfsCookie *fc, uint16_t tosfl
 	dirh->tosflag = tosflag;
 	dirh->index = 0;
 	cookie2Pathname(&dirh->fc, NULL, fpathName, true);
+	DebugInfo("CMacXFS::%s(%s)", __FUNCTION__, fpathName);
 
 	dirh->hostDir = host_opendir(fpathName);
 	if (dirh->hostDir == NULL)
@@ -2302,13 +2303,25 @@ again:
 	} else
 	{
 		CTextConversion::Host2AtariUtf8Copy(atariname, dirEntry->d_name, sizeof(atariname));
-		len = strlen(atariname);
-		if (size < len + 5)
-			return TOS_ERANGE;
+		/*
+		 * must truncate directory names, or path lookup will fail
+		 */
+		if (dirEntry->d_type == DT_DIR && (dirh->fc.drv->drv_flags & M_DRV_DOSNAMES))
+		{
+			if (size < 13 + 4)
+				return TOS_ERANGE;
+			nameto_8_3(atariname, buf + 4, 0, true);
+		} else
+		{
+			len = strlen(atariname);
+			if (size < len + 5)
+				return TOS_ERANGE;
+			strcpy(buf + 4, atariname);
+		}
 		(*(uint32_t *)buf) = cpu_to_be32(dirEntry->d_ino);
-		buf += 4;
-		strcpy(buf, atariname);
 	}
+
+	DebugInfo("CMacXFS::%s() -- return: %s \"%s\"", __FUNCTION__, dirEntry->d_type == DT_DIR ? "DIR" : "FIL", dirEntry->d_name);
 
 	if (xattr)
 	{
@@ -2487,6 +2500,11 @@ int32_t CMacXFS::xfs_dfree(XfsCookie *fc, uint32_t data[4])
 	if (res != TOS_E_OK)
 		return res;
 
+#if 0
+	fprintf(stderr, "bfree:   %llx\n", buff.f_bavail);
+	fprintf(stderr, "blocks:  %llx\n", buff.f_blocks);
+	fprintf(stderr, "blksize: %x\n", buff.f_bsize);
+#endif
 	data[0] = cpu_to_be32(buff.f_bavail); /* b_free */
 	data[1] = cpu_to_be32(buff.f_blocks); /* b_total */
 	data[2] = cpu_to_be32(buff.f_bsize); /* b_secsize */
@@ -3520,7 +3538,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 
             /* Writing back Atari addresses into Atari RAM, we currently have Mac addresses */
             /* Need to write 32-bit pointers back in subtracting offset) */
-            
+
 			if (ppath2DDparm->restpfad != 0)
 			{
 				pp = (memptr *) (AdrOffset68k + be32_to_cpu(ppath2DDparm->restpfad));
@@ -3639,7 +3657,7 @@ int32_t CMacXFS::XFSFunctions(uint32_t param, unsigned char *AdrOffset68k)
 			flinkparm *pflinkparm = (flinkparm *) params;
 			fetchXFSC(&fromDir, be16_to_cpu(pflinkparm->drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pflinkparm->dd1)));
 			fetchXFSC(&toDir, be16_to_cpu(pflinkparm->dst_drv), (MXFSDD *) (AdrOffset68k + be32_to_cpu(pflinkparm->dd2)));
-			doserr = xfs_link(&fromDir, 
+			doserr = xfs_link(&fromDir,
 					(char *) (AdrOffset68k + be32_to_cpu(pflinkparm->nam1)),
 					&toDir,
 					(char *) (AdrOffset68k + be32_to_cpu(pflinkparm->nam2)),
