@@ -2190,18 +2190,10 @@ int32_t CMacXFS::xfs_DD2name(XfsCookie *fc, char *buf, uint16_t bufsiz)
 	if (fc->drv->drv_changed)
 		return TOS_E_CHNG;
 
-	if (fc->index->parent == NULL)          /* root ? */
-	{
-		len = 1;
-		if (len > bufsiz)
-			return TOS_ERANGE;
-		buf[0] = '\0';
-		return TOS_E_OK;
-	}
-
     cookie2Pathname(fc, NULL, fpathName, false); // get the cookie filename
 
-	CTextConversion::Host2AtariUtf8Copy(pathName, fpathName, sizeof(pathName));
+	CTextConversion::Host2AtariUtf8Copy(pathName + 1, fpathName, sizeof(pathName) - 1);
+	pathName[0] = '\\';
 	len = strlen(pathName) + 1;
 	if (len > bufsiz)
 		return TOS_ERANGE;
