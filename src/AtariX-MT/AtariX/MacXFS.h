@@ -315,7 +315,7 @@ typedef struct _mx_fd {
 	int16_t flagsHost2Magic(int flags);
 	static bool filename_match(char *muster, char *fname);
 	static bool conv_path_elem(const char *path, char *name);
-	static bool nameto_8_3 (const char *macname, char *dosname, int convmode);
+	static bool nameto_8_3 (const char *macname, char *dosname, int convmode, bool toatari);
 
 	// XFS-Aufrufe
 

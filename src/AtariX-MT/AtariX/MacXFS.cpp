@@ -894,7 +894,7 @@ bool CMacXFS::conv_path_elem(const char *path, char *name)
 *
 *************************************************************/
 
-bool CMacXFS::nameto_8_3(const char *atariname, char *dosname, int convmode)
+bool CMacXFS::nameto_8_3(const char *atariname, char *dosname, int convmode, bool toatari)
 {
 	short i;
 	bool truncated = false;
@@ -914,25 +914,32 @@ bool CMacXFS::nameto_8_3(const char *atariname, char *dosname, int convmode)
 		{
 			break;
 		}
+		c = *atariname++;
 		if (convmode == 0)
-			c = *atariname++;
+			;
 		else if (convmode == 1)
-			c = ToUpper(((unsigned char)*atariname++));
+			c = ToUpper(c);
 		else
-			c = ToLower(((unsigned char)*atariname++));
-		ch = atari_to_utf16[c];
-		if (ch < 0x80)
+			c = ToLower(c);
+		if (toatari)
 		{
-			*dosname++ = ch;
-		} else if (ch < 0x800)
+			*dosname++ = c;
+		} else
 		{
-			*dosname++ = ((ch >> 6) & 0x3f) | 0xc0;
-			*dosname++ = (ch & 0x3f) | 0x80;
-		} else 
-		{
-			*dosname++ = ((ch >> 12) & 0x0f) | 0xe0;
-			*dosname++ = ((ch >> 6) & 0x3f) | 0x80;
-			*dosname++ = (ch & 0x3f) | 0x80;
+			ch = atari_to_utf16[c];
+			if (ch < 0x80)
+			{
+				*dosname++ = ch;
+			} else if (ch < 0x800)
+			{
+				*dosname++ = ((ch >> 6) & 0x3f) | 0xc0;
+				*dosname++ = (ch & 0x3f) | 0x80;
+			} else 
+			{
+				*dosname++ = ((ch >> 12) & 0x0f) | 0xe0;
+				*dosname++ = ((ch >> 6) & 0x3f) | 0x80;
+				*dosname++ = (ch & 0x3f) | 0x80;
+			}
 		}
 		i++;
 	}
@@ -959,25 +966,32 @@ bool CMacXFS::nameto_8_3(const char *atariname, char *dosname, int convmode)
 		{
 			break;
 		}
+		c = *atariname++;
 		if (convmode == 0)
-			c = *atariname++;
+			;
 		else if (convmode == 1)
-			c = ToUpper((unsigned char)*atariname++);
+			c = ToUpper(c);
 		else
-			c = ToLower((unsigned char)*atariname++);
-		ch = atari_to_utf16[c];
-		if (ch < 0x80)
+			c = ToLower(c);
+		if (toatari)
 		{
-			*dosname++ = ch;
-		} else if (ch < 0x800)
+			*dosname++ = c;
+		} else
 		{
-			*dosname++ = ((ch >> 6) & 0x3f) | 0xc0;
-			*dosname++ = (ch & 0x3f) | 0x80;
-		} else 
-		{
-			*dosname++ = ((ch >> 12) & 0x0f) | 0xe0;
-			*dosname++ = ((ch >> 6) & 0x3f) | 0x80;
-			*dosname++ = (ch & 0x3f) | 0x80;
+			ch = atari_to_utf16[c];
+			if (ch < 0x80)
+			{
+				*dosname++ = ch;
+			} else if (ch < 0x800)
+			{
+				*dosname++ = ((ch >> 6) & 0x3f) | 0xc0;
+				*dosname++ = (ch & 0x3f) | 0x80;
+			} else 
+			{
+				*dosname++ = ((ch >> 12) & 0x0f) | 0xe0;
+				*dosname++ = ((ch >> 6) & 0x3f) | 0x80;
+				*dosname++ = (ch & 0x3f) | 0x80;
+			}
 		}
 		i++;
 	}
@@ -1279,7 +1293,7 @@ int32_t CMacXFS::xfs_path2DD
 			}
 			*s = '\0';
 			if (fc.drv->drv_flags & M_DRV_DOSNAMES)
-				nameto_8_3(u, mac_dirname, 1);
+				nameto_8_3(u, mac_dirname, 1, false);
 			else
 				CTextConversion::Atari2HostUtf8Copy(mac_dirname, u, MAXPATHNAMELEN);
 			if ((newFsFile = reldir->insert(*this, mac_dirname)) == NULL)
@@ -1308,7 +1322,7 @@ int32_t CMacXFS::xfs_path2DD
 		if (s[-1] != *DIRSEPARATOR)
 		{
 			if (fc.drv->drv_flags & M_DRV_DOSNAMES)
-				nameto_8_3(u, mac_dirname, 1);
+				nameto_8_3(u, mac_dirname, 1, false);
 			else
 				CTextConversion::Atari2HostUtf8Copy(mac_dirname, u, MAXPATHNAMELEN);
 			if ((newFsFile = reldir->insert(*this, mac_dirname)) == NULL)
@@ -1488,7 +1502,7 @@ doit:
 	dta->mxdta.dta_time = cpu_to_be16(dta->mxdta.dta_time);
 	dta->mxdta.dta_date = cpu_to_be16(dta->mxdta.dta_date);
 
-	nameto_8_3(atariname, dta->mxdta.dta_name, 1); /* YYY fixme, this is wrong */
+	nameto_8_3(atariname, dta->mxdta.dta_name, 1, true);
 	DebugInfo("CMacXFS::_snext() -- return: \"%s\"", dta->mxdta.dta_name);
 	return TOS_E_OK;
 }
@@ -2283,7 +2297,7 @@ again:
 		if (size < 13)
 			return TOS_ERANGE;
 		CTextConversion::Host2AtariUtf8Copy(atariname, dirEntry->d_name, sizeof(atariname));
-		if (nameto_8_3(atariname, buf, 1))
+		if (nameto_8_3(atariname, buf, 1, true))
 			goto again;		// musste Dateinamen kuerzen
 	} else
 	{
@@ -4557,7 +4571,7 @@ bool CMacXFS::getHostFileName(char *result, struct mount_info *drv, const char *
 	// if the whole thing fails then take the requested name as is
 	// it also completes the path
 	if (drv->drv_flags & M_DRV_DOSNAMES)
-		nameto_8_3(name, result, 2);
+		nameto_8_3(name, result, 2, false);
 	else
 		CTextConversion::Atari2HostUtf8Copy(result, name, MAXPATHNAMELEN);
 
@@ -4596,7 +4610,7 @@ bool CMacXFS::getHostFileName(char *result, struct mount_info *drv, const char *
 					goto lbl_final;
 				}
 
-			nameto_8_3(dirEntry->d_name, testName, 1);
+			nameto_8_3(dirEntry->d_name, testName, 1, false);
 
 			if (strcmp(testName, filenamepart) == 0)
 			{
