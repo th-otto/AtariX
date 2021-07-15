@@ -191,9 +191,16 @@ typedef struct _mx_fd {
 
 		memptr locks;
 		char *name;
+		struct XfsFsFile *childs;
+		struct XfsFsFile *next;
 	
-		XfsFsFile(const char *root);
-		virtual ~XfsFsFile(void);
+		CMacXFS &m_xfs;
+		uint32_t mapped_value;
+		
+		XfsFsFile(CMacXFS &xfs, const char *name);
+		virtual ~XfsFsFile();
+		XfsFsFile *insert(CMacXFS &xfs, const char *name);
+		void remove(const char *name);
 	};
 
 	struct mount_info;

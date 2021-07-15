@@ -50,7 +50,7 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 
-// please remember to leave this define _after_ the reqired system headers!!!
+// please remember to leave this define _after_ the required system headers!!!
 // some systems does define this to some important value for them....
 #ifndef O_BINARY
 # define O_BINARY 0
@@ -218,19 +218,61 @@ static long gmtoff(time_t t)
 #endif
 }
 
-CMacXFS::XfsFsFile::XfsFsFile(const char *root)
+CMacXFS::XfsFsFile::XfsFsFile(CMacXFS &xfs, const char *root)
 	: parent(NULL),
 	  refCount(1),
 	  childCount(0),
 	  created(false),
 	  locks(0),
-	  name(strdup(root))
+	  name(strdup(root)),
+	  childs(NULL),
+	  next(NULL),
+	  m_xfs(xfs)
 {
+	mapped_value = MAPNEWVOIDP(this);
 }
 
-CMacXFS::XfsFsFile::~XfsFsFile(void)
+CMacXFS::XfsFsFile::~XfsFsFile()
 {
 	free(name);
+	MAPDELVOIDP(this);
+}
+
+CMacXFS::XfsFsFile *CMacXFS::XfsFsFile::insert(CMacXFS &xfs, const char *name)
+{
+	CMacXFS::XfsFsFile *f;
+	CMacXFS::XfsFsFile **prev;
+	
+	for (prev = &this->childs; *prev != NULL; prev = &(*prev)->next)
+		if (strcmp((*prev)->name, name) == 0)
+			return *prev;
+	f = new CMacXFS::XfsFsFile(xfs, name);
+	if (f == NULL)
+	{
+		DebugError("MacXFS: malloc() failed!");
+		return NULL;
+	}
+	*prev = f;
+	this->childCount++;
+	f->parent = this;
+	return f;
+}
+
+void CMacXFS::XfsFsFile::remove(const char *name)
+{
+	CMacXFS::XfsFsFile **prev;
+	CMacXFS::XfsFsFile *f;
+	
+	for (prev = &this->childs; *prev != NULL; prev = &(*prev)->next)
+		if (strcmp((*prev)->name, name) == 0)
+		{
+			f = *prev;
+			*prev = f->next;
+			this->childCount--;
+			delete f;
+			return;
+		}
+	DebugInfo("CMacXFS: name %s not found in %s", name, this->name);
 }
 
 /*****************************************************************
@@ -263,8 +305,7 @@ CMacXFS::CMacXFS()
 	drv->drv_valid = true;
 	drv->drv_flags = M_DRV_REVERSE_DIR_ORDER | M_DRV_READONLY; /* XXX */
 	// drive_m->halfSensitive = true;
-	drv->host_root = new XfsFsFile("/");
-	MAPNEWVOIDP(drv->host_root);
+	drv->host_root = new XfsFsFile(*this, "/");
 	strcpy(drv->mount_point, "A:\\");
 	drv->mount_point[0] = DriveToLetter(dev);
 
@@ -1241,14 +1282,10 @@ int32_t CMacXFS::xfs_path2DD
 				nameto_8_3(u, mac_dirname, 1);
 			else
 				CTextConversion::Atari2HostUtf8Copy(mac_dirname, u, MAXPATHNAMELEN);
-			if ((newFsFile = new XfsFsFile(mac_dirname)) == NULL)
+			if ((newFsFile = reldir->insert(*this, mac_dirname)) == NULL)
 			{
-				DebugError("MacXFS: malloc() failed!");
 				return TOS_ENSMEM;
 			}
-			MAPNEWVOIDP(newFsFile);
-			newFsFile->parent = reldir;
-			reldir->childCount++;
 			reldir = newFsFile;
 			*s++ = *DIRSEPARATOR;
 			u = s;						// letztes Element Mac
@@ -1274,14 +1311,10 @@ int32_t CMacXFS::xfs_path2DD
 				nameto_8_3(u, mac_dirname, 1);
 			else
 				CTextConversion::Atari2HostUtf8Copy(mac_dirname, u, MAXPATHNAMELEN);
-			if ((newFsFile = new XfsFsFile(mac_dirname)) == NULL)
+			if ((newFsFile = reldir->insert(*this, mac_dirname)) == NULL)
 			{
-				DebugError("MacXFS: malloc() failed!");
 				return TOS_ENSMEM;
 			}
-			MAPNEWVOIDP(newFsFile);
-			newFsFile->parent = reldir;
-			reldir->childCount++;
 			reldir = newFsFile;
 			*s++ = *DIRSEPARATOR;
 			*s = '\0';
@@ -1407,7 +1440,7 @@ int32_t CMacXFS::_snext(MAC_DTA *dta)
 
 		if (conv_path_elem(atariname, dosname))		// Konvertier. fuer Vergleich
 		{
-			DebugInfo("CMacXFS::_snext() -- skip long filename \"%s\"", atariname);
+			DebugInfo("CMacXFS::_snext() -- skip long filename \"%s\"", dirEntry->d_name);
 			continue;			/* Dateiname zu lang */
 		}
 
@@ -1455,7 +1488,7 @@ doit:
 	dta->mxdta.dta_time = cpu_to_be16(dta->mxdta.dta_time);
 	dta->mxdta.dta_date = cpu_to_be16(dta->mxdta.dta_date);
 
-	nameto_8_3(atariname, dta->mxdta.dta_name, 1);
+	nameto_8_3(atariname, dta->mxdta.dta_name, 1); /* YYY fixme, this is wrong */
 	DebugInfo("CMacXFS::_snext() -- return: \"%s\"", dta->mxdta.dta_name);
 	return TOS_E_OK;
 }
@@ -2192,7 +2225,7 @@ int32_t CMacXFS::xfs_dopendir(MAC_DIRHANDLE *dirh, XfsCookie *fc, uint16_t tosfl
 {
 	char fpathName[MAXPATHNAMELEN];
 
-	DebugInfo("CMacXFS::xfs_dopendir(drv=%d, DD=%08lx)", fc->dev, (unsigned long)MAPVOIDPTO32(fc->index));
+	DebugInfo("CMacXFS::%s(drv=%d, DD=%08lx)", __FUNCTION__, fc->dev, (unsigned long)MAPVOIDPTO32(fc->index));
 	if (fc->drv == NULL)
 		return TOS_EDRIVE;
 
@@ -2315,6 +2348,7 @@ int32_t CMacXFS::xfs_drewinddir(MAC_DIRHANDLE *dirh, uint16_t drv)
 int32_t CMacXFS::xfs_dclosedir(MAC_DIRHANDLE *dirh, uint16_t drv)
 {
 #pragma unused(drv)
+	DebugInfo("CMacXFS::%s(drv=%d, DD=%08lx)", __FUNCTION__, dirh->fc.dev, (unsigned long)MAPVOIDPTO32(dirh->fc.index));
 	if (dirh->hostDir == NULL)
 		return TOS_EIHNDL;
 	if (closedir(dirh->hostDir))
@@ -4256,8 +4290,7 @@ void CMacXFS::SetXFSDrive
 				size_t len = strlen(dirname);
 				if (len > 0 && dirname[len - 1] != *DIRSEPARATOR)
 					strcat(dirname, DIRSEPARATOR);
-				drv->host_root = new XfsFsFile(dirname);
-				MAPNEWVOIDP(drv->host_root);
+				drv->host_root = new XfsFsFile(*this, dirname);
 				// Laufwerk ist MacXFS-Laufwerk
 				newbits |= 1L << dev;
 			} else
@@ -4286,7 +4319,7 @@ void CMacXFS::SetXFSDrive
 		__FUNCTION__,
 		DriveToLetter(dev),
 		drv->host_root ? drv->host_root->name : "",
-		(unsigned long)(drv->host_root ? MAPVOIDPTO32(drv->host_root) : 0),
+		(unsigned long)MAPVOIDPTO32(drv->host_root),
 		xfsDrvTypeToStr(drvType),
 		drv->drv_flags & M_DRV_REVERSE_DIR_ORDER ? "reverse" : "normal",
 		drv->drv_flags & M_DRV_DOSNAMES ? "8+3" : "long");
@@ -4617,7 +4650,9 @@ void CMacXFS::fetchXFSC(XfsCookie *fc, uint16_t drv, MXFSDD *dd)
 {
 	if (drv >= NDRVS || !drives[drv].drv_valid)
 	{
+		fc->dev = -1;
 		fc->drv = NULL;
+		fc->index = NULL;
 		return;
 	}
 	fc->dev = drv;
