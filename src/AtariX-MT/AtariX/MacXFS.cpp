@@ -1222,7 +1222,7 @@ int32_t CMacXFS::xfs_path2DD
 	XfsCookie fc;
 	struct stat st;
 	char mac_dirname[MAXPATHNAMELEN];
-	char atariname_short[14];
+	char atariname_short[MAXPATHNAMELEN];
 
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::xfs_path2DD(drv=%d, DD=%08lx, pathname=\"%s\", mode=%d)", dev, (unsigned long)rel_dd->dirID, pathname, mode);
@@ -1353,7 +1353,8 @@ int32_t CMacXFS::xfs_path2DD
 	/* Wir versuchen zunaechst, die dirID mit nur		*/
 	/* einem Aufruf zu bestimmen						*/
 	/* ---------------------------------------------------	*/
-	cookie2Pathname(fc.drv, reldir, u, mac_dirname, true);
+	CTextConversion::Atari2HostUtf8Copy(atariname_short, u, MAXPATHNAMELEN);
+	cookie2Pathname(fc.drv, reldir, atariname_short, mac_dirname, true);
 #ifdef DEBUG_VERBOSE
 	DebugInfo("CMacXFS::xfs_path2DD(%s -> \"%s\")", macpath, mac_dirname);
 #endif
@@ -1633,6 +1634,7 @@ int32_t CMacXFS::xfs_fopen(XfsCookie *fc, const char *name, uint16_t omode, uint
 {
 	int host_fd;
 	char fpathName[MAXPATHNAMELEN];
+	char hostname[MAXPATHNAMELEN];
 
 #if DEBUG_68K_EMU
 	if (!strcmp(name, ATARI_PRG_TO_TRACE))
@@ -1662,7 +1664,8 @@ int32_t CMacXFS::xfs_fopen(XfsCookie *fc, const char *name, uint16_t omode, uint
 	if ((fc->drv->drv_flags & M_DRV_READONLY) && (flags & O_CREAT))
 		return TOS_EWRPRO;
 
-	cookie2Pathname(fc, name, fpathName, true);
+	CTextConversion::Atari2HostUtf8Copy(hostname, name, MAXPATHNAMELEN);
+	cookie2Pathname(fc, hostname, fpathName, true);
 	
 #ifdef NOTYET
 	if (!fc->index->created && (flags & O_CREAT))
@@ -1752,6 +1755,7 @@ int32_t CMacXFS::xfs_fdelete(XfsCookie *dir, const char *name)
 	return TOS_EWRPRO;
 #else
 	char fpathName[MAXPATHNAMELEN];
+	char hostname[MAXPATHNAMELEN];
 
 	if (dir->drv == NULL)
 		return TOS_EDRIVE;
@@ -1760,7 +1764,8 @@ int32_t CMacXFS::xfs_fdelete(XfsCookie *dir, const char *name)
 	if (dir->drv->drv_flags & M_DRV_READONLY)
 		return TOS_EWRPRO;
 
-	cookie2Pathname(dir, name, fpathName, true); // get the cookie filename
+	CTextConversion::Atari2HostUtf8Copy(hostname, name, MAXPATHNAMELEN);
+	cookie2Pathname(dir, hostname, fpathName, true); // get the cookie filename
 
 //	DebugInfo("CMacXFS::xfs_fdelete(name=%s)", fpathName);
 
@@ -1809,10 +1814,14 @@ int32_t CMacXFS::xfs_link(XfsCookie *fromDir, char *fromname, XfsCookie *toDir, 
 		return TOS_EWRPRO;
 
 	char ffromName[MAXPATHNAMELEN];
-	cookie2Pathname(fromDir, fromname, ffromName, true);
+	char fromName[MAXPATHNAMELEN];
+	CTextConversion::Atari2HostUtf8Copy(fromName, fromname, MAXPATHNAMELEN);
+	cookie2Pathname(fromDir, fromName, ffromName, true);
 
 	char ftoName[MAXPATHNAMELEN];
-	cookie2Pathname(toDir, toname, ftoName, true);
+	char toName[MAXPATHNAMELEN];
+	CTextConversion::Atari2HostUtf8Copy(toName, toname, MAXPATHNAMELEN);
+	cookie2Pathname(toDir, toName, ftoName, true);
 
 	if (mode)
 	{
@@ -1934,6 +1943,7 @@ int32_t CMacXFS::xfs_xattr(XfsCookie *fc, const char *name, XATTR *xattr, uint16
 {
 	struct stat st;
 	char fname[MAXPATHNAMELEN];
+	char fName[MAXPATHNAMELEN];
 	int err;
 
 #ifdef DEBUG_VERBOSE
@@ -1950,7 +1960,8 @@ int32_t CMacXFS::xfs_xattr(XfsCookie *fc, const char *name, XATTR *xattr, uint16
 		if (name[0] == '.' && !name[1])
 			name = "";		// "." wie leerer Name
 	}
-	cookie2Pathname(fc, name, fname, true);
+	CTextConversion::Atari2HostUtf8Copy(fName, name, MAXPATHNAMELEN);
+	cookie2Pathname(fc, fName, fname, true);
 
 	/* Im Modus 0 muessen Aliase dereferenziert werden	*/
 	/* ------------------------------------------------	*/
@@ -1970,6 +1981,7 @@ int32_t CMacXFS::xfs_stat64(XfsCookie *fc, const char *name, MINT_STAT64 *statp)
 {
 	struct stat st;
 	char fname[MAXPATHNAMELEN];
+	char fName[MAXPATHNAMELEN];
 
 	if (fc->drv == NULL)
 		return TOS_EDRIVE;
@@ -1981,7 +1993,8 @@ int32_t CMacXFS::xfs_stat64(XfsCookie *fc, const char *name, MINT_STAT64 *statp)
 		if (name[0] == '.' && !name[1])
 			name = "";		// "." wie leerer Name
 	}
-	cookie2Pathname(fc, name, fname, true);
+	CTextConversion::Atari2HostUtf8Copy(fName, name, MAXPATHNAMELEN);
+	cookie2Pathname(fc, fName, fname, true);
 
 	if (lstat(fname, &st) != 0)
 		return errnoHost2Mint(errno, TOS_EFILNF);
@@ -2009,6 +2022,7 @@ int32_t CMacXFS::xfs_attrib(XfsCookie *fc, const char *name, uint16_t rwflag, ui
 	struct stat st;
 	int oldattr;
 	char fpathName[MAXPATHNAMELEN];
+	char fName[MAXPATHNAMELEN];
 
 	DebugInfo("CMacXFS::xfs_attrib('%s', drv=%d, wrmode=%d, attr=0x%04x)", name, fc->dev, rwflag, attr);
 	if (fc->drv == NULL)
@@ -2026,7 +2040,8 @@ int32_t CMacXFS::xfs_attrib(XfsCookie *fc, const char *name, uint16_t rwflag, ui
 	if (rwflag && (fc->drv->drv_flags & M_DRV_READONLY))
 		return TOS_EWRPRO;
 
-	cookie2Pathname(fc, name, fpathName, true);
+	CTextConversion::Atari2HostUtf8Copy(fName, name, MAXPATHNAMELEN);
+	cookie2Pathname(fc, fName, fpathName, true);
 	
 	/*
 	 * Fattrib() is only supposed to change flags of
@@ -2114,6 +2129,7 @@ int32_t CMacXFS::xfs_fchmod(XfsCookie *fc, const char *name, uint16_t fmode)
 {
 #pragma unused(name, fmode)
 	char fpathName[MAXPATHNAMELEN];
+	char fName[MAXPATHNAMELEN];
 
 	if (fc->drv == NULL)
 		return TOS_EDRIVE;
@@ -2121,7 +2137,8 @@ int32_t CMacXFS::xfs_fchmod(XfsCookie *fc, const char *name, uint16_t fmode)
 		return TOS_E_CHNG;
 	if (fc->drv->drv_flags & M_DRV_READONLY)
 		return TOS_EWRPRO;
-	cookie2Pathname(fc, name, fpathName, true);
+	CTextConversion::Atari2HostUtf8Copy(fName, name, MAXPATHNAMELEN);
+	cookie2Pathname(fc, fName, fpathName, true);
 
     if (chmod(fpathName, modeMint2Host(fmode)))
 		return errnoHost2Mint(errno, TOS_EACCDN);
@@ -2155,11 +2172,13 @@ int32_t CMacXFS::xfs_dcreate(XfsCookie *fc, const char *name)
 #else
 
 	char fpathName[MAXPATHNAMELEN];
+	char fName[MAXPATHNAMELEN];
 
 	if (fc->drv->drv_flags & M_DRV_READONLY)
 		return TOS_EWRPRO;
 
-	cookie2Pathname(fc, name, fpathName, true);
+	CTextConversion::Atari2HostUtf8Copy(fName, name, MAXPATHNAMELEN);
+	cookie2Pathname(fc, fName, fpathName, true);
 	if (mkdir(fpathName, 0755) != 0)
 		errnoHost2Mint(errno, TOS_EFILNF);
 	return TOS_E_OK;
@@ -2658,6 +2677,7 @@ int32_t CMacXFS::xfs_symlink(XfsCookie *fc, const char *name, const char *toname
 #else
 
 	char ffromName[MAXPATHNAMELEN];
+	char ffromname[MAXPATHNAMELEN];
 	char ftoName[MAXPATHNAMELEN];
 	char ftoname[MAXPATHNAMELEN];
 
@@ -2670,7 +2690,8 @@ int32_t CMacXFS::xfs_symlink(XfsCookie *fc, const char *name, const char *toname
 	if (fc->drv->drv_flags & M_DRV_READONLY)
 		return TOS_EWRPRO;
 
-	cookie2Pathname(fc, name, ffromName, true);
+	CTextConversion::Atari2HostUtf8Copy(ffromname, name, sizeof(ffromname));
+	cookie2Pathname(fc, ffromname, ffromName, true);
 	CTextConversion::Atari2HostUtf8Copy(ftoname, toname, sizeof(ftoname));
 	strd2upath(ftoname);
 	strcpy(ftoName, ftoname);
@@ -2785,6 +2806,7 @@ int32_t CMacXFS::xfs_readlink(XfsCookie *fc, const char *name,
 				char *buf, uint16_t bufsiz)
 {
 	char fpathName[MAXPATHNAMELEN];
+	char fname[MAXPATHNAMELEN];
 	char target[MAXPATHNAMELEN];
 
 #ifdef DEBUG_VERBOSE
@@ -2798,7 +2820,8 @@ int32_t CMacXFS::xfs_readlink(XfsCookie *fc, const char *name,
 
 	/* Name erstellen und Alias auslesen	*/
 	/* ---------------------------------	*/
-	cookie2Pathname(fc, name, fpathName, true); // get the cookie filename
+	CTextConversion::Atari2HostUtf8Copy(fname, name, sizeof(fname));
+	cookie2Pathname(fc, fname, fpathName, true); // get the cookie filename
 
 	if (!host_readlink(fpathName, target, sizeof(target)))
 		return errnoHost2Mint(errno, TOS_EFILNF);
@@ -2827,6 +2850,7 @@ int32_t CMacXFS::xfs_dcntl
 )
 {
 	char fname[MAXPATHNAMELEN];
+	char temp[MAXPATHNAMELEN];
 
 	if (fc->drv == NULL)
 		return TOS_EDRIVE;
@@ -2904,7 +2928,8 @@ int32_t CMacXFS::xfs_dcntl
 			{
 				t_set.actime = t_set.modtime = time(NULL);
 			}
-			cookie2Pathname(fc, name, fname, true);
+			CTextConversion::Atari2HostUtf8Copy(temp, name, sizeof(temp));
+			cookie2Pathname(fc, temp, fname, true);
 			if (utime(fname, &t_set))
 				return errnoHost2Mint(errno, TOS_EFILNF);
 		}
@@ -2916,7 +2941,8 @@ int32_t CMacXFS::xfs_dcntl
 		break;
 
 	case MINT_FTRUNCATE:
-		cookie2Pathname(fc, name, fname, true);
+		CTextConversion::Atari2HostUtf8Copy(temp, name, sizeof(temp));
+		cookie2Pathname(fc, temp, fname, true);
 
 		DebugInfo("CMacXFS::%s: FTRUNCATE: %s, %08x", __FUNCTION__, fname, arg);
 		if (fc->drv->drv_flags & M_DRV_READONLY)
@@ -2973,7 +2999,8 @@ int32_t CMacXFS::xfs_dcntl
 
 			case MMEX_GETRSRCLEN:
 				// Mac-Rsrc-Länge liefern
-				cookie2Pathname(fc, name, fname, true);
+				CTextConversion::Atari2HostUtf8Copy(temp, name, sizeof(temp));
+				cookie2Pathname(fc, temp, fname, true);
 				// strcat(fname, "/..namedfork/rsrc
 #ifdef NOTYET
 				doserr = getCatInfo (drv, &pb, true);
@@ -4615,10 +4642,7 @@ bool CMacXFS::getHostFileName(char *result, struct mount_info *drv, const char *
 
 	// if the whole thing fails then take the requested name as is
 	// it also completes the path
-	if (drv->drv_flags & M_DRV_DOSNAMES)
-		nameto_8_3(name, result, 2, false);
-	else
-		CTextConversion::Atari2HostUtf8Copy(result, name, MAXPATHNAMELEN);
+	strcpy(result, name);
 
 	if (!strpbrk(name, "*?") && // if is it NOT a mask
 		 stat(pathName, &statBuf)) // and if such file NOT really exists
