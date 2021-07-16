@@ -105,9 +105,9 @@ class CMacXFS
 			unsigned short dev,
 			MacXFSDrvType drvType,
 			CFURLRef path,
-			unsigned int flags,
+			unsigned long flags,
 			unsigned char *AdrOffset68k);
-	void ChangeXFSDriveFlags(unsigned short dev, unsigned int flags);
+	void ChangeXFSDriveFlags(unsigned short dev, unsigned long flags);
 
    private:
 
@@ -278,7 +278,7 @@ typedef struct _mx_fd {
 		bool drv_changed;
 		bool drv_must_eject;
 		bool drv_valid;			// zeigt an, ob alias gültig ist.
-		unsigned int drv_flags;	// initialisiert auf 0en
+		unsigned long drv_flags;	// initialisiert auf 0en
 		MacXFSDrvType drv_type;
 
 		XfsFsFile *host_root;

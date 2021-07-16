@@ -198,10 +198,10 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	EmulationConfig(
 					atariKernelUrlString ? [atariKernelUrlString cStringUsingEncoding:NSUTF8StringEncoding] : NULL,
 					[atariRootfsUrlString cStringUsingEncoding:NSUTF8StringEncoding],
-					atariMemorySize, atariScreenWidth, atariScreenHeight,
-					atariScreenColourMode,
+					(unsigned int)atariMemorySize, (unsigned int)atariScreenWidth, (unsigned int)atariScreenHeight,
+					(unsigned int)atariScreenColourMode,
 					atariScreenStretchX, atariScreenStretchY,
-					atariLanguage,
+					(unsigned int)atariLanguage,
 					atariHideHostMouse,
 					[atariPrintCommand cStringUsingEncoding:NSUTF8StringEncoding],
 					[atariSerialDevice cStringUsingEncoding:NSUTF8StringEncoding]);
@@ -621,6 +621,7 @@ static BOOL PathCopy(NSString *destPath, NSString *srcPath)
 	else
 	{
 		DebugWarning("invalid localisation code %d", (int) atariLanguage);
+		rootfsLocalizedPath = [myBundle pathForResource:@"rootfs" ofType:nil];
 	}
 
 	DebugInfo("resource rootfs-common path = %s", [rootfsCommonPath UTF8String]);

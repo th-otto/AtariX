@@ -90,8 +90,6 @@ static unsigned char *HostVideoAddr;		// Beginn Bildschirmspeicher Host
 static atomic_char *p_bVideoBufChanged;
 static bool bAtariVideoRamHostEndian = true;
 
-static const char *AtariAddr2Description(uint32_t addr);
-
 #if defined(MAGICMACX_DEBUG_SCREEN_ACCESS) || defined(PATCH_VDI_PPC)
 static uint32_t p68k_OffscreenDriver = 0;
 static uint32_t p68k_ScreenDriver = 0;
@@ -247,6 +245,7 @@ static inline OSStatus OS_WaitOnQueue(MPQueueID queue, void **param1, void **par
 *
 **********************************************************************/
 
+#ifdef _DEBUG
 static const char *AtariAddr2Description(uint32_t addr)
 {
 	// Rechne ST-Adresse in TT-Adresse um
@@ -279,6 +278,7 @@ static const char *AtariAddr2Description(uint32_t addr)
 
 	return("?");
 }
+#endif
 
 
 /**********************************************************************
@@ -1023,7 +1023,7 @@ int CMagiC::LoadReloc
 			err = errno;
 		} else
 		{
-			FileSize = lseek(fd, 0l, SEEK_END);
+			FileSize = (unsigned long)lseek(fd, 0l, SEEK_END);
 			lseek(fd, 0l, SEEK_SET);
 		}
 	}
@@ -1450,9 +1450,9 @@ Assign more memory to the application using the Finder dialogue "Information"!
 		return err;
 
 	// 68k Speicherbegrenzungen ausrechnen
-	Adr68kVideo = m_RAM68ksize;
+	Adr68kVideo = (memptr)m_RAM68ksize;
 	DebugInfo("68k-Videospeicher beginnt bei 68k-Adresse 0x%08x und ist %zu Bytes groß.", Adr68kVideo, m_Video68ksize);
-	Adr68kVideoEnd = Adr68kVideo + m_Video68ksize;
+	Adr68kVideoEnd = Adr68kVideo + (memptr)m_Video68ksize;
 	m_pFgBuffer = (unsigned char *) m_pMagiCScreen->hostScreen;
 
 	UpdateAtariDoubleBuffer();
@@ -1656,7 +1656,7 @@ Reinstall the application.
 
 	// Adreßüberprüfung fürs XFS
 
-	m_MacXFS.Set68kAdressRange(m_RAM68ksize);
+	m_MacXFS.Set68kAdressRange((memptr)m_RAM68ksize);
 
 	// Laufwerk C: machen
 
@@ -1700,7 +1700,7 @@ Reinstall the application.
 	OpcodeROM = m_RAM68k;	// ROM == RAM
 	m68k_set_int_ack_callback(IRQCallback);
 	m68k_SetBaseAddr(m_RAM68k);
-	m68k_SetHiMem(m_RAM68ksize);
+	m68k_SetHiMem((memptr)m_RAM68ksize);
 	m_bSpecialExec = false;
 
 	// Reset Musashi 68k emulator
@@ -2208,9 +2208,9 @@ int CMagiC::GetKbBufferFree( void )
 {
 	int nCharsInBuffer;
 
-	nCharsInBuffer = (m_pKbRead <= m_pKbWrite) ?
-							(m_pKbWrite - m_pKbRead) :
-							(KEYBOARDBUFLEN - (m_pKbRead - m_pKbWrite));
+	nCharsInBuffer = m_pKbRead <= m_pKbWrite ?
+							(int)(m_pKbWrite - m_pKbRead) :
+							(KEYBOARDBUFLEN - (int)(m_pKbRead - m_pKbWrite));
 	return(KEYBOARDBUFLEN - nCharsInBuffer - 1);
 }
 

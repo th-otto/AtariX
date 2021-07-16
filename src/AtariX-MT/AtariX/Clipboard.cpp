@@ -514,7 +514,7 @@ void CClipboard::Mac2Atari(const uint8_t *pData)
 	*wrPtr++ = 0;		// abschließendes EOS
 
 	// letzte Zeile schreiben
-	SInt32 wrcount = wrPtr - ScrapBuffer;
+	size_t wrcount = wrPtr - ScrapBuffer;
 	(void) write(fd, ScrapBuffer, wrcount);
 	(void) close(fd);
 
@@ -544,7 +544,7 @@ void CClipboard::Atari2Mac(uint8_t **pBuffer)
 	fd = OpenAtariScrapFile(O_RDONLY);
 	if	(fd < 0)
 		return;
-	off_t fileLen = lseek(fd, 0, SEEK_END);
+	size_t fileLen = (size_t)lseek(fd, 0, SEEK_END);
 	(void) lseek(fd, 0, SEEK_SET);
 	if (fileLen == -1)
 	{

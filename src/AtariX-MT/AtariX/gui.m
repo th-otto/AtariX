@@ -72,7 +72,7 @@ int GuiMyAlert(CFStringRef msg_text, CFStringRef info_text, int nButtons)
 				  {
 					  ret = GuiMyMainThreadAlert(msg_text, info_text, nButtons);
 				  });
-	return ret;
+	return (int)ret;
 }
 
 void GuiAtariCrash

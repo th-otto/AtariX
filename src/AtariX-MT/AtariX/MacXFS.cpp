@@ -301,7 +301,7 @@ CMacXFS::CMacXFS()
 
 	// Mac-Wurzelverzeichnis machen
 	dev = DriveFromLetter('M');
-	xfs_drvbits = 1L << dev;
+	xfs_drvbits = ((uint32_t)1) << dev;
 	drv = &drives[dev];
 	drv->drv_type = MacRoot;
 	drv->drv_valid = true;
@@ -419,6 +419,7 @@ unsigned char CMacXFS::ToLower(unsigned char c)
 *
 ******************************************************************/
 
+#if 0
 static void GetTypeAndCreator(const char *name, OSType *pType, OSType *pCreator)
 {
 	name = strrchr(name, '.');
@@ -452,6 +453,7 @@ static void GetTypeAndCreator(const char *name, OSType *pType, OSType *pCreator)
 	}
 */
 }
+#endif
 
 
 /*****************************************************************
@@ -2749,7 +2751,7 @@ int32_t CMacXFS::xfs_symlink(XfsCookie *fc, const char *name, const char *toname
 					// with the hosts root directory
 					int len = MAXPATHNAMELEN;
 					strcpy(ftoName, drv->host_root->m_hostname);
-					int hrLen = strlen(drv->host_root->m_hostname);
+					int hrLen = (int)strlen(drv->host_root->m_hostname);
 					if (hrLen < len)
 						strncpy(ftoName + hrLen, ftoname + 3, len - hrLen);
 					found = true;
@@ -3148,7 +3150,7 @@ int32_t CMacXFS::dev_seek(MAC_FD *f, int32_t pos, uint16_t mode)
 	lpos = lseek(f->host_fd, pos, macmode);
 	if (lpos == (off_t)-1)
 		return errnoHost2Mint(errno, TOS_EACCDN);
-	return lpos;
+	return (int32_t)lpos;
 }
 
 
@@ -3212,8 +3214,8 @@ int32_t CMacXFS::dev_ioctl(MAC_FD *f, uint16_t cmd, void *buf)
 		if (ioctl(f->host_fd, FIONREAD, &navail) < 0)
 #endif
 		{
-			int32_t pos = lseek(f->host_fd, 0, SEEK_CUR); // get position
-			navail = lseek(f->host_fd, 0, SEEK_END) - pos;
+			off_t pos = lseek(f->host_fd, 0, SEEK_CUR); // get position
+			navail = (int)(lseek(f->host_fd, 0, SEEK_END) - pos);
 			lseek(f->host_fd, pos, SEEK_SET); // set the position back
 		}
 		*((int32_t *)buf) = cpu_to_be32(navail);
@@ -3274,8 +3276,8 @@ int32_t CMacXFS::dev_ioctl(MAC_FD *f, uint16_t cmd, void *buf)
 				uint32_t *p32 = (uint32_t *)buf;
 				tv[0].tv_sec = be32_to_cpu(p32[0]);
 				tv[1].tv_sec = be32_to_cpu(p32[1]);
-				tv[0].tv_sec = datetime2utc(tv[0].tv_sec) - gmtoff(tv[0].tv_sec);
-				tv[1].tv_sec = datetime2utc(tv[1].tv_sec) - gmtoff(tv[1].tv_sec);
+				tv[0].tv_sec = datetime2utc((uint32_t)tv[0].tv_sec) - gmtoff(tv[0].tv_sec);
+				tv[1].tv_sec = datetime2utc((uint32_t)tv[1].tv_sec) - gmtoff(tv[1].tv_sec);
 			} else
 			{
 				tv[0].tv_sec = tv[1].tv_sec = time(NULL);
@@ -4335,7 +4337,7 @@ void CMacXFS::SetXFSDrive
 	unsigned short dev,
 	MacXFSDrvType drvType,
 	CFURLRef pathUrl,
-	unsigned int flags,
+	unsigned long flags,
 	unsigned char *AdrOffset68k
 )
 {
@@ -4408,7 +4410,7 @@ void CMacXFS::SetXFSDrive
 		setDrivebits(newbits, AdrOffset68k);
 }
 
-void CMacXFS::ChangeXFSDriveFlags(unsigned short dev, unsigned int flags)
+void CMacXFS::ChangeXFSDriveFlags(unsigned short dev, unsigned long flags)
 {
 	struct mount_info *drv;
 	if (dev >= NDRVS)
@@ -4546,7 +4548,7 @@ char *CMacXFS::cookie2Pathname(struct mount_info *drv, XfsFsFile *fs, const char
 	if (name && *name)
 	{
 		// make sure there's the right trailing dir separator
-		int len = strlen(buf);
+		int len = (int)strlen(buf);
 		if (len > 0)
 		{
 			char *last = buf + len - 1;
@@ -4594,7 +4596,7 @@ char *CMacXFS::host_readlink(const char *pathname, char *target, int len)
 	int i;
 
 	target[0] = '\0';
-	if ((rv = readlink(pathname, target, len)) < 0)
+	if ((rv = (int)readlink(pathname, target, len)) < 0)
 		return NULL;
 
 	// put the trailing \0
@@ -4622,7 +4624,7 @@ char *CMacXFS::host_readlink(const char *pathname, char *target, int len)
 					// target drive found; replace the hosts root directory
 					// with the mount point
 					strncpy(target, drv->mount_point, len);
-					int mLen = strlen(drv->mount_point);
+					int mLen = (int)strlen(drv->mount_point);
 					if (mLen < len)
 						strncpy(target + mLen, tmp + hrLen, len - mLen);
 					break;

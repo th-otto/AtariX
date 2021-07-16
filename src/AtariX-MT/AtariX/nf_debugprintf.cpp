@@ -204,35 +204,35 @@ static long debugprintf(FILE *f, const char *fmt, uint32 args, int param)
 				width--;
 				l_arg = -l_arg;
 			}
-			len += debugprintf_putl(f, l_arg, 10, width, fill_char);
+			len += debugprintf_putl(f, (uint32_t)l_arg, 10, width, fill_char);
 			break;
 		case 'o':
 			if (long_flag)
 				l_arg = (unsigned long)nf_getparameter(args, param++);
 			else
 				l_arg = (unsigned int)nf_getparameter(args, param++);
-			len += debugprintf_putl(f, l_arg, 8, width, fill_char);
+			len += debugprintf_putl(f, (uint32_t)l_arg, 8, width, fill_char);
 			break;
 		case 'x':
 			if (long_flag)
 				l_arg = (unsigned long)nf_getparameter(args, param++);
 			else
 				l_arg = (unsigned int)nf_getparameter(args, param++);
-			len += debugprintf_putl(f, l_arg, 16, width, fill_char);
+			len += debugprintf_putl(f, (uint32_t)l_arg, 16, width, fill_char);
 			break;
 		case 'b':
 			if (long_flag)
 				l_arg = (unsigned long)nf_getparameter(args, param++);
 			else
 				l_arg = (unsigned int)nf_getparameter(args, param++);
-			len += debugprintf_putl(f, l_arg, 2, width, fill_char);
+			len += debugprintf_putl(f, (uint32_t)l_arg, 2, width, fill_char);
 			break;
 		case 'u':
 			if (long_flag)
 				l_arg = (unsigned long)nf_getparameter(args, param++);
 			else
 				l_arg = (unsigned int)nf_getparameter(args, param++);
-			len += debugprintf_putl(f, l_arg, 10, width, fill_char);
+			len += debugprintf_putl(f, (uint32_t)l_arg, 10, width, fill_char);
 			break;
 		}
 	}
@@ -256,7 +256,7 @@ static sint32 NF_Debugprintf_dispatch(uint32 fncode, uint32 args)
 	
 		atari2HostSafeStrncpy(buffer, str_ptr, sizeof(buffer));
 	
-		ret = debugprintf(output, buffer, args, 1);
+		ret = (int)debugprintf(output, buffer, args, 1);
 		fflush(output);
 		break;
 	}

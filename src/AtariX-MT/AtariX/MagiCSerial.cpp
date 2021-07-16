@@ -192,14 +192,14 @@ UInt32 CMagiCSerial::Write(unsigned int cnt, const char *pBuffer)
 		DebugInfo("CMagiCSerial::Write() -- ==> c = 0x%02x (%c)", (unsigned int) pBuffer[i], ((pBuffer[i] >= ' ') && (pBuffer[i] <= 'z')) ? pBuffer[i] : '?');
 	}
 #endif
-	ret = write(m_fd, pBuffer, cnt);
+	ret = (int)write(m_fd, pBuffer, cnt);
 	if	(ret != -1)
 		return((UInt32) ret);	// Anzahl Zeichen
 
 	ret = errno;
 	DebugError("CMagiCSerial::Write() -- "
 				"Fehler %d", ret);
-	return(0xffffffff);		// Atari-Fehlercode
+	return -1;		// Atari-Fehlercode
 }
 
 
@@ -235,7 +235,7 @@ UInt32 CMagiCSerial::Read(unsigned int cnt, char *pBuffer)
 	}
 
 	if	(cnt)
-		ret = read(m_fd, pBuffer, cnt);
+		ret = (int)read(m_fd, pBuffer, cnt);
 	else
 		ret = 0;
 #else
@@ -260,7 +260,7 @@ UInt32 CMagiCSerial::Read(unsigned int cnt, char *pBuffer)
 	ret = errno;
 	DebugError("CMagiCSerial::Read() -- "
 				"Fehler %d", ret);
-	return(0xffffffff);		// Atari-Fehlercode
+	return -1;		// Atari-Fehlercode
 }
 
 
@@ -314,7 +314,7 @@ bool CMagiCSerial::ReadStatus(void)
 	if	(m_InBufFill)
 		return(true);
 
-	ret = read(m_fd, m_InBuffer, SERIAL_IBUFLEN);
+	ret = (int)read(m_fd, m_InBuffer, SERIAL_IBUFLEN);
 	if	((ret == -1) || (ret == 0))
 		return(false);
 	m_InBufFill = ret;
@@ -336,9 +336,9 @@ UInt32 CMagiCSerial::Drain(void)
 	ret = tcdrain(m_fd);
 
 	if	(ret)
-		return((UInt32) -1);
+		return -1;
 
-	return(0);
+	return 0;
 }
 
 

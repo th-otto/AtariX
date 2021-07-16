@@ -72,7 +72,7 @@ class CMyPreferences : public CPreferences
 	bool m_bShowMacMouse;
 	bool m_bAutoStartMagiC;
 	CFURLRef m_drvPath[NDRIVES];
-	long m_drvFlags[NDRIVES];	// 1 == RevDir / 2 == 8+3
+	unsigned long m_drvFlags[NDRIVES];	// 1 == RevDir / 2 == 8+3
 #define M_DRV_REVERSE_DIR_ORDER  0x01
 #define M_DRV_DOSNAMES           0x02
 #define M_DRV_READONLY           0x04

@@ -78,7 +78,7 @@ static sint32 NF_Name_dispatch(uint32 fncode, uint32 args)
 	}
 
 	host2AtariSafeStrncpy(name_ptr, text, name_maxlen);
-	return strlen(text);
+	return (sint32)strlen(text);
 }
 
 /*** ---------------------------------------------------------------------- ***/
@@ -324,7 +324,7 @@ static sint32 NF_Stderr_dispatch(uint32 fncode, uint32 args)
 			}
 		}
 		fflush(output);
-		return strlen(buffer);
+		return (sint32)strlen(buffer);
 	}
 	return 0;
 }
