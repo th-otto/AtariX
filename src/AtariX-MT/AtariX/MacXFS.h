@@ -190,17 +190,18 @@ typedef struct _mx_fd {
 		bool      created;      // only xfs_creat() was issued (no dev_open yet)
 
 		memptr locks;
-		char *name;
+		char *m_atariname;
+		char *m_hostname;
 		struct XfsFsFile *childs;
 		struct XfsFsFile *next;
 	
 		CMacXFS &m_xfs;
 		uint32_t mapped_value;
 		
-		XfsFsFile(CMacXFS &xfs, const char *name);
+		XfsFsFile(CMacXFS &xfs, const char *atariname, const char *hostname);
 		virtual ~XfsFsFile();
-		XfsFsFile *insert(CMacXFS &xfs, const char *name);
-		void remove(const char *name);
+		XfsFsFile *insert(CMacXFS &xfs, const char *atariname, const char *hostname);
+		void remove(const char *atariname);
 	};
 
 	struct mount_info;
