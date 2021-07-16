@@ -824,8 +824,8 @@ bool CMacXFS::conv_path_elem(const char *path, char *name)
 
 	/* max. 8 Zeichen fuer Dateinamen kopieren */
 
-	for	(i = 0; (i < 8) && (*path) &&
-		 (!IS_DIR_SEP(*path)) && (*path != '*') && (*path != '.') && (*path != ' '); i++)
+	for	(i = 0; i < 8 && *path &&
+		 !IS_DIR_SEP(*path) && *path != '*' && *path != '.' && *path != ' '; i++)
 	{
 		*name++ = ToUpper(*path++);
 	}
@@ -834,14 +834,14 @@ bool CMacXFS::conv_path_elem(const char *path, char *name)
 
 	if (i == 8)
 	{
-		while ((*path) && (*path != ' ') && (!IS_DIR_SEP(*path)) && (*path != '.'))
+		while (*path && *path != ' ' && !IS_DIR_SEP(*path) && *path != '.')
 		{
 			path++;
 			truncated = true;
 		}
 	}
 
-	c = (*path == '*') ? '?' : ' ';
+	c = *path == '*' ? '?' : ' ';
 	if (*path == '*')
 		path++;
 	if (*path == '.')
@@ -867,7 +867,7 @@ bool CMacXFS::conv_path_elem(const char *path, char *name)
 
 	/* Zeichen fuer das Auffuellen ermitteln */
 
-	c = (*path == '*') ? '?' : ' ';
+	c = *path == '*' ? '?' : ' ';
 
 	/* Rest bis 3 Zeichen auffuellen */
 
@@ -1440,8 +1440,8 @@ int32_t CMacXFS::_snext(MAC_DTA *dta)
 		if (!macdta->fc.index->parent)
 		{
 			if (dirEntry->d_name[0] == '.' &&
-				(!dirEntry->d_name[1] ||
-				  (dirEntry->d_name[1] == '.' && !dirEntry->d_name[2])))
+				(dirEntry->d_name[1] == '\0' ||
+				  (dirEntry->d_name[1] == '.' && dirEntry->d_name[2] == '\0')))
 				continue;
 		}
 
@@ -1454,8 +1454,11 @@ int32_t CMacXFS::_snext(MAC_DTA *dta)
 
 		if (conv_path_elem(atariname, dosname))		// Konvertier. fuer Vergleich
 		{
-			DebugInfo("CMacXFS::%s() -- skip long filename \"%s\"", __FUNCTION__, dirEntry->d_name);
-			continue;			/* Dateiname zu lang */
+			if (strcmp(dirEntry->d_name), "..") != 0)
+			{
+				DebugInfo("CMacXFS::%s() -- skip long filename \"%s\"", __FUNCTION__, dirEntry->d_name);
+				continue;			/* Dateiname zu lang */
+			}
 		}
 
 		
@@ -2275,53 +2278,75 @@ int32_t CMacXFS::xfs_dreaddir(MAC_DIRHANDLE *dirh, uint16_t drv,
 	if (dirh->hostDir == NULL)
 		return TOS_EIHNDL;
 
-again:
-	/*
-	 * Skip "." & ".." when at root dir;
-	 * they are typically not present in Atari filesystems
-	 */
-	do {
+	for (;;)
+	{
 		if ((dirEntry = readdir(dirh->hostDir)) == NULL)
 			return TOS_ENMFIL;
-	} while (!dirh->fc.index->parent &&
-			  (dirEntry->d_name[0] == '.' &&
-				(!dirEntry->d_name[1] ||
-				  (dirEntry->d_name[1] == '.' && !dirEntry->d_name[2]))));
-
-	// OS X verwendet die Dateien .DS_Store, um irgendwelche Attribute
-	// zu verwalten. Die Dateien sollten ausgeblendet werden.
-	if (strcmp(dirEntry->d_name, ".DS_Store") == 0)
-		goto again;
-
-	if (dirh->tosflag)
-	{
-		if (size < 13)
-			return TOS_ERANGE;
-		CTextConversion::Host2AtariUtf8Copy(atariname, dirEntry->d_name, sizeof(atariname));
-		if (nameto_8_3(atariname, buf, 1, true))
-			goto again;		// musste Dateinamen kuerzen
-	} else
-	{
-		CTextConversion::Host2AtariUtf8Copy(atariname, dirEntry->d_name, sizeof(atariname));
-		/*
-		 * must truncate directory names, or path lookup will fail
-		 */
-		if (dirEntry->d_type == DT_DIR && (dirh->fc.drv->drv_flags & M_DRV_DOSNAMES))
+		if (dirEntry->d_name[0] == '.' &&
+			(dirEntry->d_name[1] == '\0' ||
+			  (dirEntry->d_name[1] == '.' && dirEntry->d_name[2] == '\0')))
 		{
-			if (size < 13 + 4)
+			/*
+			 * Skip "." & ".." when at root dir;
+			 * they are typically not present in Atari filesystems
+			 */
+			if (!dirh->fc.index->parent)
+				continue;
+			/*
+			 * Otherwise, return them as is, and don't go through 8+3 conversion
+			 */
+			if (dirh->tosflag)
+			{
+				if (size < 3)
+					return TOS_ERANGE;
+				strcpy(buf, dirEntry->d_name);
+			} else
+			{
+				if (size < 3 + 4)
+					return TOS_ERANGE;
+				strcpy(buf + 4, dirEntry->d_name);
+				(*(uint32_t *)buf) = cpu_to_be32(dirEntry->d_ino);
+			}
+			break;
+		}
+
+		// OS X verwendet die Dateien .DS_Store, um irgendwelche Attribute
+		// zu verwalten. Die Dateien sollten ausgeblendet werden.
+		if (strcmp(dirEntry->d_name, ".DS_Store") == 0)
+			continue;
+	
+		if (dirh->tosflag)
+		{
+			if (size < 13)
 				return TOS_ERANGE;
-			nameto_8_3(atariname, buf + 4, 0, true);
+			CTextConversion::Host2AtariUtf8Copy(atariname, dirEntry->d_name, sizeof(atariname));
+			if (nameto_8_3(atariname, buf, 1, true))
+				continue;		// musste Dateinamen kuerzen
 		} else
 		{
-			len = strlen(atariname);
-			if (size < len + 5)
-				return TOS_ERANGE;
-			strcpy(buf + 4, atariname);
+			CTextConversion::Host2AtariUtf8Copy(atariname, dirEntry->d_name, sizeof(atariname));
+			/*
+			 * must truncate directory names, or path lookup will fail
+			 */
+			if (dirEntry->d_type == DT_DIR && (dirh->fc.drv->drv_flags & M_DRV_DOSNAMES))
+			{
+				if (size < 13 + 4)
+					return TOS_ERANGE;
+				nameto_8_3(atariname, buf + 4, 0, true);
+			} else
+			{
+				len = strlen(atariname);
+				if (size < len + 5)
+					return TOS_ERANGE;
+				strcpy(buf + 4, atariname);
+			}
+			(*(uint32_t *)buf) = cpu_to_be32(dirEntry->d_ino);
 		}
-		(*(uint32_t *)buf) = cpu_to_be32(dirEntry->d_ino);
+
+		break;
 	}
 
-	DebugInfo("CMacXFS::%s() -- return: %s \"%s\"", __FUNCTION__, dirEntry->d_type == DT_DIR ? "DIR" : "FIL", dirEntry->d_name);
+	DebugInfo("CMacXFS::%s() -- return: %s \"%s\" \"%s\"", __FUNCTION__, dirEntry->d_type == DT_DIR ? "DIR" : "FIL", dirEntry->d_name, dirh->tosflag ? buf : buf + 4);
 
 	if (xattr)
 	{
