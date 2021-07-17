@@ -46,11 +46,8 @@
 	IBOutlet NSButton *outletStretchX;
 	IBOutlet NSButton *outletStretchY;
 
-#if 0
-	NSMutableArray *_tableContents;
-#else
 	NSMutableDictionary *m_AtariDrivesUrlDict;		// key: integer, value: NSString of Drive-URL
-#endif
+	NSMutableDictionary *m_AtariDrivesFlagsDict;	// key: integer, value: integer
 }
 
 - (void)windowDidLoad;

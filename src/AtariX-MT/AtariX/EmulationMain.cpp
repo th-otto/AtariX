@@ -104,9 +104,19 @@ void EmulationExit(void)
 	}
 }
 
-void EmulationChangeAtariDrive(unsigned drvnr, CFURLRef drvUrl)
+void EmulationChangeAtariDrive(unsigned drvnr, CFURLRef drvUrl, unsigned long flags)
 {
-	theEmulation.ChangeAtariDrive(drvnr, drvUrl);
+	theEmulation.ChangeAtariDrive(drvnr, drvUrl, flags);
+}
+
+CFURLRef EmulationGetAtariDrive(unsigned drvnr)
+{
+	return theEmulation.GetAtariDrive(drvnr);
+}
+
+CFURLRef EmulationGetRootfsUrl(void)
+{
+	return theEmulation.GetRootfsUrl();
 }
 
 void EmulationConfig

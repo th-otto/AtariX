@@ -1409,8 +1409,7 @@ int CMagiC::Init(CMagiCScreen *pMagiCScreen, CXCmd *pXCmd)
 #else
 	DebugInfo("68k-PC wird nicht auf Gültigkeit überprüft (Emulator läuft etwas schneller)");
 #endif
-	DebugInfo("Mac-Menü %s", (CGlobals::s_bShowMacMenu) ? "ein" : "aus");
-	DebugInfo("Autostart %s", (CGlobals::s_Preferences.m_bAutoStartMagiC) ? "ein" : "aus");
+	DebugInfo("Mac-Menü %s", CGlobals::s_bShowMacMenu ? "ein" : "aus");
 
 	p_bVideoBufChanged = &bVideoBufChanged;
 
@@ -1790,7 +1789,7 @@ void CMagiC::ChangeXFSDrive(short drvNr)
 	if	(drvNr == 'U' - 'A')
 		return;					// C:, M:, U:  sind nicht änderbar
 
-	if	((drvNr == 'C' - 'A') || (drvNr == 'M' - 'A'))
+	if	(drvNr == 'C' - 'A')
 	{
 		m_MacXFS.ChangeXFSDriveFlags(
 					drvNr,				// Laufwerknummer
@@ -1799,13 +1798,13 @@ void CMagiC::ChangeXFSDrive(short drvNr)
 	}
 	else
 	{
-		NewType = (Globals.s_Preferences.m_drvPath[drvNr] == NULL) ? CMacXFS::NoMacXFS : CMacXFS::MacDir;
+		NewType = Globals.s_Preferences.m_drvPath[drvNr] == NULL ? CMacXFS::NoMacXFS : CMacXFS::MacDir;
 
 		m_MacXFS.SetXFSDrive(
 					drvNr,				// Laufwerknummer
 					NewType,			// Laufwerktyp: Mac-Verzeichnis oder nichts
 					Globals.s_Preferences.m_drvPath[drvNr],
-					Globals.s_Preferences.m_drvFlags[drvNr],	// flags
+					Globals.s_Preferences.m_drvFlags[drvNr],
 					m_RAM68k);
 		}
 }

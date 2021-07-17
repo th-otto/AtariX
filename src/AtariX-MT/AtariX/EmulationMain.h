@@ -31,8 +31,7 @@
 
 
 #if defined (__cplusplus)
-extern "C"
-{
+extern "C" {
 #endif
 
 int EmulationInit(void);
@@ -58,7 +57,9 @@ void EmulationConfig
 	const char *atariPrintCommand,
 	const char *atariSerialDevice
 );
-void EmulationChangeAtariDrive(unsigned drvnr, CFURLRef drvUrl);
+void EmulationChangeAtariDrive(unsigned drvnr, CFURLRef drvUrl, unsigned long flags);
+CFURLRef EmulationGetAtariDrive(unsigned drvnr);
+CFURLRef EmulationGetRootfsUrl(void);
 
 #if defined (__cplusplus)
 }

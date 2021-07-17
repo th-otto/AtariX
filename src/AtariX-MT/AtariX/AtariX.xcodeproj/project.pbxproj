@@ -25,8 +25,6 @@
 		AD0936E21440B537006D73E9 /* gui.m in Sources */ = {isa = PBXBuildFile; fileRef = AD0936E11440B537006D73E9 /* gui.m */; };
 		AD3A53FD15A8D76D000202C6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AD3A53FE15A8D76D000202C6 /* AppDelegate.m */; };
 		AD3B554715A7792200787C42 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AD3B554915A7792200787C42 /* Localizable.strings */; };
-		AD3E85A2143E50DF0054D0E8 /* MyPreferences.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A0143E50DF0054D0E8 /* MyPreferences.cpp */; };
-		AD3E85A5143E50F90054D0E8 /* Preferences.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD3E85A3143E50F90054D0E8 /* Preferences.cpp */; };
 		AD3E85AA143E591A0054D0E8 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD3E85A9143E591A0054D0E8 /* CoreServices.framework */; };
 		AD42AFBD1572794F00F7B76E /* rootfs-common in Resources */ = {isa = PBXBuildFile; fileRef = AD42AFBC1572794F00F7B76E /* rootfs-common */; };
 		AD5F11981572401100F8BE63 /* rootfs in Resources */ = {isa = PBXBuildFile; fileRef = AD5F11961572401100F8BE63 /* rootfs */; };
@@ -109,10 +107,7 @@
 		AD3B554D15A7793800787C42 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AD3B554E15A7794100787C42 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AD3E859D143E508B0054D0E8 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = ../../../../../../System/Library/Frameworks/Carbon.framework; sourceTree = "<group>"; };
-		AD3E85A0143E50DF0054D0E8 /* MyPreferences.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MyPreferences.cpp; sourceTree = "<group>"; };
 		AD3E85A1143E50DF0054D0E8 /* MyPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyPreferences.h; sourceTree = "<group>"; };
-		AD3E85A3143E50F90054D0E8 /* Preferences.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Preferences.cpp; sourceTree = "<group>"; };
-		AD3E85A4143E50F90054D0E8 /* Preferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Preferences.h; sourceTree = "<group>"; };
 		AD3E85A9143E591A0054D0E8 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = ../../../../../../System/Library/Frameworks/CoreServices.framework; sourceTree = "<group>"; };
 		AD3E85AB143E59700054D0E8 /* Atari.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Atari.h; sourceTree = "<group>"; };
 		AD3E85AC143E5CC80054D0E8 /* resource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = resource.h; sourceTree = "<group>"; };
@@ -304,8 +299,6 @@
 			isa = PBXGroup;
 			children = (
 				8CFB1DF526920AFD00C17567 /* About.m */,
-				AD3E85A4143E50F90054D0E8 /* Preferences.h */,
-				AD3E85A3143E50F90054D0E8 /* Preferences.cpp */,
 				AD3E85AC143E5CC80054D0E8 /* resource.h */,
 				AD6D7DFE143FA90C00575FB1 /* missing.cpp */,
 				AD6D7E00143FA92400575FB1 /* missing.h */,
@@ -336,7 +329,6 @@
 			isa = PBXGroup;
 			children = (
 				AD3E85AB143E59700054D0E8 /* Atari.h */,
-				AD3E85A0143E50DF0054D0E8 /* MyPreferences.cpp */,
 				AD3E85A1143E50DF0054D0E8 /* MyPreferences.h */,
 				AD96C53A143E4EEC008E0D68 /* XCmd.cpp */,
 				AD96C53B143E4EEC008E0D68 /* XCmd.h */,
@@ -479,8 +471,6 @@
 				AD96C547143E4EEC008E0D68 /* TextConversion.cpp in Sources */,
 				AD96C548143E4EEC008E0D68 /* XCmd.cpp in Sources */,
 				AD96C54D143E4F56008E0D68 /* Debug.cpp in Sources */,
-				AD3E85A2143E50DF0054D0E8 /* MyPreferences.cpp in Sources */,
-				AD3E85A5143E50F90054D0E8 /* Preferences.cpp in Sources */,
 				8CEB9A4C2162EE3A00EF9EEB /* maptab.c in Sources */,
 				AD6D7DFF143FA90C00575FB1 /* missing.cpp in Sources */,
 				AD0936E21440B537006D73E9 /* gui.m in Sources */,

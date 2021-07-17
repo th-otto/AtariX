@@ -138,13 +138,6 @@ static char *stru2dpath(char *dest)
 	return result;
 }
 
-#define DriveFromLetter(d) \
-	(((d) >= 'A' && (d) <= 'Z') ? (d - 'A') : \
-	 ((d) >= 'a' && (d) <= 'z') ? (d - 'a') : \
-	 ((d) >= '1' && (d) <= '6') ? (d - '1' + 26) : \
-	 -1)
-#define DriveToLetter(d) ((d) < 26 ? 'A' + (d) : (d) - 26 + '1')
-
 static void datetime2tm(uint32_t dtm, struct tm* ttm)
 {
 	ttm->tm_mday = dtm & 0x1f;
@@ -286,8 +279,6 @@ void CMacXFS::XfsFsFile::remove(const char *atariname)
 CMacXFS::CMacXFS()
 {
 	int i;
-	struct mount_info *drv;
-	unsigned int dev;
 	
 	for (i = 0; i < NDRVS; i++)
 	{
@@ -298,26 +289,6 @@ CMacXFS::CMacXFS()
 		drives[i].drv_type = NoMacXFS;
 		drives[i].host_root = NULL;
 	}
-
-	// Mac-Wurzelverzeichnis machen
-	dev = DriveFromLetter('M');
-	xfs_drvbits = ((uint32_t)1) << dev;
-	drv = &drives[dev];
-	drv->drv_type = MacRoot;
-	drv->drv_valid = true;
-	drv->drv_flags = M_DRV_REVERSE_DIR_ORDER | M_DRV_READONLY; /* XXX */
-	// drive_m->halfSensitive = true;
-	drv->host_root = new XfsFsFile(*this, "/", "/");
-	strcpy(drv->mount_point, "A:\\");
-	drv->mount_point[0] = DriveToLetter(dev);
-
-	DebugInfo("CMacXFS::%s() -- Drive %c: '%s', root DD=%08lx, dir order=%s, names=%s",
-		__FUNCTION__,
-		DriveToLetter(dev),
-		drv->host_root ? drv->host_root->m_hostname : "",
-		(unsigned long)(drv->host_root ? MAPVOIDPTO32(drv->host_root) : 0),
-		drv->drv_flags & M_DRV_REVERSE_DIR_ORDER ? "reverse" : "normal",
-		drv->drv_flags & M_DRV_DOSNAMES ? "8+3" : "long");
 }
 
 
@@ -2549,6 +2520,7 @@ int32_t CMacXFS::xfs_dfree(XfsCookie *fc, uint32_t data[4])
 		return res;
 
 #if 0
+	fprintf(stderr, "Dfree %c\n", DriveToLetter(fc->dev));
 	fprintf(stderr, "bfree:   %llx\n", buff.f_bavail);
 	fprintf(stderr, "blocks:  %llx\n", buff.f_blocks);
 	fprintf(stderr, "blksize: %x\n", buff.f_bsize);
@@ -4371,6 +4343,8 @@ void CMacXFS::SetXFSDrive
 				if (len > 0 && dirname[len - 1] != *DIRSEPARATOR)
 					strcat(dirname, DIRSEPARATOR);
 				drv->host_root = new XfsFsFile(*this, dirname, dirname);
+				if (strcmp(dirname, "/") == 0)
+					drvType = MacRoot;
 				// Laufwerk ist MacXFS-Laufwerk
 				newbits |= 1L << dev;
 			} else

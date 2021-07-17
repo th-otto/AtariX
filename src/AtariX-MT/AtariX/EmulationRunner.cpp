@@ -201,17 +201,34 @@ void EmulationRunner::Config
  *
  *********************************************************************************************************/
 
-void EmulationRunner::ChangeAtariDrive(unsigned drvnr, CFURLRef drvUrl)
+void EmulationRunner::ChangeAtariDrive(unsigned drvnr, CFURLRef drvUrl, unsigned long flags)
 {
 	DebugTrace("%s()", __func__);
 	if (drvnr < NDRIVES)
 	{
 		Globals.s_Preferences.m_drvPath[drvnr] = drvUrl;
+		Globals.s_Preferences.m_drvFlags[drvnr] = flags;
 		if (m_EmulatorRunning)
 		{
 			m_Emulator.ChangeXFSDrive(drvnr);
 		}
 	}
+}
+
+CFURLRef EmulationRunner::GetAtariDrive(unsigned drvnr)
+{
+	DebugTrace("%s()", __func__);
+	if (drvnr < NDRIVES)
+		return Globals.s_Preferences.m_drvPath[drvnr];
+	return NULL;
+}
+
+CFURLRef EmulationRunner::GetRootfsUrl(void)
+{
+	DebugTrace("%s()", __func__);
+	if (m_EmulatorRunning)
+		return Globals.s_rootfsUrl;
+	return NULL;
 }
 
 

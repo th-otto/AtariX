@@ -1,6 +1,7 @@
 #import "AppDelegate.h"
 #include "EmulationMain.h"
 #include "Debug.h"
+#include "Globals.h"
 
 /* these were renamed in SDK 10.12 and above */
 #if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
@@ -10,6 +11,7 @@
 #endif
 
 
+static NSString *DMKPreferenceVersion = @"PreferenceVersion";
 static NSString *DMKRootfsPathUrlKey = @"rootfsPathUrl";
 static NSString *DMKAtariMemorySizeKey = @"atariMemorySize";
 static NSString *DMKAtariScreenWidthKey = @"atariScreenWidth";
@@ -21,6 +23,7 @@ static NSString *DMKAtariHideHostMouseKey = @"atariHideHostMouse";
 static NSString *DMKAtariScreenColourModeKey = @"atariScreenColourMode";
 static NSString *DMKAtariLanguageKey = @"atariLanguage";
 static NSString *DMKAtariDrivesTableKey = @"atariDrivesTable";
+static NSString *DMKAtariDrivesFlagsKey = @"atariDrivesFlags";
 static NSString *DMKAtariScreenStretchXKey = @"atariScreenStretchX";
 static NSString *DMKAtariScreenStretchYKey = @"atariScreenStretchY";
 
@@ -50,8 +53,8 @@ static NSString *DMKAtariScreenStretchYKey = @"atariScreenStretchY";
 		NSAlert *alert;
 		alert = [[NSAlert alloc] init];
 		[alert addButtonWithTitle:@"OK"];
-		[alert setMessageText:@"The Atari root file system is not initialised or is invalid.\nPlease first choose an existing one, or create one, then restart the application!"];
-		[alert setInformativeText:@" The necessary file MAGX.INF could not be found in the current Atari root file system path.\n If you want to create a root file system using the currently defined path, you might select \"Revert Root FS\" from the menu.\n Alternatively you can choose a different path to either an already initialised root file system or to your desired root FS directory.\n In the latter case you must afterwards create the root file sytem as described."];
+		[alert setMessageText:NSLocalizedString(@"The Atari root file system is not initialised or is invalid.\nPlease first choose an existing one, or create one, then restart the application!", nil)];
+		[alert setInformativeText:NSLocalizedString(@" The necessary file MAGX.INF could not be found in the current Atari root file system path.\n If you want to create a root file system using the currently defined path, you might select \"Revert Root FS\" from the menu.\n Alternatively you can choose a different path to either an already initialised root file system or to your desired root FS directory.\n In the latter case you must afterwards create the root file sytem as described.", nil)];
 		[alert setAlertStyle:NSAlertStyleWarning];
 		[alert runModal];
 		[alert release];
@@ -59,15 +62,9 @@ static NSString *DMKAtariScreenStretchYKey = @"atariScreenStretchY";
 
 	m_configEmulationDone = false;
 
-	// Test: Was passiert, wenn wir hier hängenbleiben
-	/*
-	for (;;)
-		;
-	*/
-	// Ergebnis: Das Programm hängt ad infinitum
-
     // Direct service requests to self.
     [NSApp setServicesProvider:self];
+    [NSApp activateIgnoringOtherApps:YES];
 
 /*
     [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:0 context:NULL subtype:0 data1:0 data2:0] atStart:NO];
@@ -106,6 +103,8 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	DebugTrace("%s()", __func__);
     NSMutableDictionary *initialValues = [NSMutableDictionary dictionary];
 
+	[initialValues setObject:[NSNumber numberWithInteger:0] forKey:DMKPreferenceVersion];
+
 	// default Atari rootfs ("C:" Drive)
 	//NSString *home = NSHomeDirectory(); und dann verketten geht auch, aber das folgende ist eleganter:
 	NSString *defaultRootfs = [[NSString stringWithUTF8String:"~/MAGIC_C/"] stringByExpandingTildeInPath];
@@ -132,7 +131,7 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	[initialValues setObject:[NSNumber numberWithBool:NO] forKey:DMKAtariAutostartKey];
 	[initialValues setObject:[NSNumber numberWithBool:NO] forKey:DMKAtariHideHostMouseKey];
 
-	[initialValues setObject:[NSNumber numberWithInteger:3] forKey:DMKAtariScreenColourModeKey];
+	[initialValues setObject:[NSNumber numberWithInteger:atariScreenMode16] forKey:DMKAtariScreenColourModeKey];
 	[initialValues setObject:[NSNumber numberWithInteger:1] forKey:DMKAtariLanguageKey];
 
 	[initialValues setObject:[NSNumber numberWithBool:NO] forKey:DMKAtariScreenStretchXKey];
@@ -140,6 +139,25 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 
 	NSUserDefaultsController *sharedController = [NSUserDefaultsController sharedUserDefaultsController];
     [sharedController setInitialValues:initialValues];
+
+	NSUserDefaults *myDefaults = [sharedController defaults];
+	if ([myDefaults integerForKey:DMKPreferenceVersion] <= 0)
+	{
+		/*
+		 * First version did not have drive "M" in the list of drive URLs.
+		 * Add that, and also create the dictionary for the flags
+		 */
+		NSMutableDictionary *atariDrivesUrlDict = [NSMutableDictionary dictionaryWithDictionary:[myDefaults dictionaryForKey:DMKAtariDrivesTableKey]];
+		NSMutableDictionary *atariDrivesFlagsDict = [NSMutableDictionary dictionaryWithDictionary:[myDefaults dictionaryForKey:DMKAtariDrivesFlagsKey]];
+		NSString *url = [[NSURL fileURLWithPath:@"/" isDirectory:YES] absoluteString];
+		[atariDrivesUrlDict setObject:url forKey:@"M:"];
+		NSNumber *theFlags = [NSNumber numberWithUnsignedLong:M_DRV_REVERSE_DIR_ORDER];
+ 		[atariDrivesFlagsDict setObject:theFlags forKey:@"M:"];
+		[myDefaults setObject:atariDrivesUrlDict forKey:DMKAtariDrivesTableKey];
+		[myDefaults setObject:atariDrivesFlagsDict forKey:DMKAtariDrivesFlagsKey];
+		[myDefaults setObject:[NSNumber numberWithInteger:1] forKey:DMKPreferenceVersion];
+		[sharedController save:self];
+	}
 }
 
 
@@ -162,22 +180,28 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	NSUserDefaultsController *sharedController = [NSUserDefaultsController sharedUserDefaultsController];
 
 	// get Atari drive map and tell emulator
-	NSUserDefaults *myDefaults = [sharedController defaults /* values ?*/];
+	NSUserDefaults *myDefaults = [sharedController defaults];
 	NSDictionary *atariDrivesUrlDict = [NSDictionary dictionaryWithDictionary:[myDefaults dictionaryForKey:DMKAtariDrivesTableKey]];
+	NSDictionary *atariDrivesFlagsDict = [NSDictionary dictionaryWithDictionary:[myDefaults dictionaryForKey:DMKAtariDrivesFlagsKey]];
 	// go through dictionary
 	[atariDrivesUrlDict enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop)
 	 {
 		 NSString *drvname = key;
 		 unichar c = [drvname characterAtIndex:0];
-		 unsigned drvnr = c - 'A';
-		 NSString *path = obj;
-		 DebugInfo("Enumerating Key %s and Value %s", [key UTF8String], [obj UTF8String]);
-		 NSURL *drvUrl = [NSURL URLWithString:path];
-		 // __bridge wird benötigt, wenn Automatic Reference Counting eingeschaltet ist
-		 CFURLRef myCFURL = (__bridge CFURLRef) drvUrl;
-		 EmulationChangeAtariDrive(drvnr, myCFURL);
-		 // wir müssen hier den Referenzzähler erhöhen, weil wir die NSURL als CFURL weitergegeben haben und sie dort gespeichert wird.
-		 [drvUrl retain];
+		 int drvnr = DriveFromLetter(c);
+		 if (drvnr >= 0)
+		 {
+			 NSString *path = obj;
+			 NSNumber *flags;
+			 DebugInfo("Enumerating Key %s and Value %s", [key UTF8String], [obj UTF8String]);
+			 NSURL *drvUrl = [NSURL URLWithString:path];
+			 // __bridge wird benötigt, wenn Automatic Reference Counting eingeschaltet ist
+			 CFURLRef myCFURL = (__bridge CFURLRef) drvUrl;
+			 flags = [atariDrivesFlagsDict valueForKey:key];
+			 EmulationChangeAtariDrive(drvnr, myCFURL, flags.unsignedLongValue);
+			 // wir müssen hier den Referenzzähler erhöhen, weil wir die NSURL als CFURL weitergegeben haben und sie dort gespeichert wird.
+			 [drvUrl retain];
+		 }
 	 }];
 	
 	// get Atari memory size and tell emulator
@@ -278,27 +302,6 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 	[NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
 }
 
-#if 0
-- (void)longCode
-{
-	DebugTrace("%s()", __func__);
-	EmulationRunSdl();
-/*
-    NSAutoreleasePool *pool;
-    pool = [[NSAutoreleasePool alloc] init];
-    BOOL keepGoing = YES;
-	
-    while ( keepGoing) {
-        // Do something here that will eventually stop by
-        // setting keepGoing to NO
-    }
-	
-    [pool release];
-*/
-	DebugTrace("%s() =>", __func__);
-}
-#endif
-
 
 /*****************************************************************************************************
  *
@@ -323,11 +326,6 @@ Of course, this assumes your delegate responds to shouldHandleEvents and handleE
 		[self configEmulation];		// is ignored, if already configured
 		EmulationOpenWindow();
 		EmulationRun();
-#if 0
-		// geht nicht, da SDL im "main thread" laufen muß
-		[NSThread detachNewThreadSelector:@selector(longCode)
-								 toTarget:self withObject:nil];
-#endif
 	}
 	DebugTrace("%s() =>", __func__);
 }

@@ -17,21 +17,16 @@
  */
 
 /*
-*
-* "Preferences" für MagicMacX
-*
-*/
+ *
+ * "Preferences" für MagicMacX
+ *
+ */
 
 #ifndef _INCLUDED_MYPREFERENCES_H
 #define _INCLUDED_MYPREFERENCES_H
 
-#include "Preferences.h"
-
 #define	MyCreator 'MgMc'
 #define	MyPrefsType 'Pref'
-#define	ATARIMEMSIZEDEFAULT	(8*1024*1024)
-#define	NDRIVES ('Z'-'A' + 1)
-#define	ATARIDRIVEISMAPPABLE(d)	((d != 'C'-'A') && (d != 'M'-'A') && (d != 'U'-'A'))
 
 // Atari screen colour mode
 typedef enum
@@ -45,55 +40,25 @@ typedef enum
 	atariScreenMode2 = 6		// monochrome
 } enAtariScreenColourMode;
 
+#define	NDRIVES ('Z' - 'A' + 1)
 
-class CMyPreferences : public CPreferences
-{
-   public:
-	// Konstruktor
-	CMyPreferences();
-	// Destruktor
-	~CMyPreferences();
-	// Initialisierung
-	int Init( void );
-	// Alle Einstellungen holen
-	int GetPreferences( void );
-	void Update_Monitor( void );
-	void Update_AtariMem( void );
-	void Update_GeneralSettings( void );
-	void Update_Drives( void );
-	void Update_PrintingCommand( void );
-	void Update_AuxPath( void );
-	void Update_AtariScreen( void );
-
-	// Variablen
-	unsigned long m_AtariMemSize;
-	bool m_bShowMacMenu;
-	enAtariScreenColourMode m_atariScreenColourMode;
-	bool m_bShowMacMouse;
-	bool m_bAutoStartMagiC;
-	CFURLRef m_drvPath[NDRIVES];
-	unsigned long m_drvFlags[NDRIVES];	// 1 == RevDir / 2 == 8+3
 #define M_DRV_REVERSE_DIR_ORDER  0x01
 #define M_DRV_DOSNAMES           0x02
 #define M_DRV_READONLY           0x04
-	unsigned short m_KeyCodeForRightMouseButton;
+
+#ifdef __cplusplus
+class CMyPreferences
+{
+public:
+	// Variablen
+	unsigned long m_AtariMemSize;
+	enAtariScreenColourMode m_atariScreenColourMode;
+	CFURLRef m_drvPath[NDRIVES];
+	unsigned long m_drvFlags[NDRIVES];	// 1 == RevDir / 2 == 8+3
 	char m_szPrintingCommand[256];
 	char m_szAuxPath[256];
-	short m_Monitor;		// 0 == Hauptbildschirm
-	bool m_bAtariScreenManualSize;
-	unsigned short m_AtariScreenX;
-	unsigned short m_AtariScreenY;
-	unsigned short m_AtariScreenWidth;
-	unsigned short m_AtariScreenHeight;
-	unsigned short m_ScreenRefreshFrequency;
 	bool m_bPPC_VDI_Patch;
-
-	/*
-	char **m_DocTypes;			// no longer used
-	UInt16 m_DocTypesNum;
-	*/
-   private:
-	// Funktionen
-	// Attribute
 };
 #endif
+
+#endif /* _INCLUDED_MYPREFERENCES_H */

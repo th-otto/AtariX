@@ -26,16 +26,18 @@
 
 #import "PreferencesWindowController.h"
 #include "Debug.h"
+#include "EmulationMain.h"
+#include "Globals.h"
 
 static NSString *DMKAtariDrivesTableKey = @"atariDrivesTable";
+static NSString *DMKAtariDrivesFlagsKey = @"atariDrivesFlags";
 
 
 // 1st column: identifier is "DriveCell"
 // 2nd column: identifier is "PathCell"
 
 // Sample data we will display
-#define ATARI_NUM_DRIVES ('Z' - 'A' + 1)
-static const NSString *ATTableData[ATARI_NUM_DRIVES + 1] =
+static const NSString *ATTableData[NDRIVES + 1] =
 {
     @"A:",
     @"B:",
@@ -67,12 +69,10 @@ static const NSString *ATTableData[ATARI_NUM_DRIVES + 1] =
 };
 
 // some demo drive numbers
-#define ATARI_DRIVE_A ('A' - 'A')
-#define ATARI_DRIVE_C ('C' - 'A')
-#define ATARI_DRIVE_D ('D' - 'A')
-#define ATARI_DRIVE_M ('M' - 'A')
-#define ATARI_DRIVE_U ('U' - 'A')
-#define ATARI_DRIVE_Z ('Z' - 'A')
+#define ATARI_DRIVE_A DriveFromLetter('A')
+#define ATARI_DRIVE_C DriveFromLetter('C')
+#define ATARI_DRIVE_M DriveFromLetter('M')
+#define ATARI_DRIVE_U DriveFromLetter('U')
 
 // convert drive number (0..25) to NSString
 #define ATARI_DRIVE_STR(n) (ATTableData[n])
@@ -88,11 +88,8 @@ static const NSString *ATTableData[ATARI_NUM_DRIVES + 1] =
 
 - (void)dealloc
 {
-#if 1
 	[m_AtariDrivesUrlDict release];
-#else
-    [_tableContents release];
-#endif
+	[m_AtariDrivesFlagsDict release];
 	[super dealloc];
 }
 
@@ -112,61 +109,23 @@ static const NSString *ATTableData[ATARI_NUM_DRIVES + 1] =
 
 	//	[self showWindow:nil];
 
-	//[outletAtariMemory setStringValue:@"Bliblablub"];
-
-#if 1
 	// create dictionary of key/value pairs
-	m_AtariDrivesUrlDict = [[NSMutableDictionary alloc] initWithCapacity:ATARI_NUM_DRIVES];
-#if 1
+	m_AtariDrivesUrlDict = [[NSMutableDictionary alloc] initWithCapacity:NDRIVES];
+	m_AtariDrivesFlagsDict = [[NSMutableDictionary alloc] initWithCapacity:NDRIVES];
 	// note that sharedUserDefaultsController returns (id), so compiler does not know which type, therefore we have "shared".
 	NSUserDefaultsController *sharedController = [NSUserDefaultsController sharedUserDefaultsController];
 	// make sure changes to the defaults are not applied immediately so that we can revert them on "cancel"
 	[sharedController setAppliesImmediately:FALSE];
 	// read Atari drive dictionary from preferences
-	NSUserDefaults *myDefaults = [sharedController defaults /* values ?*/];
+	NSUserDefaults *myDefaults = [sharedController defaults];
 	[m_AtariDrivesUrlDict setDictionary:[myDefaults dictionaryForKey:DMKAtariDrivesTableKey]];
-#else
-	// Add some demo stuff
-	[m_AtariDrivesUrlDict setObject:@"URL://Floppy-A-Demo-Url" forKey:ATARI_DRIVE_STR(ATARI_DRIVE_A)];
-	[m_AtariDrivesUrlDict setObject:@"URL://Drive-D-Demo-Url" forKey:ATARI_DRIVE_STR(ATARI_DRIVE_D)];
-//	[m_AtariDrivesUrlDict setValue:@"URL://Drive-D-Demo-Url" forKey:ATARI_DRIVE_STR(ATARI_DRIVE_D)];	// does not accept const (!) NSstring
-#endif
-#else
-    // Load up our sample data
-    _tableContents = [NSMutableArray new];
-    // Walk each string in the array until we hit the end (nil)
-    NSString **data = &ATTableData[0];
-    while (*data != nil)
-	{
-        NSString *name = *data;
-        NSImage *image = [NSImage imageNamed:name];
-        // our model will consist of a dictionary with Name/Image key pairs
-        NSDictionary *dictionary = [[[NSDictionary alloc] initWithObjectsAndKeys:name, @"Name", image, @"Image", nil] autorelease];
-        [_tableContents addObject:dictionary];
-        data++;
-    }
-    [outletAtariDrivesTableView reloadData];
-#endif
+	[m_AtariDrivesFlagsDict setDictionary:[myDefaults dictionaryForKey:DMKAtariDrivesFlagsKey]];
 
 	// disable buttons
 	[outletAtariDrivePathSelect setEnabled:NO];
 	[outletAtariDriveRemove setEnabled:NO];
 	[outletAtariDrive8p3 setEnabled:NO];
-
-/*
-	extern int myKeyboardHack;
-	extern int myKeyBoardHackFunction(void);
-
-	myKeyBoardHackFunction();
-	myKeyboardHack = 1;
-*/
-/*
-	extern int myKeyboardHack2;
-	extern int myKeyBoardHackFunction2(void);
-	
-	myKeyBoardHackFunction2();
-	myKeyboardHack2 = 1;
-*/
+	[outletAtariDrive8p3 setState:NO];
 }
 
 
@@ -188,7 +147,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 		id theValue;
 
 #if 1
-		NSParameterAssert(rowIndex >= 0 && rowIndex < ATARI_NUM_DRIVES);
+		NSParameterAssert(rowIndex >= 0 && rowIndex < NDRIVES);
 #else
 		NSParameterAssert(rowIndex >= 0 && rowIndex < [_tableContents count]);
 #endif
@@ -201,32 +160,33 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 		{
 			if (rowIndex == ATARI_DRIVE_C)
 			{
-				theValue = @"---------- root drive (reserved) ----------";
-			}
-			else
-			if (rowIndex == ATARI_DRIVE_M)
-			{
-				theValue = @"---------- host file sytem (reserved) ----------";
+				theValue = (NSURL *)EmulationGetRootfsUrl();
+				if (theValue == nil)
+				{
+					NSUserDefaultsController *sharedController = [NSUserDefaultsController sharedUserDefaultsController];
+					NSUserDefaults *myDefaults = [sharedController defaults];
+					theValue = [myDefaults stringForKey:@"rootfsPathUrl"];
+				}
+				if (theValue == nil)
+				{
+					theValue = @"";
+				}
+				theValue = [theValue stringByAppendingString:@" (root drive)"];
 			}
 			else
 			if (rowIndex == ATARI_DRIVE_U)
 			{
-				theValue = @"---------- Atari file sytem (reserved) ----------";
+				theValue = @"---------- Atari file system (reserved) ----------";
 			}
 			else
 			{
-#if 1
 				theValue = [m_AtariDrivesUrlDict objectForKey:ATARI_DRIVE_STR(rowIndex)];
 				if (theValue == nil)
 				{
 					theValue = @"(unused)";
 				}
-#else
-				id theRecord;
-				theRecord = [_tableContents objectAtIndex:rowIndex];
-				theValue = [theRecord objectForKey:[aTableColumn identifier]];
-				theValue = @"bla";
-#endif
+				if (rowIndex == ATARI_DRIVE_M)
+					theValue = [theValue stringByAppendingString:@" (host file system)"];
 			}
 		}
 
@@ -249,7 +209,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView
 {
 #if 1
-	return ATARI_NUM_DRIVES;
+	return NDRIVES;
 #else
 	NSInteger retVal = [_tableContents count];
     return retVal;
@@ -337,8 +297,8 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 	// write Atari drive dictionary to preferences
 	NSUserDefaults *myDefaults = [sharedController defaults];
 	[myDefaults setObject:m_AtariDrivesUrlDict forKey:DMKAtariDrivesTableKey];
+	[myDefaults setObject:m_AtariDrivesFlagsDict forKey:DMKAtariDrivesFlagsKey];
 
-//	[myDefaults setValuesForKeysWithDictionary:m_AtariDrivesUrlDict];
 	// save all changed preferences
 	[sharedController save:self];
 	// close window
@@ -371,12 +331,12 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 - (IBAction)actionAtariDrivePathSelect:(id)sender
 {
 	DebugTrace("%s()", __FUNCTION__);
-	NSInteger driveNo = outletAtariDrivesTableView.selectedRow;
+	int driveNo = (int)outletAtariDrivesTableView.selectedRow;
 	//	[outletAtariDrivesTableView selectedColumn];	// equivalent
-	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_M && driveNo != ATARI_DRIVE_U && driveNo <= ATARI_DRIVE_Z)
+	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_U && driveNo < NDRIVES)
 	{
 		NSOpenPanel *chooser = [NSOpenPanel openPanel];
-		NSString *myTitle = [NSString stringWithFormat:@"Choose Path for Virtual Atari Drive %c:", (int)driveNo + 'A'];
+		NSString *myTitle = [NSString stringWithFormat:@"Choose Path for Virtual Atari Drive %c:", DriveToLetter(driveNo)];
 		chooser.title = myTitle;
 		chooser.canChooseFiles = NO;
 		//	[DirectoryChooser setCanChooseFiles:NO];	// equivalent
@@ -387,7 +347,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 		DebugInfo("%s() : runModal() -> %d", __FUNCTION__, (int)ret);
 		if (ret == NSFileHandlingPanelOKButton)
 		{
-			DebugInfo("%s() File Chooser exited with OK, change drive %c:", __FUNCTION__, (int)driveNo + 'A');
+			DebugInfo("%s() File Chooser exited with OK, change drive %c:", __FUNCTION__, DriveToLetter(driveNo));
 			NSArray *urls = chooser.URLs;
 			// das geht nicht, und NSString bleibt eine URL?!?
 			NSURL *pathUrl = urls.lastObject;
@@ -396,11 +356,12 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 			NSIndexSet *rowIndexSet = [NSIndexSet indexSetWithIndex:driveNo];
 			NSIndexSet *colIndexSet = [NSIndexSet indexSetWithIndex:1];
 			[outletAtariDrivesTableView reloadDataForRowIndexes:rowIndexSet columnIndexes:colIndexSet];
+			[self actionAtariDrivesTable:sender];
 		}
 	}
 	else
 	{
-		DebugInfo("%s() : invalid selected drive %d", __FUNCTION__, (int)driveNo);
+		DebugInfo("%s() : invalid selected drive %d", __FUNCTION__, driveNo);
 	}
 }
 
@@ -416,12 +377,14 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 	DebugTrace("%s()", __FUNCTION__);
 	NSInteger driveNo = outletAtariDrivesTableView.selectedRow;
 	//	[outletAtariDrivesTableView selectedColumn];	// equivalent
-	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_M && driveNo != ATARI_DRIVE_U && driveNo <= ATARI_DRIVE_Z)
+	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_U && driveNo < NDRIVES)
 	{
 		[m_AtariDrivesUrlDict removeObjectForKey:ATARI_DRIVE_STR(driveNo)];
+		[m_AtariDrivesFlagsDict removeObjectForKey:ATARI_DRIVE_STR(driveNo)];
 		NSIndexSet *rowIndexSet = [NSIndexSet indexSetWithIndex:driveNo];
 		NSIndexSet *colIndexSet = [NSIndexSet indexSetWithIndex:1];
 		[outletAtariDrivesTableView reloadDataForRowIndexes:rowIndexSet columnIndexes:colIndexSet];
+		[self actionAtariDrivesTable:sender];
 	}
 	else
 	{
@@ -439,12 +402,15 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 - (IBAction)actionAtariDrivesTable:(id)sender
 {
 	DebugTrace("%s()", __FUNCTION__);
-	NSInteger driveNo = outletAtariDrivesTableView.selectedRow;
-	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_M && driveNo != ATARI_DRIVE_U && driveNo <= ATARI_DRIVE_Z)
+	int driveNo = (int)outletAtariDrivesTableView.selectedRow;
+	unsigned long flagsVal = 0;
+	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_U && driveNo < NDRIVES)
 	{
-		DebugInfo("%s() : selected drive %d", __FUNCTION__, (int)driveNo);
+		DebugInfo("%s() : selected drive %d", __FUNCTION__, driveNo);
 		id theValue;
+		id theFlags;
 		theValue = [m_AtariDrivesUrlDict objectForKey:ATARI_DRIVE_STR(driveNo)];
+		theFlags = [m_AtariDrivesFlagsDict objectForKey:ATARI_DRIVE_STR(driveNo)];
 		if (theValue == nil)
 		{
 			// disable buttons
@@ -456,18 +422,21 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 			// enable buttons
 			[outletAtariDriveRemove setEnabled:YES];
 			[outletAtariDrive8p3 setEnabled:YES];
+			if (theFlags)
+				flagsVal = [theFlags unsignedLongValue];
 		}
 
 		[outletAtariDrivePathSelect setEnabled:YES];	// select or change path
 	}
 	else
 	{
-		DebugInfo("%s() : invalid selected drive %d", __FUNCTION__, (int)driveNo);
+		DebugInfo("%s() : invalid selected drive %d", __FUNCTION__, driveNo);
 		// disable buttons
 		[outletAtariDrivePathSelect setEnabled:NO];
 		[outletAtariDriveRemove setEnabled:NO];
 		[outletAtariDrive8p3 setEnabled:NO];
 	}
+	[outletAtariDrive8p3 setState:(flagsVal & M_DRV_DOSNAMES) != 0];
 }
 
 
@@ -479,6 +448,19 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 
 - (IBAction)actionAtariDrive8p3:(id)sender {
 	DebugTrace("%s()", __FUNCTION__);
+	int driveNo = (int)outletAtariDrivesTableView.selectedRow;
+	if (driveNo >= ATARI_DRIVE_A && driveNo != ATARI_DRIVE_C && driveNo != ATARI_DRIVE_U && driveNo < NDRIVES)
+	{
+		NSNumber *theFlags;
+		theFlags = [m_AtariDrivesFlagsDict objectForKey:ATARI_DRIVE_STR(driveNo)];
+		if (theFlags == nil)
+			theFlags = [NSNumber numberWithUnsignedLong:0];
+		if ([outletAtariDrive8p3 state] == NO)
+			theFlags = [NSNumber numberWithUnsignedLong:theFlags.unsignedLongValue & ~M_DRV_DOSNAMES];
+		else
+			theFlags = [NSNumber numberWithUnsignedLong:theFlags.unsignedLongValue | M_DRV_DOSNAMES];
+		[m_AtariDrivesFlagsDict setObject:theFlags forKey:ATARI_DRIVE_STR(driveNo)];
+	}
 }
 
 
