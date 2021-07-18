@@ -363,7 +363,7 @@ static char const lowers[] = { '\x84', '\x94', '\x81', '\x87', '\x82', '\x86', '
 static char const uppers[] = { '\x8e', '\x99', '\x9a', '\x80', '\x90', '\x8f', '\x92', '\xb5', '\xb6', '\xc1', '\xa5', '\xb7', '\xb2', '\xb8',0};
 unsigned char CMacXFS::ToUpper(unsigned char c)
 {
-	char *found;
+	const char *found;
 
 	if (c >= 'a' && c <= 'z')
 		return c & 0x5f;
@@ -374,7 +374,7 @@ unsigned char CMacXFS::ToUpper(unsigned char c)
 
 unsigned char CMacXFS::ToLower(unsigned char c)
 {
-	char *found;
+	const char *found;
 
 	if (c >= 'A' && c <= 'Z')
 		return c | 0x20;
