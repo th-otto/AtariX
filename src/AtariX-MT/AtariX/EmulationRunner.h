@@ -25,9 +25,6 @@
 
 // system headers
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
 // user headers
 #include "Debug.h"
 #include "Globals.h"

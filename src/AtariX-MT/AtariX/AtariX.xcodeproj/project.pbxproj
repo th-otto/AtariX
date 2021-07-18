@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		002F3C0109D093BD00EBEB88 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 002F3C0009D093BD00EBEB88 /* OpenGL.framework */; };
 		38357A5F0A23B86E001C6B13 /* EmulationMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38357A5E0A23B86E001C6B13 /* EmulationMain.cpp */; };
 		38694A270A23D420005C94A3 /* EmulationRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38694A250A23D420005C94A3 /* EmulationRunner.cpp */; };
 		8CD601B62162F83E00C6F5CB /* natfeat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CD601B52162F83E00C6F5CB /* natfeat.cpp */; };
@@ -181,7 +180,6 @@
 			files = (
 				ADC8D9D41A3F81EC0014AE2F /* SDL2.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
-				002F3C0109D093BD00EBEB88 /* OpenGL.framework in Frameworks */,
 				AD3E85AA143E591A0054D0E8 /* CoreServices.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
