@@ -1,0 +1,11 @@
+//
+//  atarix.xcconfig
+//  AtariX
+//
+//  Created by Thorsten on 19/07/2021.
+//
+//
+
+ARCHS = i386 x86_64
+VALID_ARCHS = i386 x86_64 arm64 armv7 armv7s
+STRINGS_FILE_OUTPUT_ENCODING = UTF-8
