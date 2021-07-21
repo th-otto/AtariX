@@ -60,8 +60,6 @@ extern void SendWindowFocusAcquired( void );
 // global function used by CMagiCWindow to report keyboard focus relinguish
 extern void SendWindowFocusRelinguish( void );
 // global function used by CMagiCWindow to report mouse clicks
-extern void SendWindowMoveHandler( UInt32 evkind, Rect *pNewRect );
-// global function used by CMagiCWindow to report mouse clicks
 extern int SendMouseButtonHandler( unsigned int NumOfButton, bool bIsDown );
 // global function used by CMagiC to report 68k exceptions
 extern void Send68kExceptionData(	

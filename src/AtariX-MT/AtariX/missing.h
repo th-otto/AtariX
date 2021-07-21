@@ -45,7 +45,7 @@ public:
 	// Vordergrund-Bildspeicher
 	MXVDI_PIXMAP m_PixMap;					// der Atari-Bildschirm in Mac-Koordinaten
 	void *hostScreen;
-	UInt32 m_pColourTable[MAGIC_COLOR_TABLE_LEN];			// 256 Farben: Farbtabelle
+	uint32_t m_pColourTable[MAGIC_COLOR_TABLE_LEN];			// 256 Farben: Farbtabelle
 };
 
 extern "C" int GuiMyAlert(CFStringRef msg_text, CFStringRef info_txt, int nButtons);

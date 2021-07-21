@@ -35,8 +35,8 @@
 EmulationRunner::EmulationRunner(void)
 {
 	DebugTrace("%s()", __func__);
-    m_bQuitLoop = false;
-    //drawContext = NULL;
+	m_bQuitLoop = false;
+	//drawContext = NULL;
 	m_EmulatorThread = NULL;
 	m_200HzCnt = 0;
 	m_EmulatorRunning = false;
@@ -74,7 +74,7 @@ EmulationRunner::~EmulationRunner(void)
 void EmulationRunner::Init(void)
 {
 	DebugTrace("%s()", __func__);
-    int ret;
+	int ret;
 
 	m_counter = 0;
 
@@ -364,7 +364,7 @@ static void ConvertSurface
 (
 	const SDL_Surface *pSrc,
 	SDL_Surface *pDst,
-	const UInt32 palette[256],
+	const uint32_t palette[256],
 	bool bStretchX, bool bStretchY
 )
 {
@@ -381,7 +381,7 @@ static void ConvertSurface
 	uint32_t col0 = palette[0];
 	uint32_t col1 = palette[1];
 	// convert from RGB555 to RGB888 using a conversion table
-	const uint32_t rgbConvTable5to8[32] =
+	static uint32_t const rgbConvTable5to8[32] =
 	{
 		0,
 		( 1 * 255)/31,
@@ -809,7 +809,7 @@ void EmulationRunner::_OpenWindow(void)
 			break;
 	}
 
-	sprintf(m_window_title, "Atari Emulation (%ux%ux%u%s)", m_atariScreenW, m_atariScreenH, screenbitsperpixel, (planeBytes == 2) ? "ip" : "");
+	sprintf(m_window_title, "Atari Emulation (%ux%ux%u%s)", m_atariScreenW, m_atariScreenH, screenbitsperpixel, planeBytes == 2 ? "ip" : "");
 	m_visible = false;
 	m_initiallyVisible = false;
 
@@ -834,7 +834,7 @@ void EmulationRunner::_OpenWindow(void)
 	// we do not deal with the alpha channel, otherwise we always must make sure that each pixel is 0xff******
 	SDL_SetSurfaceBlendMode(m_sdl_atari_surface, SDL_BLENDMODE_NONE);
 
-	// In case the Atari does not run in native host graphics mode, we need a converversion surface,
+	// In case the Atari does not run in native host graphics mode, we need a conversion surface,
 	// and instead of directly updating the texture from the Atari surface, we first convert it to 32 bits per pixel.
 
 	if (screenbitsperpixel != 32)
@@ -933,12 +933,12 @@ void EmulationRunner::_OpenWindow(void)
 	pixmap->bounds_bottom = m_sdl_atari_surface->h - 1;
 	pixmap->bounds_right  = m_sdl_atari_surface->w - 1;
 	pixmap->pmVersion     = 4;							// should mean: pixmap base address is 32-bit address
-    pixmap->packType      = 0;							// unpacked?
-    pixmap->packSize      = 0;							// unimportant?
-    pixmap->pixelType     = pixelType;					// 16 is RGBDirect, 0 would be indexed
-    pixmap->pixelSize     = m_sdl_atari_surface->format->BitsPerPixel;
-    pixmap->cmpCount      = cmpCount;					// components: 3 = red, green, blue, 1 = monochrome
-    pixmap->cmpSize       = cmpSize;					// True colour: 8 bits per component
+	pixmap->packType      = 0;							// unpacked?
+	pixmap->packSize      = 0;							// unimportant?
+	pixmap->pixelType     = pixelType;					// 16 is RGBDirect, 0 would be indexed
+	pixmap->pixelSize     = m_sdl_atari_surface->format->BitsPerPixel;
+	pixmap->cmpCount      = cmpCount;					// components: 3 = red, green, blue, 1 = monochrome
+	pixmap->cmpSize       = cmpSize;					// True colour: 8 bits per component
 	pixmap->planeBytes    = planeBytes;					// offset to next plane
 	pixmap->pmTable32     = 0;
 	pixmap->pmReserved    = 0;
@@ -1004,7 +1004,7 @@ Uint32 EmulationRunner::LoopTimer(Uint32 interval, void *param)
 			p->m_Emulator.SendVBL();
 		}
 
-		if (((p->m_200HzCnt % 8) == 0) && (p->m_Emulator.bVideoBufChanged))
+		if ((p->m_200HzCnt % 8) == 0 && p->m_Emulator.bVideoBufChanged)
 		{
 			// screen update runs with 25 Hz
 
@@ -1020,7 +1020,7 @@ Uint32 EmulationRunner::LoopTimer(Uint32 interval, void *param)
 		}
 	}
 
-    return interval;
+	return interval;
 }
 
 
@@ -1032,9 +1032,9 @@ Uint32 EmulationRunner::LoopTimer(Uint32 interval, void *param)
 
 void EmulationRunner::Cleanup(void)
 {
-    (void) SDL_RemoveTimer(m_timer);
+	SDL_RemoveTimer(m_timer);
 	m_timer = 0;
-    SDL_Quit();
+	SDL_Quit();
 }
 
 
@@ -1236,10 +1236,10 @@ void EmulationRunner::EventLoop(void)
 	// Do not catch keyboard events, leave them for dialogue windows
 	SDL_KeyboardActivate(0);		// TODO: Find better hack
 
-    while(!m_bQuitLoop && SDL_PollEvent(&event))
+	while(!m_bQuitLoop && SDL_PollEvent(&event))
 	{
 		EventHandle(event);
-    }
+	}
 }
 
 
@@ -1265,7 +1265,7 @@ void EmulationRunner::EventPump(void)
 
 void EmulationRunner::HandleUserEvents(SDL_Event* event)
 {
-    switch (event->user.code)
+	switch (event->user.code)
 	{
 		case OPEN_EMULATOR_WINDOW:
 			if (!m_sdl_window)
@@ -1285,20 +1285,20 @@ void EmulationRunner::HandleUserEvents(SDL_Event* event)
 			}
 			break;
 
-        case RUN_EMULATOR_WINDOW_UPDATE:
+		case RUN_EMULATOR_WINDOW_UPDATE:
 			if (m_sdl_window)
 			{
 				EmulatorWindowUpdate();
 			}
-            break;
+			break;
 
 		case STOP_EMULATOR:
 			_StopEmulatorThread();
 			break;
 			
-        default:
-            break;
-    }
+		default:
+			break;
+	}
 }
 
 

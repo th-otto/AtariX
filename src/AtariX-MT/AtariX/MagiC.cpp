@@ -108,35 +108,35 @@ enum
 /*
  * ordinary C function callbacks that are provided by the emulator to the kernel
  */
-    MacSys_gettime,    	 // LONG GetTime(void) Datum und Uhrzeit ermitteln
-    MacSys_settime,      // void SetTime(LONG *time) Datum/Zeit setzen
-    MacSys_Setpalette,   // void Setpalette( int ptr[16] )
-    MacSys_Setcolor,     // int Setcolor( int nr, int val )
-    MacSys_VsetRGB,      // void VsetRGB( WORD index, WORD count, LONG *array )
-    MacSys_VgetRGB,      // void VgetRGB( WORD index, WORD count, LONG *array )
-    MacSys_syshalt,      // SysHalt( char *str ) "System halted"
-    MacSys_syserr,       // SysErr( void ) Bomben
+	MacSys_gettime,    	 // LONG GetTime(void) Datum und Uhrzeit ermitteln
+	MacSys_settime,      // void SetTime(LONG *time) Datum/Zeit setzen
+	MacSys_Setpalette,   // void Setpalette( int ptr[16] )
+	MacSys_Setcolor,     // int Setcolor( int nr, int val )
+	MacSys_VsetRGB,      // void VsetRGB( WORD index, WORD count, LONG *array )
+	MacSys_VgetRGB,      // void VgetRGB( WORD index, WORD count, LONG *array )
+	MacSys_syshalt,      // SysHalt( char *str ) "System halted"
+	MacSys_syserr,       // SysErr( void ) Bomben
 	MacSys_coldboot,     // ColdBoot(void) Kaltstart ausführen
-    MacSys_exit,         // Exit(void) beenden
-    MacSys_debugout,     // MacPuts( char *str ) fürs Debugging
-    MacSys_error,        // d0 = -1: kein Grafiktreiber
-    MacSys_prtos,        // Bcostat(void) für PRT
-    MacSys_prtin,        // Cconin(void) für PRT
-    MacSys_prtout,       // Cconout( void *params ) für PRT
-    MacSys_prtouts,      // LONG PrtOuts({char *buf, LONG count}) String auf Drucker
-    MacSys_serconf,      // Rsconf( void *params ) für ser1
-    MacSys_seris,        // Bconstat(void) für ser1 (AUX)
-    MacSys_seros,        // Bcostat(void) für ser1
-    MacSys_serin,        // Cconin(void) für ser1
-    MacSys_serout,       // Cconout( void *params ) für ser1
-    MacSys_SerOpen,      // Serielle Schnittstelle öffnen
-    MacSys_SerClose,     // Serielle Schnittstelle schließen
-    MacSys_SerRead,      // Lesen(buffer, len) => gelesene Zeichen
-    MacSys_SerWrite,     // Schreiben(buffer, len) => geschriebene Zeichen
-    MacSys_SerStat,      // Lese-/Schreibstatus
-    MacSys_SerIoctl,     // Ioctl-Aufrufe für serielle Schnittstelle
-    MacSys_dos_macfn,    // DosFn({int,void*} *) DOS-Funktionen 0x60..0xfe
-    MacSys_Yield,		 // Rechenzeit abgeben
+	MacSys_exit,         // Exit(void) beenden
+	MacSys_debugout,     // MacPuts( char *str ) fürs Debugging
+	MacSys_error,        // d0 = -1: kein Grafiktreiber
+	MacSys_prtos,        // Bcostat(void) für PRT
+	MacSys_prtin,        // Cconin(void) für PRT
+	MacSys_prtout,       // Cconout( void *params ) für PRT
+	MacSys_prtouts,      // LONG PrtOuts({char *buf, LONG count}) String auf Drucker
+	MacSys_serconf,      // Rsconf( void *params ) für ser1
+	MacSys_seris,        // Bconstat(void) für ser1 (AUX)
+	MacSys_seros,        // Bcostat(void) für ser1
+	MacSys_serin,        // Cconin(void) für ser1
+	MacSys_serout,       // Cconout( void *params ) für ser1
+	MacSys_SerOpen,      // Serielle Schnittstelle öffnen
+	MacSys_SerClose,     // Serielle Schnittstelle schließen
+	MacSys_SerRead,      // Lesen(buffer, len) => gelesene Zeichen
+	MacSys_SerWrite,     // Schreiben(buffer, len) => geschriebene Zeichen
+	MacSys_SerStat,      // Lese-/Schreibstatus
+	MacSys_SerIoctl,     // Ioctl-Aufrufe für serielle Schnittstelle
+	MacSys_dos_macfn,    // DosFn({int,void*} *) DOS-Funktionen 0x60..0xfe
+	MacSys_Yield,		 // Rechenzeit abgeben
 
 /*
  * member functions of CMagiC
@@ -1721,19 +1721,6 @@ void CMagiC::UpdateAtariDoubleBuffer(void)
 {
 	DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideoAddr =%p", (void *)m_pFgBuffer);
 	HostVideoAddr = m_pFgBuffer;
-
-#if 0
-	if	(m_pBgBuffer)
-	{
-		DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideo2Addr =%p", (void *)m_pBgBuffer);
-		HostVideo2Addr = m_pBgBuffer;
-	}
-	else
-	{
-		DebugInfo("CMagiC::UpdateAtariDoubleBuffer() --- HostVideo2Addr =%p", (void *)m_pFgBuffer);
-		HostVideo2Addr = m_pFgBuffer;
-	}
-#endif
 }
 
 
@@ -2146,7 +2133,7 @@ OSStatus CMagiC::EmuThread( void )
 	}
 
 
-  end_of_thread:
+end_of_thread:
 
 	// Main Task mitteilen, daß der Emulator-Thread beendet wurde
 	m_bEmulatorIsRunning = false;
@@ -2834,8 +2821,6 @@ uint32_t CMagiC::AtariBIOSInit(uint32_t params, unsigned char *AdrOffset68k)
 /* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L763 */
 uint32_t CMagiC::AtariVdiInit(uint32_t params, unsigned char *AdrOffset68k)
 {
-//#pragma unused(params)
-//#pragma unused(AdrOffset68k)
 	Point PtAtariMousePos;
 	uint16_t *p_linea_BYTES_LIN;
 
@@ -2883,14 +2868,14 @@ uint32_t CMagiC::AtariExec68k(uint32_t params, unsigned char *AdrOffset68k)
 #pragma unused(AdrOffset68k)
 	char Old68kContext[1024];
 	uint32_t ret;
-   	#pragma options align=packed
+#pragma options align=packed
 	struct New68Context
 	{
 		uint32_t regPC;
 		uint32_t regSP;
 		uint32_t arg;
 	};
-   	#pragma options align=reset
+#pragma options align=reset
 	New68Context *pNew68Context = (New68Context *)(uintptr_t)params; /* FIXME: not yet 64bit clean */
 
 	if	(!pNew68Context)
@@ -2969,13 +2954,13 @@ uint32_t CMagiC::AtariExec68k(uint32_t params, unsigned char *AdrOffset68k)
 /* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L848 */
 uint32_t CMagiC::AtariDOSFn(uint32_t params, unsigned char *AdrOffset68k)
 {
-  	#pragma options align=packed
+#pragma options align=packed
 	struct AtariDOSFnParm
 	{
 		uint16_t dos_fnr;
 		uint32_t parms;
 	};
-   	#pragma options align=reset
+#pragma options align=reset
 
 #ifdef _DEBUG
 	AtariDOSFnParm *theAtariDOSFnParm = (AtariDOSFnParm *) (AdrOffset68k + params);
@@ -3084,30 +3069,30 @@ uint32_t CMagiC::AtariVsetRGB(uint32_t params, unsigned char *AdrOffset68k)
 {
 	int i,j;
 	uint32_t c;
-	UInt32 *pColourTable;
-  	#pragma options align=packed
+	uint32_t *pColourTable;
+#pragma options align=packed
 	struct VsetRGBParm
 	{
 		uint16_t index;
 		uint16_t cnt;
 		uint32_t pValues;
 	};
-   	#pragma options align=reset
+#pragma options align=reset
 
 	VsetRGBParm *theVsetRGBParm = (VsetRGBParm *) (AdrOffset68k + params);
-	const UInt8 *pValues = (const UInt8 *) (AdrOffset68k + be32_to_cpu(theVsetRGBParm->pValues));
+	const uint8_t *pValues = (const uint8_t *) (AdrOffset68k + be32_to_cpu(theVsetRGBParm->pValues));
 	uint16_t index = be16_to_cpu(theVsetRGBParm->index);
 	uint16_t cnt = be16_to_cpu(theVsetRGBParm->cnt);
 	DebugInfo("CMagiC::AtariVsetRGB(index=%u, cnt=%u, 0x%02x%02x%02x%02x)",
-			  (unsigned) index, (unsigned) cnt,
-			  (unsigned) pValues[0], (unsigned) pValues[1], (unsigned) pValues[2], (unsigned) pValues[3]);
+			  index, cnt,
+			  pValues[0], pValues[1], pValues[2], pValues[3]);
 
 	// durchlaufe alle zu ändernden Farben
 	pColourTable = pTheMagiC->m_pMagiCScreen->m_pColourTable;
 	j = MIN(MAGIC_COLOR_TABLE_LEN, index + cnt);
 	for	(i = index, pColourTable += index;
 		i < j;
-		i++, pValues += 4,pColourTable++)
+		i++, pValues += 4, pColourTable++)
 	{
 		// Atari: 00rrggbb
 		// 0xff000000		black
@@ -3134,18 +3119,18 @@ uint32_t CMagiC::AtariVsetRGB(uint32_t params, unsigned char *AdrOffset68k)
 uint32_t CMagiC::AtariVgetRGB(uint32_t params, unsigned char *AdrOffset68k)
 {
 	int i,j;
-	UInt32 *pColourTable;
-   	#pragma options align=packed
+	uint32_t *pColourTable;
+#pragma options align=packed
 	struct VgetRGBParm
 	{
 		uint16_t index;
 		uint16_t cnt;
 		uint32_t pValues;
 	};
-    	#pragma options align=reset
+#pragma options align=reset
 
- 	VgetRGBParm *theVgetRGBParm = (VgetRGBParm *) (AdrOffset68k + params);
- 	UInt8 *pValues = (UInt8 *) (AdrOffset68k + be32_to_cpu(theVgetRGBParm->pValues));
+	VgetRGBParm *theVgetRGBParm = (VgetRGBParm *) (AdrOffset68k + params);
+	uint8_t *pValues = (uint8_t *) (AdrOffset68k + be32_to_cpu(theVgetRGBParm->pValues));
 	uint16_t index = be16_to_cpu(theVgetRGBParm->index);
 	uint16_t cnt = be16_to_cpu(theVgetRGBParm->cnt);
 	DebugInfo("CMagiC::AtariVgetRGB(index=%d, cnt=%d)", index, cnt);
@@ -3513,8 +3498,8 @@ uint32_t CMagiC::AtariPrtOutS(uint32_t params, unsigned char *AdrOffset68k)
 		uint32_t buf;
 		uint32_t cnt;
 	};
- 	PrtOutParm *thePrtOutParm = (PrtOutParm *) (AdrOffset68k + params);
- 	uint32_t ret;
+	PrtOutParm *thePrtOutParm = (PrtOutParm *) (AdrOffset68k + params);
+	uint32_t ret;
 
 
 //	DebugInfo("CMagiC::AtariPrtOutS()");
@@ -3586,7 +3571,7 @@ uint32_t CMagiC::OpenSerialBIOS(void)
 /* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3225 */
 uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 {
-   	#pragma options align=packed
+#pragma options align=packed
 	struct SerConfParm
 	{
 		uint16_t baud;
@@ -3601,7 +3586,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 		uint32_t parm;		// Ioctl-Parameter
 		uint32_t ptr2zero;		// deref. und auf ungleich 0 setzen!
 	};
-    	#pragma options align=reset
+#pragma options align=reset
 	unsigned int nBitsTable[] =
 	{
 		8,7,6,5
@@ -3728,7 +3713,7 @@ uint32_t CMagiC::AtariSerConf(uint32_t params, unsigned char *AdrOffset68k)
 					case 2:
 						ret = pTheSerial->Flush(false, true);
 						break;
-         
+
 					// Empfangspuffer und Sendepuffer werden gelîscht.
 					case 3:
 						ret = pTheSerial->Flush(true, true);
@@ -4172,13 +4157,13 @@ uint32_t CMagiC::AtariSerClose(uint32_t params, unsigned char *AdrOffset68k)
 /* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L173 */
 uint32_t CMagiC::AtariSerRead(uint32_t params, unsigned char *AdrOffset68k)
 {
-   	#pragma options align=packed
+#pragma options align=packed
 	struct SerReadParm
 	{
 		uint32_t buf;
 		uint32_t len;
 	};
-    	#pragma options align=reset
+#pragma options align=reset
 	uint32_t ret;
 
 	SerReadParm *theSerReadParm = (SerReadParm *) (AdrOffset68k + params);
@@ -4204,13 +4189,13 @@ uint32_t CMagiC::AtariSerRead(uint32_t params, unsigned char *AdrOffset68k)
 /* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L191 */
 uint32_t CMagiC::AtariSerWrite(uint32_t params, unsigned char *AdrOffset68k)
 {
-   	#pragma options align=packed
+#pragma options align=packed
 	struct SerWriteParm
 	{
 		uint32_t buf;
 		uint32_t len;
 	};
-    	#pragma options align=reset
+#pragma options align=reset
 	uint32_t ret;
 
 	SerWriteParm *theSerWriteParm = (SerWriteParm *) (AdrOffset68k + params);
@@ -4236,12 +4221,12 @@ uint32_t CMagiC::AtariSerWrite(uint32_t params, unsigned char *AdrOffset68k)
 /* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L209 */
 uint32_t CMagiC::AtariSerStat(uint32_t params, unsigned char *AdrOffset68k)
 {
-   	#pragma options align=packed
+#pragma options align=packed
 	struct SerStatParm
 	{
 		uint16_t rwflag;
 	};
-    	#pragma options align=reset
+#pragma options align=reset
 
 //	DebugInfo("CMagiC::AtariSerWrite()");
 	SerStatParm *theSerStatParm = (SerStatParm *) (AdrOffset68k + params);
@@ -4266,13 +4251,13 @@ uint32_t CMagiC::AtariSerStat(uint32_t params, unsigned char *AdrOffset68k)
 /* called from https://github.com/th-otto/MagicMac/blob/master/tools/dev_ser/dev_sers.s#L234 */
 uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 {
-   	#pragma options align=packed
+#pragma options align=packed
 	struct SerIoctlParm
 	{
 		uint16_t cmd;
 		uint32_t parm;
 	};
-    	#pragma options align=reset
+#pragma options align=reset
 
 //	DebugInfo("CMagiC::AtariSerWrite()");
 	SerIoctlParm *theSerIoctlParm = (SerIoctlParm *) (AdrOffset68k + params);
@@ -4355,7 +4340,7 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 				case 2:
 					ret = pTheSerial->Flush(false, true);
 					break;
-    
+
 				// Empfangspuffer und Sendepuffer werden gelîscht.
 				case 3:
 					ret = pTheSerial->Flush(true, true);
@@ -4556,12 +4541,12 @@ uint32_t CMagiC::AtariSerIoctl(uint32_t params, unsigned char *AdrOffset68k)
 /* called from https://github.com/th-otto/MagicMac/blob/master/kernel/bios/magcmacx/macxbios.s#L3391 */
 uint32_t CMagiC::AtariYield(uint32_t params, unsigned char *AdrOffset68k)
 {
-   	#pragma options align=packed
+#pragma options align=packed
 	struct YieldParm
 	{
 		uint32_t num;
 	};
-    	#pragma options align=reset
+#pragma options align=reset
 	OSStatus err;
 	MPEventFlags EventFlags;
 
@@ -4671,14 +4656,14 @@ uint32_t CMagiC::AtariGetKeyboardOrMouseData(uint32_t params, unsigned char *Adr
 uint32_t CMagiC::MmxDaemon(uint32_t params, unsigned char *AdrOffset68k)
 {
 	uint32_t ret;
-   	#pragma options align=packed
+#pragma options align=packed
 	struct MmxDaemonParm
 	{
 		uint16_t cmd;
 		uint32_t parm;
 	};
 	unsigned char *pBuf;
-    	#pragma options align=reset
+#pragma options align=reset
 
 
 //	DebugInfo("CMagiC::MmxDaemon()");

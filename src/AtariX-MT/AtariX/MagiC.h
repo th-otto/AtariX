@@ -209,8 +209,6 @@ class CMagiC
 	bool m_bScreenBufferChanged;
 	unsigned char *m_pFgBuffer;
 	unsigned long m_FgBufferLineLenInBytes;
-//	unsigned char *m_pBgBuffer;
-//	unsigned long m_BgBufferLineLenInBytes;
 	MPCriticalRegionID m_ScrCriticalRegionId;
 
 	// fürs Drucken (leider statisch)
