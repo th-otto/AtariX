@@ -25,6 +25,7 @@
 #include "config.h"
 // System-Header
 #include <CoreFoundation/CoreFoundation.h>
+#include <SDL2/SDL.h>
 // Programm-Header
 #include "Debug.h"
 #include "Globals.h"
@@ -86,7 +87,6 @@ static uint32_t AdrOsRomStart;			// Beginn schreibgeschützter Bereich
 static uint32_t AdrOsRomEnd;			// Ende schreibgeschützter Bereich
 #endif
 static unsigned char *HostVideoAddr;		// Beginn Bildschirmspeicher Host
-//static unsigned char *HostVideo2Addr;		// Beginn Bildschirmspeicher Host (Hintergrundpuffer)
 static atomic_char *p_bVideoBufChanged;
 static bool bAtariVideoRamHostEndian = true;
 
@@ -434,12 +434,8 @@ void m68k_write_memory_8(m68k_addr_type address, m68k_data_type value)
 	{
 		address -= Adr68kVideo;
 		*((uint8_t *) (HostVideoAddr + address)) = (uint8_t) value;
-		//*((uint8_t*) (HostVideo2Addr + address)) = (uint8_t) value;
-		(void) atomic_exchange(p_bVideoBufChanged, 1);
-		//DebugInfo("vchg");
-		//usleep(100000);
-	}
-	else
+		atomic_exchange(p_bVideoBufChanged, 1);
+	} else
 	{
 		const char *Name;
 		uint32_t act_pd;
@@ -498,11 +494,7 @@ void m68k_write_memory_16(m68k_addr_type address, m68k_data_type value)
 			*((uint16_t *) (HostVideoAddr + address)) = (uint16_t) value;		// x86 has bgr instead of rgb
 		else
 			*((uint16_t *) (HostVideoAddr + address)) = (uint16_t) cpu_to_be16(value);
-
-// //		*((uint16_t*) (HostVideo2Addr + address)) = (uint16_t) cpu_to_be16(value);
-//		*((uint16_t *) (HostVideo2Addr + address)) = (uint16_t) value;	// x86 has bgr instead of rgb
-		(void) atomic_exchange(p_bVideoBufChanged, 1);
-		//DebugInfo("vchg");
+		atomic_exchange(p_bVideoBufChanged, 1);
 	}
 	else
 	{
@@ -868,11 +860,7 @@ void m68k_write_memory_32(m68k_addr_type address, m68k_data_type value)
 			*((uint32_t *) (HostVideoAddr + address)) = value;		// x86 has brg instead of rgb
 		else
 			*((uint32_t *) (HostVideoAddr + address)) = cpu_to_be32(value);
-
-// //		*((uint32_t*) (HostVideo2Addr + address)) = value;		// x86 has brg instead of rgb
-//		*((uint32_t *) (HostVideo2Addr + address)) = cpu_to_be32(value);
-		(void) atomic_exchange(p_bVideoBufChanged, 1);
-		//DebugInfo("vchg");
+		atomic_exchange(p_bVideoBufChanged, 1);
 	}
 	else
 	{
@@ -3099,11 +3087,16 @@ uint32_t CMagiC::AtariVsetRGB(uint32_t params, unsigned char *AdrOffset68k)
 		// 0xffff0000		red
 		// 0xff00ff00		green
 		// 0xff0000ff		blue
+#if SDL_VERSION_ATLEAST(2,0,12)
+		/* something has changed here with newer version of SDL... */
+		c = (pValues[3] << 16) | (pValues[2] << 8) | (pValues[1] << 0) | (0xff000000);
+#else
 		c = (pValues[1] << 16) | (pValues[2] << 8) | (pValues[3] << 0) | (0xff000000);
+#endif
 		*pColourTable++ = c;
 	}
 
-	(void) atomic_exchange(p_bVideoBufChanged, 1);
+	atomic_exchange(p_bVideoBufChanged, 1);
 
 	return 0;
 }
