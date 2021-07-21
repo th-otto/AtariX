@@ -166,6 +166,9 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 					NSUserDefaultsController *sharedController = [NSUserDefaultsController sharedUserDefaultsController];
 					NSUserDefaults *myDefaults = [sharedController defaults];
 					theValue = [myDefaults stringForKey:@"rootfsPathUrl"];
+				} else
+				{
+					theValue = [theValue absoluteString];
 				}
 				if (theValue == nil)
 				{
@@ -186,7 +189,9 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 					theValue = @"(unused)";
 				}
 				if (rowIndex == ATARI_DRIVE_M)
+				{
 					theValue = [theValue stringByAppendingString:@" (host file system)"];
+				}
 			}
 		}
 
